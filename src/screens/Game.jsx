@@ -625,8 +625,8 @@ export default function Game() {
                 ? '0 0 0 8px rgba(255,68,68,0.1),0 0 0 16px rgba(255,68,68,0.05)'
                 : '0 0 0 8px rgba(255,180,0,0.1),0 0 0 16px rgba(255,180,0,0.05)',
             }}
-            onTouchStart={(e) => { e.preventDefault(); handleTap() }}
-            onClick={(e) => { e.preventDefault(); handleTap() }}
+            onTouchStart={(e) => handleTap(e)}
+            onClick={(e) => handleTap(e)}
           >
             <div style={{ width: running ? '22px' : '16px', height: running ? '22px' : '16px', background: '#141414', borderRadius: running ? '4px' : '50%' }} />
             <span style={styles.btnStopText}>{running ? 'PARAR' : 'START'}</span>
