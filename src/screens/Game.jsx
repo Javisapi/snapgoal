@@ -37,6 +37,8 @@ export default function Game() {
   const [barrierOptions, setBarrierOptions] = useState(null)
   const [warning, setWarning] = useState(null)
   const [myTurn, setMyTurn] = useState(false)
+  const [showAbandon, setShowAbandon] = useState(false)
+  const [opponentGone, setOpponentGone] = useState(false)
   const [cards, setCards] = useState({ p1: { yellow: 0, red: 0 }, p2: { yellow: 0, red: 0 } })
   const [penaltyChoice, setPenaltyChoice] = useState(null)
   const [showPenaltyPopup, setShowPenaltyPopup] = useState(false)
