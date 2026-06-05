@@ -53,6 +53,9 @@ export default function Game() {
   const opponentRef = useRef(null)
   const channelRef = useRef(null)
   const runningRef = useRef(false)
+  const heartbeatRef = useRef(null)
+  const disconnectRef = useRef(null)
+  const warnRef = useRef(null)
   const lastTapRef = useRef(0)
   const preShootOffsetRef = useRef(0)
 
