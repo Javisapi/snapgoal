@@ -159,6 +159,15 @@ export default function Game() {
     channelRef.current = channel
     channel.subscribe()
 
+    // Heartbeat — avisar cada 5s que seguimos conectados
+    const isP1 = m.player1_id === p.id
+    heartbeatRef.current = setInterval(async () => {
+      const field = isP1 ? 'player1_last_seen' : 'player2_last_seen'
+      await supabase.from('matches').update({ [field]: new Date().toISOString() }).eq('id', matchId)
+    }, 5000)
+
+    startDisconnectWatcher(m, p)
+
     // Si hay falta pendiente y soy el rival sin barrera aún
     if (m.pending_type === 'FALTA' && m.current_turn !== p.id && !m.barrier_range) {
       setBarrierOptions(true)
@@ -174,6 +183,29 @@ export default function Game() {
       setCentesimas(base + Math.floor((Date.now() - startedAtMs) / 10))
     }, 10)
   }
+  function startDisconnectWatcher(m, p) {
+    clearTimeout(warnRef.current)
+    clearTimeout(disconnectRef.current)
+    warnRef.current = setTimeout(() => {
+      setOpponentGone('warning')
+    }, 10000)
+    disconnectRef.current = setTimeout(async () => {
+      setOpponentGone('gone')
+      const isP1 = m.player1_id === p.id
+      const sp1 = isP1 ? 5 : 0
+      const sp2 = isP1 ? 0 : 5
+      await supabase.from('matches').update({
+        status: 'finished',
+        winner_id: p.id,
+        score_p1: sp1, score_p2: sp2,
+        ended_at: new Date().toISOString(),
+        last_event: JSON.stringify({ emoji: '🔌', label: 'Rival desconectado — victoria 5-0' }),
+      }).eq('id', matchId)
+      await updateStats(sp1, sp2, matchRef.current, p)
+      navigate('/result/' + matchId)
+    }, 30000)
+  }
+
   async function handleAbandon() {
     const m = matchRef.current
     const p = playerRef.current
@@ -735,7 +767,7 @@ const styles = {
   btnStop: { width: '130px', height: '130px', borderRadius: '50%', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '6px', WebkitTapHighlightColor: 'transparent' },
   btnStopText: { fontSize: '0.8rem', fontWeight: '900', color: '#141414', letterSpacing: '1px' },
   btnWaiting: { width: '130px', height: '130px', borderRadius: '50%', background: 'rgba(255,255,255,0.04)', border: '2px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' },
-  abandonBtn: { background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.25)', fontSize: '1rem', cursor: 'pointer', padding: '4px 8px', lineHeight: 1 },
+  abandonBtn: { background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', fontWeight: '700', cursor: 'pointer', padding: '6px 10px', lineHeight: 1 },
   overlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem', zIndex: 100 },
   modal: { background: '#1e1e1e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '20px', padding: '1.75rem', display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%' },
   modalTitle: { fontSize: '1.2rem', fontWeight: '800', color: '#fff', textAlign: 'center', margin: 0 },
