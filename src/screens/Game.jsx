@@ -168,7 +168,15 @@ export default function Game() {
       setCentesimas(base + Math.floor((Date.now() - startedAtMs) / 10))
     }, 10)
   }
+  function handleClick() {
+    const now = Date.now()
+    if (now - lastTapRef.current < 600) return
+    lastTapRef.current = now
+    if (runningRef.current) stopTimer()
+    else startTimer()
+  }
 
+  async function startTimer() {
   async function startTimer() {
     preShootOffsetRef.current = offsetRef.current
     if (runningRef.current) return
