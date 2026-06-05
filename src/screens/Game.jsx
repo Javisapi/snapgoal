@@ -170,7 +170,7 @@ export default function Game() {
   }
   function handleClick() {
     const now = Date.now()
-    if (now - lastTapRef.current < 600) return
+    if (now - lastTapRef.current < 300) return
     lastTapRef.current = now
     if (runningRef.current) stopTimer()
     else startTimer()
