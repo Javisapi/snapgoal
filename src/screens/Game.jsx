@@ -2,6 +2,14 @@ import { useEffect, useState, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
+const GAME_CSS = `
+  @keyframes eventFlash { 0%{opacity:0;transform:scale(0.5) translateY(20px)} 20%{opacity:1;transform:scale(1.05) translateY(0)} 70%{opacity:1;transform:scale(1) translateY(0)} 100%{opacity:0;transform:scale(0.95) translateY(-15px)} }
+  @keyframes goalRing { 0%{transform:scale(0.8);opacity:0.8} 100%{transform:scale(2.5);opacity:0} }
+  @keyframes cardShake { 0%,100%{transform:translateX(0) rotate(0deg)} 20%{transform:translateX(-10px) rotate(-3deg)} 40%{transform:translateX(10px) rotate(3deg)} 60%{transform:translateX(-6px) rotate(-2deg)} 80%{transform:translateX(6px) rotate(2deg)} }
+  @keyframes flashOverlayGold { 0%{opacity:0} 15%{opacity:1} 100%{opacity:0} }
+  @keyframes flashOverlayRed { 0%{opacity:0} 15%{opacity:1} 100%{opacity:0} }
+`
+
 async function getPlayer() {
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) return null
@@ -39,6 +47,7 @@ export default function Game() {
   const [myTurn, setMyTurn] = useState(false)
   const [showAbandon, setShowAbandon] = useState(false)
   const [opponentGone, setOpponentGone] = useState(false)
+  const [flashEvent, setFlashEvent] = useState(null)
   const [cards, setCards] = useState({ p1: { yellow: 0, red: 0 }, p2: { yellow: 0, red: 0 } })
   const [penaltyChoice, setPenaltyChoice] = useState(null)
   const [showPenaltyPopup, setShowPenaltyPopup] = useState(false)
@@ -60,6 +69,9 @@ export default function Game() {
   const preShootOffsetRef = useRef(0)
 
   useEffect(() => {
+    const s = document.createElement('style')
+    s.textContent = GAME_CSS
+    document.head.appendChild(s)
     init()
     return () => {
       clearInterval(intervalRef.current)
@@ -229,6 +241,11 @@ export default function Game() {
     setTimeout(() => navigate('/result/' + matchId), 500)
   }
 
+  function triggerFlash(type, text) {
+    setFlashEvent({ type, text, key: Date.now() })
+    setTimeout(() => setFlashEvent(null), 1800)
+  }
+
   function handleClick() {
     const now = Date.now()
     if (now - lastTapRef.current < 50) return
@@ -264,6 +281,7 @@ export default function Game() {
         setWarning({ type: 'red', text: `🟥 2 amarillas = Roja a ${p.username} — gol para el rival` })
         stopTimer(true)
       } else {
+        triggerFlash('yellow', 'AMARILLA')
         setWarning({ type: 'yellow', text: `🟨 Tarjeta amarilla a ${p.username} — para antes de 5s` })
       }
     }, 2000)
@@ -582,6 +600,41 @@ export default function Game() {
 
   return (
     <div style={styles.container}>
+
+      {/* Flash de evento */}
+      {flashEvent && (
+        <div key={flashEvent.key} style={{ position:'absolute', inset:0, pointerEvents:'none', zIndex:50, display:'flex', alignItems:'center', justifyContent:'center' }}>
+          {/* Overlay de color */}
+          <div style={{
+            position:'absolute', inset:0,
+            background: flashEvent.type === 'goal' || flashEvent.type === 'owngoal' ? 'rgba(255,180,0,0.12)' : flashEvent.type === 'red' ? 'rgba(255,68,68,0.15)' : 'rgba(255,200,0,0.1)',
+            animation: 'flashOverlayGold 1.8s ease forwards',
+          }}/>
+          {/* Anillo expansivo para gol */}
+          {(flashEvent.type === 'goal') && (
+            <div style={{
+              position:'absolute',
+              width:'120px', height:'120px',
+              borderRadius:'50%',
+              border: '3px solid #ffb400',
+              animation: 'goalRing 0.8s ease-out forwards',
+            }}/>
+          )}
+          {/* Texto del evento */}
+          <div style={{
+            fontSize: flashEvent.type === 'goal' ? '3.5rem' : '2.5rem',
+            fontWeight:'900',
+            letterSpacing:'-1px',
+            color: flashEvent.type === 'goal' ? '#ffb400' : flashEvent.type === 'owngoal' ? '#ff8800' : flashEvent.type === 'red' ? '#ff4444' : '#ffc800',
+            animation: flashEvent.type === 'red' || flashEvent.type === 'yellow' ? 'cardShake 0.5s ease, eventFlash 1.8s ease forwards' : 'eventFlash 1.8s ease forwards',
+            textShadow: flashEvent.type === 'goal' ? '0 0 40px rgba(255,180,0,0.5)' : 'none',
+            textAlign:'center',
+            lineHeight:1,
+          }}>
+            {flashEvent.text}
+          </div>
+        </div>
+      )}
 
       {/* Modal abandono */}
       {showAbandon && (

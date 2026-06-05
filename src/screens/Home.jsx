@@ -3,12 +3,34 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
 
+async function deleteAccount(playerId) {
+  await supabase.from('plays').delete().eq('player_id', playerId)
+  await supabase.from('matchmaking_queue').delete().eq('player_id', playerId)
+  await supabase.from('matches').delete().or(`player1_id.eq.${playerId},player2_id.eq.${playerId}`)
+  await supabase.from('players').delete().eq('id', playerId)
+  await supabase.auth.signOut()
+  Object.keys(sessionStorage).forEach(k => sessionStorage.removeItem(k))
+}
+
+const HOME_CSS = `
+  @keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes lineDraw { from{width:0} to{width:48px} }
+`
+
 export default function Home() {
   const { player, loading, registerPlayer } = useAuth()
   const [username, setUsername] = useState('')
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const navigate = useNavigate()
+
+  useEffect(() => {
+    const s = document.createElement('style')
+    s.textContent = HOME_CSS
+    document.head.appendChild(s)
+  }, [])
 
   async function handleRegister() {
     const name = username.trim()
@@ -16,25 +38,11 @@ export default function Home() {
     if (name.length < 3) { setError('Mínimo 3 caracteres'); return }
     if (name.length > 20) { setError('Máximo 20 caracteres'); return }
     if (!/^[a-zA-Z0-9_]+$/.test(name)) { setError('Solo letras, números y guión bajo'); return }
-
     setSaving(true)
     setError('')
     const { player: newPlayer, error: authError } = await registerPlayer(name)
     if (authError) { setError(authError); setSaving(false); return }
     navigate('/queue')
-  }
-
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-  const [deleting, setDeleting] = useState(false)
-
-  async function handleDeleteAccount() {
-    if (!player) return
-    setDeleting(true)
-    await deleteAccount(player.id)
-    setDeleting(false)
-    setShowDeleteConfirm(false)
-    navigate('/')
-    window.location.reload()
   }
 
   async function handlePlay() {
@@ -45,30 +53,57 @@ export default function Home() {
     }
   }
 
+  async function handleDeleteAccount() {
+    if (!player) return
+    setDeleting(true)
+    await deleteAccount(player.id)
+    setDeleting(false)
+    setShowDeleteConfirm(false)
+    window.location.reload()
+  }
+
   if (loading) return (
     <div style={styles.container}>
-      <div style={styles.top}>
-        <div style={styles.ball}>⚽</div>
-        <h1 style={styles.title}>SnapGoal</h1>
-      </div>
+      <div style={styles.wordmark}>SnapGoal</div>
     </div>
   )
 
   if (player) return (
     <div style={styles.container}>
-      <div style={styles.top}>
-        <div style={styles.ball}>⚽</div>
-        <h1 style={styles.title}>SnapGoal</h1>
-        <p style={styles.subtitle}>El partido más rápido del mundo</p>
-      </div>
-      <div style={styles.form}>
-        <div style={styles.welcomeBox}>
-          <p style={styles.welcomeLabel}>Bienvenido de vuelta</p>
-          <p style={styles.welcomeName}>{player.username}</p>
-          <p style={styles.welcomeStats}>{player.total_points} pts · {player.matches_played} partidos</p>
+      {showDeleteConfirm && (
+        <div style={styles.overlay}>
+          <div style={styles.modal}>
+            <p style={styles.modalTitle}>Borrar cuenta</p>
+            <p style={styles.modalText}>Se eliminarán permanentemente tu perfil, historial y estadísticas. Esta acción no se puede deshacer.</p>
+            <button style={styles.btnConfirmDelete} onClick={handleDeleteAccount} disabled={deleting}>
+              {deleting ? 'Borrando...' : 'Confirmar borrado'}
+            </button>
+            <button style={styles.btnCancelDelete} onClick={() => setShowDeleteConfirm(false)}>Cancelar</button>
+          </div>
         </div>
-        <button style={styles.btnPrimary} onClick={handlePlay}>⚡ Buscar partido</button>
-        <button style={styles.btnSecondary} onClick={() => navigate('/ranking')}>🏆 Ranking</button>
+      )}
+
+      <div style={styles.top}>
+        <div style={styles.wordmark}>SnapGoal</div>
+        <div style={styles.wordmarkLine} />
+      </div>
+
+      <div style={styles.playerSection}>
+        <p style={styles.playerGreeting}>Bienvenido</p>
+        <p style={styles.playerName}>{player.username}</p>
+        <div style={styles.playerMeta}>
+          <span style={styles.playerMetaItem}>{player.total_points} pts</span>
+          <span style={styles.playerMetaDot} />
+          <span style={styles.playerMetaItem}>{player.matches_played} partidos</span>
+          <span style={styles.playerMetaDot} />
+          <span style={styles.playerMetaItem}>{player.matches_won}V {player.matches_drawn}E {player.matches_lost}D</span>
+        </div>
+      </div>
+
+      <div style={styles.actions}>
+        <button style={styles.btnPrimary} onClick={handlePlay}>Buscar partido</button>
+        <button style={styles.btnSecondary} onClick={() => navigate('/ranking')}>Ranking</button>
+        <button style={styles.btnGhost} onClick={() => setShowDeleteConfirm(true)}>Borrar cuenta</button>
       </div>
     </div>
   )
@@ -76,15 +111,13 @@ export default function Home() {
   return (
     <div style={styles.container}>
       <div style={styles.top}>
-        <div style={styles.ball}>⚽</div>
-        <h1 style={styles.title}>SnapGoal</h1>
-        <p style={styles.subtitle}>El partido más rápido del mundo</p>
+        <div style={styles.wordmark}>SnapGoal</div>
+        <div style={styles.wordmarkLine} />
+        <p style={styles.tagline}>El partido más rápido del mundo</p>
       </div>
-      <div style={styles.form}>
-        <div style={styles.registerBox}>
-          <p style={styles.registerTitle}>Elige tu nombre de jugador</p>
-          <p style={styles.registerSub}>Lo usarás siempre. No se puede cambiar.</p>
-        </div>
+
+      <div style={styles.registerSection}>
+        <p style={styles.registerLabel}>Elige tu nombre</p>
         <input
           style={styles.input}
           type="text"
@@ -97,39 +130,45 @@ export default function Home() {
           autoCorrect="off"
           autoComplete="off"
         />
+        <p style={styles.inputHint}>Solo letras, números y guión bajo. No se puede cambiar.</p>
         {error && <p style={styles.error}>{error}</p>}
+      </div>
+
+      <div style={styles.actions}>
         <button style={styles.btnPrimary} onClick={handleRegister} disabled={saving}>
-          {saving ? 'Creando cuenta...' : '⚡ Empezar a jugar'}
+          {saving ? 'Creando...' : 'Empezar a jugar'}
         </button>
-        <button style={styles.btnSecondary} onClick={() => navigate('/ranking')}>🏆 Ranking</button>
+        <button style={styles.btnSecondary} onClick={() => navigate('/ranking')}>Ranking</button>
       </div>
     </div>
   )
 }
 
 const styles = {
-  container: { height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '3rem 2rem 4rem', background: '#141414', position: 'relative' },
-  top: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', marginTop: '3rem' },
-  ball: { fontSize: '5rem', lineHeight: 1 },
-  title: { fontSize: '3rem', fontWeight: '800', color: '#ffffff', letterSpacing: '-1px' },
-  subtitle: { fontSize: '1rem', color: 'rgba(255,255,255,0.3)', marginTop: '0.25rem' },
-  form: { display: 'flex', flexDirection: 'column', gap: '1rem' },
-  welcomeBox: { background: 'rgba(255,180,0,0.08)', border: '1px solid rgba(255,180,0,0.2)', borderRadius: '16px', padding: '1.25rem', textAlign: 'center' },
-  welcomeLabel: { fontSize: '0.8rem', color: '#ffb400', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '0.25rem' },
-  welcomeName: { fontSize: '1.5rem', fontWeight: '800', color: '#ffffff', marginBottom: '0.25rem' },
-  welcomeStats: { fontSize: '0.85rem', color: 'rgba(255,255,255,0.4)' },
-  registerBox: { textAlign: 'center', marginBottom: '0.5rem' },
-  registerTitle: { fontSize: '1.1rem', fontWeight: '700', color: '#ffffff', marginBottom: '0.25rem' },
-  registerSub: { fontSize: '0.85rem', color: 'rgba(255,255,255,0.35)' },
-  input: { background: '#1e1e1e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '1rem 1.25rem', fontSize: '1.1rem', color: '#fff', outline: 'none', width: '100%' },
-  error: { color: '#ff4444', fontSize: '0.9rem', textAlign: 'center' },
-  btnPrimary: { background: '#ffb400', color: '#141414', border: 'none', borderRadius: '12px', padding: '1.1rem', fontSize: '1.1rem', fontWeight: '800', cursor: 'pointer', width: '100%' },
-  btnSecondary: { background: 'transparent', color: 'rgba(255,255,255,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '1rem', fontSize: '1rem', cursor: 'pointer', width: '100%' },
-  btnDelete: { background: 'transparent', color: 'rgba(255,80,80,0.5)', border: '1px solid rgba(255,80,80,0.15)', borderRadius: '12px', padding: '0.75rem', fontSize: '0.9rem', cursor: 'pointer', width: '100%' },
-  overlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem', zIndex: 100 },
-  modal: { background: '#1e1e1e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '20px', padding: '1.75rem', display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%' },
-  modalTitle: { fontSize: '1.2rem', fontWeight: '800', color: '#fff', textAlign: 'center', margin: 0 },
-  modalText: { fontSize: '0.9rem', color: 'rgba(255,255,255,0.5)', textAlign: 'center', lineHeight: 1.6, margin: 0 },
-  btnConfirmDelete: { background: '#ff4444', color: '#fff', border: 'none', borderRadius: '12px', padding: '1rem', fontSize: '1rem', fontWeight: '700', cursor: 'pointer', width: '100%' },
-  btnCancelDelete: { background: 'transparent', color: 'rgba(255,255,255,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '0.9rem', fontSize: '0.95rem', cursor: 'pointer', width: '100%' },
+  container: { height:'100%', display:'flex', flexDirection:'column', justifyContent:'space-between', padding:'3.5rem 2rem 4rem', background:'#141414', position:'relative', animation:'fadeIn 0.4s ease forwards' },
+  top: { display:'flex', flexDirection:'column', gap:'0.75rem' },
+  wordmark: { fontSize:'2.8rem', fontWeight:'900', color:'#fff', letterSpacing:'-2px', lineHeight:1 },
+  wordmarkLine: { height:'3px', width:'48px', background:'#ffb400', borderRadius:'2px', animation:'lineDraw 0.5s ease 0.2s both' },
+  tagline: { fontSize:'0.85rem', color:'rgba(255,255,255,0.25)', letterSpacing:'0.5px', margin:0 },
+  playerSection: { display:'flex', flexDirection:'column', gap:'0.4rem' },
+  playerGreeting: { fontSize:'0.8rem', color:'rgba(255,255,255,0.3)', letterSpacing:'1px', textTransform:'uppercase', margin:0 },
+  playerName: { fontSize:'2rem', fontWeight:'800', color:'#fff', letterSpacing:'-1px', margin:0 },
+  playerMeta: { display:'flex', alignItems:'center', gap:'0.5rem', flexWrap:'wrap' },
+  playerMetaItem: { fontSize:'0.8rem', color:'rgba(255,255,255,0.4)' },
+  playerMetaDot: { width:'3px', height:'3px', borderRadius:'50%', background:'rgba(255,255,255,0.2)' },
+  registerSection: { display:'flex', flexDirection:'column', gap:'0.75rem' },
+  registerLabel: { fontSize:'0.8rem', color:'rgba(255,255,255,0.3)', letterSpacing:'1px', textTransform:'uppercase', margin:0 },
+  input: { background:'transparent', border:'none', borderBottom:'1px solid rgba(255,255,255,0.15)', borderRadius:0, padding:'0.75rem 0', fontSize:'1.4rem', fontWeight:'700', color:'#fff', outline:'none', width:'100%', letterSpacing:'-0.5px' },
+  inputHint: { fontSize:'0.75rem', color:'rgba(255,255,255,0.2)', margin:0 },
+  error: { fontSize:'0.85rem', color:'#ff4444', margin:0 },
+  actions: { display:'flex', flexDirection:'column', gap:'0.75rem' },
+  btnPrimary: { background:'#ffb400', color:'#141414', border:'none', borderRadius:'12px', padding:'1.1rem', fontSize:'1rem', fontWeight:'800', cursor:'pointer', width:'100%', letterSpacing:'0.5px' },
+  btnSecondary: { background:'transparent', color:'rgba(255,255,255,0.4)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:'12px', padding:'0.9rem', fontSize:'0.9rem', cursor:'pointer', width:'100%' },
+  btnGhost: { background:'transparent', color:'rgba(255,80,80,0.4)', border:'none', padding:'0.5rem', fontSize:'0.8rem', cursor:'pointer', width:'100%' },
+  overlay: { position:'absolute', inset:0, background:'rgba(0,0,0,0.9)', display:'flex', alignItems:'center', justifyContent:'center', padding:'2rem', zIndex:100 },
+  modal: { background:'#1a1a1a', border:'1px solid rgba(255,255,255,0.08)', borderRadius:'20px', padding:'1.75rem', display:'flex', flexDirection:'column', gap:'1rem', width:'100%' },
+  modalTitle: { fontSize:'1.1rem', fontWeight:'700', color:'#fff', margin:0 },
+  modalText: { fontSize:'0.85rem', color:'rgba(255,255,255,0.4)', lineHeight:1.6, margin:0 },
+  btnConfirmDelete: { background:'#ff4444', color:'#fff', border:'none', borderRadius:'10px', padding:'0.9rem', fontSize:'0.95rem', fontWeight:'700', cursor:'pointer', width:'100%' },
+  btnCancelDelete: { background:'transparent', color:'rgba(255,255,255,0.3)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:'10px', padding:'0.85rem', fontSize:'0.9rem', cursor:'pointer', width:'100%' },
 }
