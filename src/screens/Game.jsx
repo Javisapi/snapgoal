@@ -222,7 +222,8 @@ export default function Game() {
       last_event: JSON.stringify({ emoji: '🏳️', label: `${p.username} abandonó — derrota 0-5` }),
     }).eq('id', matchId)
     await updateStats(sp1, sp2, m, p)
-    navigate('/result/' + matchId)
+    // Esperar a que Supabase propague el cambio al rival
+    setTimeout(() => navigate('/result/' + matchId), 500)
   }
 
   function handleClick() {
