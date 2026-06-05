@@ -177,7 +177,6 @@ export default function Game() {
   }
 
   async function startTimer() {
-  async function startTimer() {
     preShootOffsetRef.current = offsetRef.current
     if (runningRef.current) return
     const base = offsetRef.current
