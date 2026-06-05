@@ -147,6 +147,10 @@ export default function Game() {
           try { setLastPlay(JSON.parse(updated.last_event)) } catch(e) {}
         }
 
+        // El rival sigue vivo — reiniciar watcher
+        setOpponentGone(false)
+        startDisconnectWatcher(updated, playerRef.current)
+
         if (updated.status === 'finished') navigate('/result/' + matchId)
       })
 
@@ -168,6 +172,25 @@ export default function Game() {
       setCentesimas(base + Math.floor((Date.now() - startedAtMs) / 10))
     }, 10)
   }
+  async function handleAbandon() {
+    const m = matchRef.current
+    const p = playerRef.current
+    const isP1 = m.player1_id === p.id
+    const winnerId = isP1 ? m.player2_id : m.player1_id
+    const sp1 = isP1 ? 0 : 5
+    const sp2 = isP1 ? 5 : 0
+    await supabase.from('matches').update({
+      status: 'finished',
+      winner_id: winnerId,
+      score_p1: sp1,
+      score_p2: sp2,
+      ended_at: new Date().toISOString(),
+      last_event: JSON.stringify({ emoji: '🏳️', label: `${p.username} abandonó — derrota 0-5` }),
+    }).eq('id', matchId)
+    await updateStats(sp1, sp2, m, p)
+    navigate('/result/' + matchId)
+  }
+
   function handleClick() {
     const now = Date.now()
     if (now - lastTapRef.current < 50) return
@@ -522,6 +545,25 @@ export default function Game() {
   return (
     <div style={styles.container}>
 
+      {/* Modal abandono */}
+      {showAbandon && (
+        <div style={styles.overlay}>
+          <div style={styles.modal}>
+            <p style={styles.modalTitle}>🏳️ Abandonar partido</p>
+            <p style={styles.modalText}>Si abandonas, perderás el partido 0-5 y se sumarán puntos al rival.</p>
+            <button style={styles.btnConfirmAbandon} onClick={handleAbandon}>Sí, abandonar</button>
+            <button style={styles.btnCancelAbandon} onClick={() => setShowAbandon(false)}>Cancelar</button>
+          </div>
+        </div>
+      )}
+
+      {/* Banner desconexión */}
+      {opponentGone === 'warning' && (
+        <div style={styles.disconnectBanner}>
+          <span style={styles.disconnectBannerText}>⚽ Esperando respuesta de tu oponente...</span>
+        </div>
+      )}
+
       <div style={styles.topBar}>
         <div style={styles.playerChip}>
           <span style={styles.playerName}>
@@ -531,7 +573,10 @@ export default function Game() {
           </span>
           <span style={styles.playerScore}>{scoreMe}</span>
         </div>
-        <span style={styles.vs}>VS</span>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+          <button style={styles.abandonBtn} onClick={() => setShowAbandon(true)}>✕</button>
+          <span style={styles.vs}>VS</span>
+        </div>
         <div style={styles.playerChip}>
           <span style={styles.playerName}>
             {opponent.username.toUpperCase()}
@@ -659,7 +704,7 @@ export default function Game() {
 }
 
 const styles = {
-  container: { height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '2rem 1.5rem 2.5rem', background: '#141414' },
+  container: { height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '2rem 1.5rem 2.5rem', background: '#141414', position: 'relative' },
   topBar: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
   playerChip: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' },
   playerName: { fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', fontWeight: '600', letterSpacing: '0.5px' },
@@ -688,6 +733,15 @@ const styles = {
   btnStop: { width: '130px', height: '130px', borderRadius: '50%', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '6px', WebkitTapHighlightColor: 'transparent' },
   btnStopText: { fontSize: '0.8rem', fontWeight: '900', color: '#141414', letterSpacing: '1px' },
   btnWaiting: { width: '130px', height: '130px', borderRadius: '50%', background: 'rgba(255,255,255,0.04)', border: '2px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' },
+  abandonBtn: { background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.25)', fontSize: '1rem', cursor: 'pointer', padding: '4px 8px', lineHeight: 1 },
+  overlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem', zIndex: 100 },
+  modal: { background: '#1e1e1e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '20px', padding: '1.75rem', display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%' },
+  modalTitle: { fontSize: '1.2rem', fontWeight: '800', color: '#fff', textAlign: 'center', margin: 0 },
+  modalText: { fontSize: '0.9rem', color: 'rgba(255,255,255,0.5)', textAlign: 'center', lineHeight: 1.6, margin: 0 },
+  btnConfirmAbandon: { background: '#ff4444', color: '#fff', border: 'none', borderRadius: '12px', padding: '1rem', fontSize: '1rem', fontWeight: '700', cursor: 'pointer', width: '100%' },
+  btnCancelAbandon: { background: 'transparent', color: 'rgba(255,255,255,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '0.9rem', fontSize: '0.95rem', cursor: 'pointer', width: '100%' },
+  disconnectBanner: { background: 'rgba(255,180,0,0.1)', border: '1px solid rgba(255,180,0,0.3)', borderRadius: '10px', padding: '0.6rem 1rem', textAlign: 'center', marginBottom: '0.5rem' },
+  disconnectBannerText: { color: '#ffb400', fontSize: '0.85rem', fontWeight: '600' },
   bottomBar: { display: 'flex', justifyContent: 'space-around', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.06)' },
   bottomItem: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' },
   bottomLabel: { fontSize: '0.65rem', color: 'rgba(255,255,255,0.25)', letterSpacing: '1px' },
