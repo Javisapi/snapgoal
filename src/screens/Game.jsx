@@ -96,6 +96,10 @@ export default function Game() {
       .from('matches').select('*').eq('id', matchId).single()
     if (!m) { navigate('/'); return }
 
+    // Si el partido está en announcing, redirigir a la pantalla de anuncio
+    if (m.status === 'announcing') { navigate('/announce/' + matchId); return }
+    if (m.status === 'cancelled') { navigate('/'); return }
+
     // Verificar si el turno lleva más de 30 segundos sin actividad al cargar
     if (m.status === 'playing' && m.turn_started_at) {
       const turnAge = (Date.now() - new Date(m.turn_started_at).getTime()) / 1000
@@ -445,9 +449,12 @@ export default function Game() {
     setRunning(false)
     setWarning(null)
 
-    await processPlay(total, forced)
-
-    processingRef.current = false
+    try {
+      await processPlay(total, forced)
+    } finally {
+      // Siempre liberar el lock aunque haya error
+      processingRef.current = false
+    }
   }
 
   async function processPlay(total, redCard) {

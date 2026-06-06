@@ -61,7 +61,7 @@ export default function Queue() {
 
     // Intentar emparejar inmediatamente
     const matchId = await tryMatchOnServer(p.id)
-    if (matchId) { navigate('/game/' + matchId); return }
+    if (matchId) { navigate('/announce/' + matchId); return }
 
     // Polling para detectar partido activo aunque falle Realtime
     const activeCheckInterval = setInterval(async () => {
@@ -110,7 +110,7 @@ export default function Queue() {
       if (stateRef.current.cancelled) return
       const matchId = await tryMatchOnServer(p.id)
       if (matchId && !stateRef.current.cancelled) {
-        navigate('/game/' + matchId)
+        navigate('/announce/' + matchId)
       }
     }, 2000)
 
