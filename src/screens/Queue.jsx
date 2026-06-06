@@ -4,30 +4,28 @@ import { supabase } from '../lib/supabase'
 
 async function getPlayer() {
   const { data: { session } } = await supabase.auth.getSession()
-  if (!session) { console.log('NO SESSION'); return null }
+  if (!session) return null
   const key = 'player_' + session.user.id
   const cached = sessionStorage.getItem(key)
-  if (cached) { console.log('PLAYER FROM CACHE', JSON.parse(cached).username); return JSON.parse(cached) }
+  if (cached) return JSON.parse(cached)
   const { data } = await supabase.from('players').select('*').eq('auth_id', session.user.id).single()
   if (data) sessionStorage.setItem(key, JSON.stringify(data))
-  console.log('PLAYER FROM DB', data?.username)
   return data
 }
 
 export default function Queue() {
   const navigate = useNavigate()
   const [dots, setDots] = useState('')
-  const stateRef = useRef({ cancelled: false, queueId: null, channels: [] })
+  const stateRef = useRef({ cancelled: false, queueId: null, channel: null, intervals: [] })
 
   useEffect(() => {
-    console.log('QUEUE MOUNTED')
-    const interval = setInterval(() => setDots(d => d.length >= 3 ? '' : d + '.'), 500)
+    const dotsInterval = setInterval(() => setDots(d => d.length >= 3 ? '' : d + '.'), 500)
     init()
     return () => {
-      console.log('QUEUE UNMOUNTED')
       stateRef.current.cancelled = true
-      clearInterval(interval)
-      stateRef.current.channels.forEach(c => supabase.removeChannel(c))
+      clearInterval(dotsInterval)
+      stateRef.current.intervals.forEach(i => clearInterval(i))
+      if (stateRef.current.channel) supabase.removeChannel(stateRef.current.channel)
       if (stateRef.current.queueId) {
         supabase.from('matchmaking_queue').delete().eq('id', stateRef.current.queueId)
       }
@@ -35,98 +33,66 @@ export default function Queue() {
   }, [])
 
   async function init() {
-    console.log('INIT STARTED')
     const p = await getPlayer()
-    console.log('PLAYER:', p?.username, 'CANCELLED:', stateRef.current.cancelled)
-    if (!p) { console.log('NO PLAYER, NAVIGATING HOME'); navigate('/'); return }
-    if (stateRef.current.cancelled) { console.log('CANCELLED EARLY'); return }
+    if (!p || stateRef.current.cancelled) { navigate('/'); return }
 
+    // Limpiar entradas anteriores
     await supabase.from('matchmaking_queue').delete().eq('player_id', p.id)
-    await new Promise(r => setTimeout(r, 300))
-    if (stateRef.current.cancelled) return
 
-    console.log('INSERTING INTO QUEUE')
+    // Entrar en cola
     const { data: entry, error } = await supabase
       .from('matchmaking_queue')
       .insert({ player_id: p.id, status: 'waiting' })
       .select().single()
 
-    console.log('QUEUE ENTRY:', entry?.id, 'ERROR:', error)
     if (error || stateRef.current.cancelled) return
     stateRef.current.queueId = entry.id
 
-    const ch1 = supabase
-      .channel('queue-changes-' + p.id)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'matchmaking_queue' },
-        () => tryMatch(p, entry.id))
-      .subscribe()
-    stateRef.current.channels.push(ch1)
+    // Intentar emparejar inmediatamente
+    const matchId = await tryMatchOnServer(p.id)
+    if (matchId) { navigate('/game/' + matchId); return }
 
-    // Polling cada 3 segundos como respaldo
-    const pollInterval = setInterval(() => tryMatch(p, entry.id), 3000)
-    stateRef.current.pollInterval = pollInterval
-
-    const ch2 = supabase
-      .channel('my-entry-' + entry.id)
+    // Escuchar cuando me empareja el servidor
+    const channel = supabase
+      .channel('my-queue-' + entry.id)
       .on('postgres_changes', {
-        event: 'UPDATE', schema: 'public', table: 'matchmaking_queue',
+        event: 'UPDATE', schema: 'public',
+        table: 'matchmaking_queue',
         filter: `id=eq.${entry.id}`,
       }, async (payload) => {
-        console.log('MY ENTRY UPDATED:', payload.new.status)
-        if (payload.new.status === 'matched') {
+        if (payload.new.status === 'matched' && !stateRef.current.cancelled) {
+          // Buscar el partido creado
           const { data: match } = await supabase
-            .from('matches').select('id')
+            .from('matches')
+            .select('id')
             .or(`player1_id.eq.${p.id},player2_id.eq.${p.id}`)
             .eq('status', 'playing')
             .order('started_at', { ascending: false })
-            .limit(1).single()
-          console.log('MATCH FOUND:', match?.id)
-          if (match && !stateRef.current.cancelled) navigate('/game/' + match.id)
+            .limit(1)
+            .single()
+          if (match) navigate('/game/' + match.id)
         }
       })
       .subscribe()
-    stateRef.current.channels.push(ch2)
 
-    await tryMatch(p, entry.id)
+    stateRef.current.channel = channel
+
+    // Polling cada 2 segundos — cada jugador intenta emparejar
+    const pollInterval = setInterval(async () => {
+      if (stateRef.current.cancelled) return
+      const matchId = await tryMatchOnServer(p.id)
+      if (matchId && !stateRef.current.cancelled) {
+        navigate('/game/' + matchId)
+      }
+    }, 2000)
+
+    stateRef.current.intervals.push(pollInterval)
   }
 
-  async function tryMatch(p, myQueueId) {
-    console.log('TRY MATCH called')
-    if (stateRef.current.cancelled) return
-
-    const { data: myEntry } = await supabase
-      .from('matchmaking_queue').select('status, joined_at')
-      .eq('id', myQueueId).single()
-    if (!myEntry || myEntry.status !== 'waiting') return
-
-    const { data: rivals } = await supabase
-      .from('matchmaking_queue').select('*')
-      .eq('status', 'waiting').neq('player_id', p.id)
-      .order('joined_at', { ascending: true }).limit(1)
-
-    console.log('RIVALS:', rivals?.length)
-    if (!rivals || rivals.length === 0) return
-    const rival = rivals[0]
-
-    const myTime = new Date(myEntry.joined_at).getTime()
-    const rivalTime = new Date(rival.joined_at).getTime()
-    console.log('MY TIME:', myTime, 'RIVAL TIME:', rivalTime, 'I GO FIRST:', myTime <= rivalTime)
-    if (myTime > rivalTime) return
-
-    console.log('CREATING MATCH')
-    const { data: match, error } = await supabase
-      .from('matches')
-      .insert({ player1_id: p.id, player2_id: rival.player_id, current_turn: p.id, status: 'playing' })
-      .select().single()
-
-    console.log('MATCH CREATED:', match?.id, 'ERROR:', error)
-    if (error || !match) return
-
-    await supabase.from('matchmaking_queue')
-      .update({ status: 'matched' })
-      .in('id', [myQueueId, rival.id])
-
-    if (!stateRef.current.cancelled) navigate('/game/' + match.id)
+  async function tryMatchOnServer(playerId) {
+    const { data, error } = await supabase.rpc('do_matchmaking', { p_player_id: playerId })
+    if (error || !data) return null
+    return data
   }
 
   return (
