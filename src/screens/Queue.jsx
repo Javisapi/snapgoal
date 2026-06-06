@@ -63,6 +63,23 @@ export default function Queue() {
     const matchId = await tryMatchOnServer(p.id)
     if (matchId) { navigate('/game/' + matchId); return }
 
+    // Polling para detectar partido activo aunque falle Realtime
+    const activeCheckInterval = setInterval(async () => {
+      if (stateRef.current.cancelled) return
+      const { data: activeMatch } = await supabase
+        .from('matches')
+        .select('id')
+        .or(`player1_id.eq.${p.id},player2_id.eq.${p.id}`)
+        .eq('status', 'playing')
+        .order('started_at', { ascending: false })
+        .limit(1)
+        .single()
+      if (activeMatch && !stateRef.current.cancelled) {
+        navigate('/game/' + activeMatch.id)
+      }
+    }, 2000)
+    stateRef.current.intervals.push(activeCheckInterval)
+
     // Escuchar cuando me empareja el servidor
     const channel = supabase
       .channel('my-queue-' + entry.id)

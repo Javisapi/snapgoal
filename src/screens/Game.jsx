@@ -96,6 +96,28 @@ export default function Game() {
       .from('matches').select('*').eq('id', matchId).single()
     if (!m) { navigate('/'); return }
 
+    // Verificar si el turno lleva más de 10 segundos sin actividad
+    if (m.status === 'playing' && m.turn_started_at) {
+      const turnAge = (Date.now() - new Date(m.turn_started_at).getTime()) / 1000
+      if (turnAge > 10) {
+        const inactivePlayer = m.current_turn
+        const isInactiveMe = inactivePlayer === p.id
+        const sp1 = m.player1_id === inactivePlayer ? 0 : 5
+        const sp2 = m.player2_id === inactivePlayer ? 0 : 5
+        const winnerId = m.player1_id === inactivePlayer ? m.player2_id : m.player1_id
+        await supabase.from('matches').update({
+          status: 'finished',
+          winner_id: winnerId,
+          score_p1: sp1, score_p2: sp2,
+          ended_at: new Date().toISOString(),
+          last_event: JSON.stringify({ emoji: '⏱', label: 'Partido terminado por inactividad' }),
+        }).eq('id', matchId)
+        await updateStats(sp1, sp2, { ...m, score_p1: sp1, score_p2: sp2 }, p)
+        navigate('/result/' + matchId)
+        return
+      }
+    }
+
     matchRef.current = m
     setMatch(m)
     setMyTurn(m.current_turn === p.id)
@@ -199,6 +221,29 @@ export default function Game() {
     heartbeatRef.current = setInterval(async () => {
       const field = isP1 ? 'player1_last_seen' : 'player2_last_seen'
       await supabase.from('matches').update({ [field]: new Date().toISOString() }).eq('id', matchId)
+
+      // Ambos jugadores verifican inactividad del jugador con el turno
+      const { data: current } = await supabase
+        .from('matches').select('*').eq('id', matchId).single()
+      if (!current || current.status === 'finished') return
+      if (current.turn_started_at && !current.timer_running) {
+        const turnAge = (Date.now() - new Date(current.turn_started_at).getTime()) / 1000
+        if (turnAge > 10) {
+          const inactivePlayer = current.current_turn
+          const sp1 = current.player1_id === inactivePlayer ? 0 : 5
+          const sp2 = current.player2_id === inactivePlayer ? 0 : 5
+          const winnerId = current.player1_id === inactivePlayer ? current.player2_id : current.player1_id
+          await supabase.from('matches').update({
+            status: 'finished',
+            winner_id: winnerId,
+            score_p1: sp1, score_p2: sp2,
+            ended_at: new Date().toISOString(),
+            last_event: JSON.stringify({ emoji: '⏱', label: 'Partido terminado por inactividad' }),
+          }).eq('id', matchId)
+          await updateStats(sp1, sp2, { ...current, score_p1: sp1, score_p2: sp2 }, p)
+          navigate('/result/' + matchId)
+        }
+      }
     }, 5000)
 
     startDisconnectWatcher(m, p)
@@ -625,6 +670,7 @@ export default function Game() {
       status: finished ? 'finished' : 'playing',
       winner_id: winnerId,
       ended_at: finished ? new Date().toISOString() : null,
+      turn_started_at: finished ? null : new Date().toISOString(),
     }).eq('id', matchId)
 
     if (finished) {
