@@ -603,49 +603,19 @@ export default function Game() {
   }
 
   async function updateStats(sp1, sp2, m, p) {
-    const p1 = m.player1_id === p.id
-    const myScore = p1 ? sp1 : sp2
-    const oppScore = p1 ? sp2 : sp1
-    const myPts = myScore > oppScore ? 3 : myScore === oppScore ? 1 : 0
-    const oppPts = oppScore > myScore ? 3 : myScore === oppScore ? 1 : 0
-    const oppId = p1 ? m.player2_id : m.player1_id
+    const currentMatch = await supabase
+      .from('matches').select('*').eq('id', matchId).single()
+    if (!currentMatch.data) return
 
-    const myCards = p1 ? (m.cards_p1 || { yellow: 0, red: 0 }) : (m.cards_p2 || { yellow: 0, red: 0 })
-    const oppCards = p1 ? (m.cards_p2 || { yellow: 0, red: 0 }) : (m.cards_p1 || { yellow: 0, red: 0 })
-
-    await supabase.rpc('update_player_stats', {
-      p_player_id: p.id,
-      p_points: myPts,
-      p_won: myScore > oppScore ? 1 : 0,
-      p_drawn: myScore === oppScore ? 1 : 0,
-      p_lost: myScore < oppScore ? 1 : 0,
-    })
-    await supabase.rpc('update_player_stats', {
-      p_player_id: oppId,
-      p_points: oppPts,
-      p_won: oppScore > myScore ? 1 : 0,
-      p_drawn: myScore === oppScore ? 1 : 0,
-      p_lost: oppScore < myScore ? 1 : 0,
-    })
-
-    // Actualizar goles y tarjetas
-    await supabase.from('players').update({
-      goals_scored: supabase.rpc ? undefined : 0,
-    }).eq('id', p.id)
-
-    await supabase.rpc('update_player_goals_cards', {
-      p_player_id: p.id,
-      p_goals_scored: myScore,
-      p_goals_conceded: oppScore,
-      p_yellow: myCards.yellow || 0,
-      p_red: myCards.red || 0,
-    })
-    await supabase.rpc('update_player_goals_cards', {
-      p_player_id: oppId,
-      p_goals_scored: oppScore,
-      p_goals_conceded: myScore,
-      p_yellow: oppCards.yellow || 0,
-      p_red: oppCards.red || 0,
+    const match = currentMatch.data
+    await supabase.rpc('finalize_match_stats', {
+      p_match_id: matchId,
+      p_player1_id: match.player1_id,
+      p_player2_id: match.player2_id,
+      p_score1: match.score_p1,
+      p_score2: match.score_p2,
+      p_cards_p1: match.cards_p1 || { yellow: 0, red: 0 },
+      p_cards_p2: match.cards_p2 || { yellow: 0, red: 0 },
     })
   }
 
