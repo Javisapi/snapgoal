@@ -91,6 +91,9 @@ export default function Game() {
     playerRef.current = p
     setPlayer(p)
 
+    // Cerrar partidos abandonados antes de cargar el nuevo
+    await supabase.rpc('close_abandoned_matches', { p_player_id: p.id })
+
     const { data: m } = await supabase
       .from('matches').select('*').eq('id', matchId).single()
     if (!m) { navigate('/'); return }
