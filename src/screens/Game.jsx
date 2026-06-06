@@ -48,6 +48,8 @@ export default function Game() {
   const [showAbandon, setShowAbandon] = useState(false)
   const [opponentGone, setOpponentGone] = useState(false)
   const [flashEvent, setFlashEvent] = useState(null)
+  const [inactivityProgress, setInactivityProgress] = useState(0)
+  const [inactivityWarning, setInactivityWarning] = useState(false)
   const [cards, setCards] = useState({ p1: { yellow: 0, red: 0 }, p2: { yellow: 0, red: 0 } })
   const [penaltyChoice, setPenaltyChoice] = useState(null)
   const [showPenaltyPopup, setShowPenaltyPopup] = useState(false)
@@ -65,6 +67,8 @@ export default function Game() {
   const heartbeatRef = useRef(null)
   const disconnectRef = useRef(null)
   const warnRef = useRef(null)
+  const inactivityIntervalRef = useRef(null)
+  const inactivityStartRef = useRef(null)
   const lastTapRef = useRef(0)
   const preShootOffsetRef = useRef(0)
 
@@ -168,6 +172,13 @@ export default function Game() {
         setOpponentGone(false)
         startDisconnectWatcher(updated, playerRef.current)
 
+        // Gestionar timer de inactividad
+        if (updated.current_turn === playerRef.current?.id) {
+          startInactivityTimer(playerRef.current, updated)
+        } else {
+          stopInactivityTimer()
+        }
+
         if (updated.status === 'finished') navigate('/result/' + matchId)
       })
 
@@ -241,6 +252,48 @@ export default function Game() {
     setTimeout(() => navigate('/result/' + matchId), 500)
   }
 
+  function startInactivityTimer(p, m) {
+    clearInterval(inactivityIntervalRef.current)
+    setInactivityProgress(0)
+    setInactivityWarning(false)
+    inactivityStartRef.current = Date.now()
+
+    inactivityIntervalRef.current = setInterval(async () => {
+      const elapsed = (Date.now() - inactivityStartRef.current) / 1000
+      const progress = Math.min(elapsed / 10, 1)
+      setInactivityProgress(progress)
+
+      if (elapsed >= 5 && elapsed < 10) {
+        setInactivityWarning(true)
+      }
+
+      if (elapsed >= 10) {
+        clearInterval(inactivityIntervalRef.current)
+        setInactivityWarning(false)
+        // Partido terminado por inactividad
+        const isP1 = m.player1_id === p.id
+        const sp1 = isP1 ? 0 : 5
+        const sp2 = isP1 ? 5 : 0
+        const winnerId = isP1 ? m.player2_id : m.player1_id
+        await supabase.from('matches').update({
+          status: 'finished',
+          winner_id: winnerId,
+          score_p1: sp1, score_p2: sp2,
+          ended_at: new Date().toISOString(),
+          last_event: JSON.stringify({ emoji: '⏱', label: `${p.username} no tiró — derrota por inactividad` }),
+        }).eq('id', matchId)
+        await updateStats(sp1, sp2, matchRef.current, p)
+        navigate('/result/' + matchId)
+      }
+    }, 50)
+  }
+
+  function stopInactivityTimer() {
+    clearInterval(inactivityIntervalRef.current)
+    setInactivityProgress(0)
+    setInactivityWarning(false)
+  }
+
   function triggerFlash(type, text) {
     setFlashEvent({ type, text, key: Date.now() })
     setTimeout(() => setFlashEvent(null), 1800)
@@ -263,6 +316,8 @@ export default function Game() {
     startTimeRef.current = startedAtMs
     runningRef.current = true
     setRunning(true)
+
+    stopInactivityTimer()
 
     intervalRef.current = setInterval(() => {
       setCentesimas(base + Math.floor((Date.now() - startedAtMs) / 10))
@@ -512,6 +567,8 @@ export default function Game() {
       else if (sp2 > sp1) winnerId = m.player2_id
     }
 
+    stopInactivityTimer()
+
     await supabase.from('plays').insert({
       match_id: matchId, player_id: p.id,
       centesimas: total, result: resultType, points_scored: 0,
@@ -645,6 +702,13 @@ export default function Game() {
             <button style={styles.btnConfirmAbandon} onClick={handleAbandon}>Sí, abandonar</button>
             <button style={styles.btnCancelAbandon} onClick={() => setShowAbandon(false)}>Cancelar</button>
           </div>
+        </div>
+      )}
+
+      {/* Banner inactividad */}
+      {inactivityWarning && myTurn && !running && (
+        <div style={{ background: 'rgba(255,68,68,0.1)', border: '1px solid rgba(255,68,68,0.3)', borderRadius: '10px', padding: '0.6rem 1rem', textAlign: 'center', animation: 'inactivityBannerIn 0.3s ease forwards' }}>
+          <span style={{ color: '#ff4444', fontSize: '0.85rem', fontWeight: '700' }}>⚠️ ¡Tira ya! — 5 segundos para perder el partido</span>
         </div>
       )}
 
