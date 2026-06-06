@@ -16,12 +16,26 @@ async function getPlayer() {
 export default function Queue() {
   const navigate = useNavigate()
   const [dots, setDots] = useState('')
+  const [noMatch, setNoMatch] = useState(false)
   const stateRef = useRef({ cancelled: false, queueId: null, channel: null, intervals: [] })
 
   useEffect(() => {
     const dotsInterval = setInterval(() => setDots(d => d.length >= 3 ? '' : d + '.'), 500)
+
+    // Timeout de 10 segundos
+    const timeoutId = setTimeout(() => {
+      if (!stateRef.current.cancelled) {
+        stateRef.current.cancelled = true
+        setNoMatch(true)
+        if (stateRef.current.queueId) {
+          supabase.from('matchmaking_queue').delete().eq('id', stateRef.current.queueId)
+        }
+      }
+    }, 10000)
+
     init()
     return () => {
+      clearTimeout(timeoutId)
       stateRef.current.cancelled = true
       clearInterval(dotsInterval)
       stateRef.current.intervals.forEach(i => clearInterval(i))
@@ -95,6 +109,17 @@ export default function Queue() {
     return data
   }
 
+  if (noMatch) return (
+    <div style={styles.container}>
+      <div style={styles.content}>
+        <div style={styles.noMatchIcon}>✕</div>
+        <h2 style={styles.noMatchTitle}>Sin oponente</h2>
+        <p style={styles.noMatchText}>Lo siento. No hemos encontrado oponente. ¡Vuelve a intentarlo!</p>
+      </div>
+      <button style={styles.btnPrimary} onClick={() => navigate('/')}>Volver al inicio</button>
+    </div>
+  )
+
   return (
     <div style={styles.container}>
       <div style={styles.content}>
@@ -131,4 +156,8 @@ const styles = {
   title: { fontSize: '1.5rem', fontWeight: '700', color: '#fff', textAlign: 'center', minWidth: '240px' },
   subtitle: { color: 'rgba(255,255,255,0.3)', fontSize: '1rem', textAlign: 'center' },
   btnCancel: { background: 'transparent', color: 'rgba(255,255,255,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '1rem 2rem', fontSize: '1rem', cursor: 'pointer', width: '100%' },
+  btnPrimary: { background: '#ffb400', color: '#141414', border: 'none', borderRadius: '12px', padding: '1.1rem', fontSize: '1rem', fontWeight: '800', cursor: 'pointer', width: '100%' },
+  noMatchIcon: { fontSize: '3rem', color: 'rgba(255,255,255,0.2)', fontWeight: '900', lineHeight: 1, marginBottom: '1rem' },
+  noMatchTitle: { fontSize: '1.5rem', fontWeight: '800', color: '#fff', textAlign: 'center', marginBottom: '0.5rem' },
+  noMatchText: { fontSize: '0.95rem', color: 'rgba(255,255,255,0.4)', textAlign: 'center', lineHeight: 1.5 },
 }
