@@ -96,10 +96,10 @@ export default function Game() {
       .from('matches').select('*').eq('id', matchId).single()
     if (!m) { navigate('/'); return }
 
-    // Verificar si el turno lleva más de 10 segundos sin actividad
+    // Verificar si el turno lleva más de 30 segundos sin actividad al cargar
     if (m.status === 'playing' && m.turn_started_at) {
       const turnAge = (Date.now() - new Date(m.turn_started_at).getTime()) / 1000
-      if (turnAge > 10) {
+      if (turnAge > 30) {
         const inactivePlayer = m.current_turn
         const isInactiveMe = inactivePlayer === p.id
         const sp1 = m.player1_id === inactivePlayer ? 0 : 5
