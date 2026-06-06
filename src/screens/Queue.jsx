@@ -62,6 +62,10 @@ export default function Queue() {
       .subscribe()
     stateRef.current.channels.push(ch1)
 
+    // Polling cada 3 segundos como respaldo
+    const pollInterval = setInterval(() => tryMatch(p, entry.id), 3000)
+    stateRef.current.pollInterval = pollInterval
+
     const ch2 = supabase
       .channel('my-entry-' + entry.id)
       .on('postgres_changes', {
