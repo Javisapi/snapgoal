@@ -15,6 +15,7 @@ async function deleteAccount(playerId) {
 const HOME_CSS = `
   @keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
   @keyframes lineDraw { from{width:0} to{width:48px} }
+  @keyframes onlinePulse { 0%,100%{opacity:1;box-shadow:0 0 6px rgba(0,220,100,0.6)} 50%{opacity:0.7;box-shadow:0 0 12px rgba(0,220,100,0.3)} }
 `
 
 export default function Home() {
@@ -26,6 +27,7 @@ export default function Home() {
   const [deleting, setDeleting] = useState(false)
   const [showInstall, setShowInstall] = useState(false)
   const [showRegisterInfo, setShowRegisterInfo] = useState(false)
+  const [onlineCount, setOnlineCount] = useState(0)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -36,6 +38,25 @@ export default function Home() {
 
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
   const isAndroid = /Android/.test(navigator.userAgent)
+
+  useEffect(() => {
+    const channel = supabase.channel('online-users', {
+      config: { presence: { key: Math.random().toString(36).slice(2) } }
+    })
+
+    channel
+      .on('presence', { event: 'sync' }, () => {
+        const state = channel.presenceState()
+        setOnlineCount(Object.keys(state).length)
+      })
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await channel.track({ online_at: new Date().toISOString() })
+        }
+      })
+
+    return () => supabase.removeChannel(channel)
+  }, [])
 
   async function handleRegister() {
     const name = username.trim()
@@ -135,6 +156,12 @@ export default function Home() {
             <div style={styles.wordmarkLine} />
           </div>
           <div style={styles.topBtns}>
+            {onlineCount > 0 && (
+              <div style={styles.onlineBadge}>
+                <div style={styles.onlineDot} />
+                <span style={styles.onlineText}>{onlineCount} online</span>
+              </div>
+            )}
             <button style={styles.topBtn} onClick={() => setShowInstall(true)}>Instalar</button>
           </div>
         </div>
@@ -170,6 +197,12 @@ export default function Home() {
             <div style={styles.wordmarkLine} />
           </div>
           <div style={styles.topBtns}>
+            {onlineCount > 0 && (
+              <div style={styles.onlineBadge}>
+                <div style={styles.onlineDot} />
+                <span style={styles.onlineText}>{onlineCount} online</span>
+              </div>
+            )}
             <button style={styles.topBtn} onClick={() => setShowInstall(true)}>Instalar</button>
           </div>
         </div>
@@ -230,6 +263,9 @@ const styles = {
   topRow: { display:'flex', justifyContent:'space-between', alignItems:'flex-start' },
   topBtns: { display:'flex', flexDirection:'column', alignItems:'flex-end', gap:'0.4rem', paddingTop:'0.25rem' },
   topBtn: { background:'rgba(255,180,0,0.1)', border:'1px solid rgba(255,180,0,0.2)', borderRadius:'8px', color:'#ffb400', fontSize:'0.72rem', fontWeight:'700', cursor:'pointer', padding:'5px 10px', letterSpacing:'0.3px' },
+  onlineBadge: { display:'flex', alignItems:'center', gap:'5px', background:'rgba(0,220,100,0.08)', border:'1px solid rgba(0,220,100,0.2)', borderRadius:'20px', padding:'4px 10px', animation:'onlinePulse 2.5s ease-in-out infinite' },
+  onlineDot: { width:'6px', height:'6px', borderRadius:'50%', background:'#00dc64', flexShrink:0 },
+  onlineText: { fontSize:'0.7rem', fontWeight:'700', color:'#00dc64', letterSpacing:'0.3px' },
   installStep: { display:'flex', alignItems:'flex-start', gap:'0.75rem', padding:'0.4rem 0' },
   installNum: { width:'22px', height:'22px', borderRadius:'50%', background:'#ffb400', color:'#141414', fontSize:'0.75rem', fontWeight:'900', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 },
   installText: { fontSize:'0.85rem', color:'rgba(255,255,255,0.5)', lineHeight:1.5, margin:0 },
