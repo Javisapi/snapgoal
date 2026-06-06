@@ -95,21 +95,17 @@ export default function Home() {
             {isIOS ? (
               <>
                 <p style={styles.modalText}>En tu iPhone o iPad:</p>
-                <div style={styles.installStep}><span style={styles.installNum}>1</span><p style={styles.installText}>Abre SnapGoal en <strong style={{color:'#fff'}}>Safari</strong> (no Chrome)</p></div>
-                <div style={styles.installStep}><span style={styles.installNum}>2</span><p style={styles.installText}>Pulsa el botón de compartir <strong style={{color:'#fff'}}>⎙</strong> en la barra inferior</p></div>
-                <div style={styles.installStep}><span style={styles.installNum}>3</span><p style={styles.installText}>Selecciona <strong style={{color:'#fff'}}>"Añadir a pantalla de inicio"</strong></p></div>
-                <div style={styles.installStep}><span style={styles.installNum}>4</span><p style={styles.installText}>Pulsa <strong style={{color:'#fff'}}>"Añadir"</strong> — ya tienes SnapGoal en tu pantalla</p></div>
-              </>
-            ) : isAndroid ? (
-              <>
-                <p style={styles.modalText}>En tu Android:</p>
-                <div style={styles.installStep}><span style={styles.installNum}>1</span><p style={styles.installText}>Abre SnapGoal en <strong style={{color:'#fff'}}>Chrome</strong></p></div>
-                <div style={styles.installStep}><span style={styles.installNum}>2</span><p style={styles.installText}>Pulsa los <strong style={{color:'#fff'}}>tres puntos ⋮</strong> arriba a la derecha</p></div>
-                <div style={styles.installStep}><span style={styles.installNum}>3</span><p style={styles.installText}>Selecciona <strong style={{color:'#fff'}}>"Añadir a pantalla de inicio"</strong></p></div>
-                <div style={styles.installStep}><span style={styles.installNum}>4</span><p style={styles.installText}>Confirma — ya tienes SnapGoal en tu pantalla</p></div>
+                <div style={styles.installStep}><span style={styles.installNum}>1</span><p style={styles.installText}>Pulsa el botón de compartir en la barra del navegador</p></div>
+                <div style={styles.installStep}><span style={styles.installNum}>2</span><p style={styles.installText}>Selecciona <strong style={{color:'#fff'}}>"Añadir a pantalla de inicio"</strong></p></div>
+                <div style={styles.installStep}><span style={styles.installNum}>3</span><p style={styles.installText}>Pulsa <strong style={{color:'#fff'}}>"Añadir"</strong> — ya tienes SnapGoal en tu pantalla</p></div>
               </>
             ) : (
-              <p style={styles.modalText}>Abre SnapGoal desde tu móvil para ver las instrucciones de instalación según tu dispositivo.</p>
+              <>
+                <p style={styles.modalText}>En tu Android:</p>
+                <div style={styles.installStep}><span style={styles.installNum}>1</span><p style={styles.installText}>Pulsa los <strong style={{color:'#fff'}}>tres puntos ⋮</strong> en la barra del navegador</p></div>
+                <div style={styles.installStep}><span style={styles.installNum}>2</span><p style={styles.installText}>Selecciona <strong style={{color:'#fff'}}>"Añadir a pantalla de inicio"</strong></p></div>
+                <div style={styles.installStep}><span style={styles.installNum}>3</span><p style={styles.installText}>Confirma — ya tienes SnapGoal en tu pantalla</p></div>
+              </>
             )}
             <button style={styles.btnCancelDelete} onClick={() => setShowInstall(false)}>Cerrar</button>
           </div>
