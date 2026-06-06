@@ -8,14 +8,6 @@ async function getPlayer() {
   const { data } = await supabase.from('players').select('*').eq('auth_id', session.user.id).single()
   if (data) sessionStorage.setItem('player_' + session.user.id, JSON.stringify(data))
   return data
-} } = await supabase.auth.getSession()
-  if (!session) return null
-  const key = 'player_' + session.user.id
-  const cached = sessionStorage.getItem(key)
-  if (cached) return JSON.parse(cached)
-  const { data } = await supabase.from('players').select('*').eq('auth_id', session.user.id).single()
-  if (data) sessionStorage.setItem(key, JSON.stringify(data))
-  return data
 }
 
 export default function Queue() {
