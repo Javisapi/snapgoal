@@ -173,7 +173,7 @@ export default function Home() {
             <button style={styles.topBtn} onClick={() => setShowInstall(true)}>Instalar</button>
           </div>
         </div>
-        <p style={styles.tagline}>El partido más rápido del mundo</p>
+        <p style={styles.tagline}>Sin VAR. Sin lesiones. 30 secondi sono molto lunghi.</p>
       </div>
 
       <div style={styles.registerSection}>
