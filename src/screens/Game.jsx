@@ -61,6 +61,7 @@ export default function Game() {
   const opponentRef = useRef(null)
   const channelRef = useRef(null)
   const runningRef = useRef(false)
+  const processingRef = useRef(false)
   const heartbeatRef = useRef(null)
   const disconnectRef = useRef(null)
   const warnRef = useRef(null)
@@ -130,6 +131,8 @@ export default function Game() {
         table: 'matches', filter: `id=eq.${matchId}`,
       }, (payload) => {
         const updated = payload.new
+        // Ignorar eventos de otros partidos
+        if (updated.id !== matchId) return
         matchRef.current = updated
         setMatch({ ...updated })
         const isMyTurn = updated.current_turn === playerRef.current?.id
@@ -181,6 +184,8 @@ export default function Game() {
 
         if (updated.status === 'finished') {
           stopInactivityTimer()
+          clearInterval(heartbeatRef.current)
+          clearInterval(intervalRef.current)
           navigate('/result/' + matchId)
           return
         }
@@ -206,9 +211,13 @@ export default function Game() {
 
   function startLocalTimer(base, startedAtMs) {
     clearInterval(intervalRef.current)
+    // Calcular cuánto tiempo ha pasado ya desde que arrancó (compensar latencia)
+    const alreadyElapsed = Math.floor((Date.now() - startedAtMs) / 10)
+    const adjustedBase = base + alreadyElapsed
+    offsetRef.current = base
+    setCentesimas(adjustedBase)
     runningRef.current = true
     setRunning(true)
-    offsetRef.current = base
     intervalRef.current = setInterval(() => {
       setCentesimas(base + Math.floor((Date.now() - startedAtMs) / 10))
     }, 10)
@@ -304,6 +313,7 @@ export default function Game() {
   }
 
   function handleClick() {
+    if (processingRef.current) return
     const now = Date.now()
     if (now - lastTapRef.current < 50) return
     lastTapRef.current = now
@@ -312,8 +322,9 @@ export default function Game() {
   }
 
   async function startTimer() {
-    preShootOffsetRef.current = offsetRef.current
     if (runningRef.current) return
+    if (processingRef.current) return
+    preShootOffsetRef.current = offsetRef.current
     const base = offsetRef.current
     const now = new Date().toISOString()
     const startedAtMs = Date.now()
@@ -328,6 +339,7 @@ export default function Game() {
     }, 10)
 
     timeoutWarnRef.current = setTimeout(async () => {
+      if (!runningRef.current || processingRef.current) return
       const p = playerRef.current
       const m = matchRef.current
       const isP1 = m.player1_id === p.id
@@ -336,16 +348,21 @@ export default function Game() {
       const newCards = { ...currentCards, yellow: newYellow }
       const update = isP1 ? { cards_p1: newCards } : { cards_p2: newCards }
       await supabase.from('matches').update(update).eq('id', matchId)
+      if (!runningRef.current || processingRef.current) return
       if (newYellow >= 2) {
         setWarning({ type: 'red', text: `🟥 2 amarillas = Roja a ${p.username} — gol para el rival` })
+        triggerFlash('red', 'ROJA')
         stopTimer(true)
       } else {
         triggerFlash('yellow', 'AMARILLA')
         setWarning({ type: 'yellow', text: `🟨 Tarjeta amarilla a ${p.username} — para antes de 5s` })
       }
     }, 2000)
+
     timeoutRedRef.current = setTimeout(() => {
+      if (!runningRef.current || processingRef.current) return
       const p = playerRef.current
+      triggerFlash('red', 'ROJA')
       setWarning({ type: 'red', text: `🟥 Tarjeta roja a ${p.username} — gol para el rival` })
       stopTimer(true)
     }, 5000)
@@ -357,17 +374,31 @@ export default function Game() {
   }
 
   async function stopTimer(forced = false) {
+    // Si ya está procesando, ignorar siempre — incluso forzado
+    if (processingRef.current) return
+    // Si no está corriendo y no es forzado, ignorar
+    if (!forced && !runningRef.current) return
+    // Si es forzado pero no está corriendo, ignorar también
+    if (forced && !runningRef.current) return
+
+    // Bloquear inmediatamente cualquier evento posterior
+    processingRef.current = true
+    runningRef.current = false
+
     clearInterval(intervalRef.current)
     clearTimeout(timeoutWarnRef.current)
     clearTimeout(timeoutRedRef.current)
+
     const elapsed = Math.floor((Date.now() - startTimeRef.current) / 10)
     const total = offsetRef.current + elapsed
     offsetRef.current = total
     setCentesimas(total)
-    runningRef.current = false
     setRunning(false)
     setWarning(null)
-    processPlay(total, forced)
+
+    await processPlay(total, forced)
+
+    processingRef.current = false
   }
 
   async function processPlay(total, redCard) {
