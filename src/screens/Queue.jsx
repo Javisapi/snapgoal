@@ -75,7 +75,7 @@ export default function Queue() {
         .limit(1)
         .single()
       if (activeMatch && !stateRef.current.cancelled) {
-        navigate('/game/' + activeMatch.id)
+        navigate('/announce/' + activeMatch.id)
       }
     }, 2000)
     stateRef.current.intervals.push(activeCheckInterval)
@@ -98,7 +98,7 @@ export default function Queue() {
             .order('started_at', { ascending: false })
             .limit(1)
             .single()
-          if (match) navigate('/game/' + match.id)
+          if (match) navigate('/announce/' + match.id)
         }
       })
       .subscribe()
