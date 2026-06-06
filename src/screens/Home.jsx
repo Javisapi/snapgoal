@@ -181,7 +181,7 @@ export default function Home() {
         <input
           style={styles.input}
           type="text"
-          placeholder="ej: javier_fc"
+          placeholder="ej: Snaplayer00"
           value={username}
           onChange={e => setUsername(e.target.value.toLowerCase())}
           onKeyDown={e => e.key === 'Enter' && handleRegister()}
