@@ -283,19 +283,23 @@ export default function Game() {
       if (elapsed >= 10) {
         clearInterval(inactivityIntervalRef.current)
         setInactivityWarning(false)
-        // Partido terminado por inactividad
-        const isP1 = m.player1_id === p.id
+        // Usar matchRef.current para tener el estado más reciente
+        const currentMatch = matchRef.current
+        if (!currentMatch || currentMatch.status === 'finished') return
+        const isP1 = currentMatch.player1_id === p.id
         const sp1 = isP1 ? 0 : 5
         const sp2 = isP1 ? 5 : 0
-        const winnerId = isP1 ? m.player2_id : m.player1_id
+        const winnerId = isP1 ? currentMatch.player2_id : currentMatch.player1_id
         await supabase.from('matches').update({
           status: 'finished',
           winner_id: winnerId,
-          score_p1: sp1, score_p2: sp2,
+          score_p1: sp1,
+          score_p2: sp2,
           ended_at: new Date().toISOString(),
           last_event: JSON.stringify({ emoji: '⏱', label: `${p.username} no tiró — derrota por inactividad` }),
         }).eq('id', matchId)
-        await updateStats(sp1, sp2, matchRef.current, p)
+        // Pasar scores correctos directamente, no desde matchRef que puede estar desactualizado
+        await updateStats(sp1, sp2, { ...currentMatch, score_p1: sp1, score_p2: sp2 }, p)
         navigate('/result/' + matchId)
       }
     }, 50)
