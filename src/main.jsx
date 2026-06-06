@@ -1,14 +1,13 @@
-import { StrictMode } from 'react'
-
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-  })
-}
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 
-createRoot(document.getElementById('root')).render(
-  <App />
-)
+const CACHE_VERSION = '2'
+if (sessionStorage.getItem('cache_version') !== CACHE_VERSION) {
+  Object.keys(sessionStorage).forEach(k => {
+    if (k.startsWith('player_')) sessionStorage.removeItem(k)
+  })
+  sessionStorage.setItem('cache_version', CACHE_VERSION)
+}
+
+createRoot(document.getElementById('root')).render(<App />)
