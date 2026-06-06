@@ -7,12 +7,10 @@ const RULES_CSS = `
 
 const SECTIONS = [
   {
-    title: 'El cronómetro',
+    title: 'Duración del partido',
     color: '#ffb400',
     rules: [
-      'Hay un único cronómetro compartido para ambos jugadores, en formato seg:cen.',
-      'El cronómetro nunca se resetea — siempre acumula tiempo.',
-      'Cada jugador arranca y para el cronómetro en su turno. El partido dura máximo 30 segundos.',
+      '30 segundos.',
     ]
   },
   {
