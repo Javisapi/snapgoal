@@ -482,7 +482,7 @@ export default function Game() {
   async function commitPlay(total, resultType, sp1, sp2, changeTurn, m, p, event) {
     const diff = Math.abs(sp1 - sp2)
     const secs = Math.floor(total / 100)
-    const timeUp = secs >= 45
+    const timeUp = secs >= 30
     const finished = diff >= 5 || timeUp
 
     const nextTurn = changeTurn
@@ -783,7 +783,7 @@ export default function Game() {
       <div style={styles.bottomBar}>
         <div style={styles.bottomItem}>
           <span style={styles.bottomLabel}>TIEMPO</span>
-          <span style={styles.bottomVal}>{Math.max(0, 45 - secs)}s</span>
+          <span style={styles.bottomVal}>{Math.max(0, 30 - secs)}s</span>
         </div>
         <div style={styles.bottomItem}>
           <span style={styles.bottomLabel}>DIFERENCIA</span>

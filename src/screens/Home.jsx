@@ -103,6 +103,7 @@ export default function Home() {
       <div style={styles.actions}>
         <button style={styles.btnPrimary} onClick={handlePlay}>Buscar partido</button>
         <button style={styles.btnSecondary} onClick={() => navigate('/ranking')}>Ranking</button>
+        <button style={styles.btnSecondary} onClick={() => navigate('/rules')}>Reglas</button>
         <button style={styles.btnGhost} onClick={() => setShowDeleteConfirm(true)}>Borrar cuenta</button>
       </div>
     </div>
@@ -139,6 +140,7 @@ export default function Home() {
           {saving ? 'Creando...' : 'Empezar a jugar'}
         </button>
         <button style={styles.btnSecondary} onClick={() => navigate('/ranking')}>Ranking</button>
+        <button style={styles.btnSecondary} onClick={() => navigate('/rules')}>Reglas</button>
       </div>
     </div>
   )

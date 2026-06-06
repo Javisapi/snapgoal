@@ -1,0 +1,160 @@
+import { useNavigate } from 'react-router-dom'
+import { useEffect } from 'react'
+
+const RULES_CSS = `
+  @keyframes rulesFadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+`
+
+const SECTIONS = [
+  {
+    title: 'El cronómetro',
+    color: '#ffb400',
+    rules: [
+      'Hay un único cronómetro compartido para ambos jugadores, en formato seg:cen.',
+      'El cronómetro nunca se resetea — siempre acumula tiempo.',
+      'Cada jugador arranca y para el cronómetro en su turno. El partido dura máximo 30 segundos.',
+    ]
+  },
+  {
+    title: 'Resultado de cada tirada',
+    color: '#ffb400',
+    rules: [
+      '⚽ :00 — Gol directo',
+      '🥅 :99 — Penalty',
+      '🧤 :98 — Falta',
+      '🚩 :97 — Córner',
+      '💥 :13 — Gol en propia',
+      'Cualquier otro valor — sin gol, turno cambia',
+    ]
+  },
+  {
+    title: '🥅 Penalty (:99)',
+    color: 'rgba(255,255,255,0.7)',
+    rules: [
+      'El tirador elige par o impar.',
+      'Vuelve a tirar. Si la centésima es del tipo elegido → GOL.',
+      'Si no → fallo, turno cambia.',
+    ]
+  },
+  {
+    title: '🧤 Falta (:98)',
+    color: 'rgba(255,255,255,0.7)',
+    rules: [
+      'El rival elige la barrera: 20-30, 30-40 o 40-50.',
+      'El tirador ve el rango y vuelve a tirar.',
+      'Si para dentro del rango → GOL. Si no → fallo, turno cambia.',
+    ]
+  },
+  {
+    title: '🚩 Córner (:97)',
+    color: 'rgba(255,255,255,0.7)',
+    rules: [
+      'El tirador vuelve a tirar.',
+      'Si para en un múltiplo de 10 → GOL. Si no → fallo, turno cambia.',
+    ]
+  },
+  {
+    title: '🟨 Tarjetas',
+    color: 'rgba(255,255,255,0.7)',
+    rules: [
+      'Más de 2 segundos sin parar → tarjeta amarilla.',
+      'Más de 5 segundos sin parar → tarjeta roja.',
+      '2 amarillas = tarjeta roja automática.',
+      'Tarjeta roja → gol al rival + el crono vuelve al tiempo anterior.',
+      '2 rojas al mismo jugador → derrota 0-5.',
+    ]
+  },
+  {
+    title: 'Fin del partido',
+    color: '#ffb400',
+    rules: [
+      'El partido termina cuando un jugador tiene 5 goles de ventaja.',
+      'O cuando el cronómetro supera los 30 segundos.',
+      'Si arranca antes de los 29 segundos, puede parar hasta los 31 segundos.',
+    ]
+  },
+  {
+    title: 'Empate — penaltis',
+    color: 'rgba(255,255,255,0.7)',
+    rules: [
+      'Si hay empate al llegar a 30 segundos → penaltis a muerte súbita.',
+      'Máximo 3 tandas. En cada tanda lanza A y luego B.',
+      'Si A marca y B falla → gana A (y viceversa).',
+      'Si tras 3 tandas sigue el empate → empate definitivo.',
+    ]
+  },
+  {
+    title: 'Puntos',
+    color: '#ffb400',
+    rules: [
+      'Victoria → 3 puntos',
+      'Empate → 1 punto',
+      'Derrota → 0 puntos',
+    ]
+  },
+  {
+    title: 'Abandono y desconexión',
+    color: 'rgba(255,255,255,0.7)',
+    rules: [
+      'Abandonar el partido → derrota 0-5.',
+      'Sin respuesta durante 30 segundos → derrota 0-5 por desconexión.',
+    ]
+  },
+]
+
+export default function Rules() {
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    const s = document.createElement('style')
+    s.textContent = RULES_CSS
+    document.head.appendChild(s)
+  }, [])
+
+  return (
+    <div style={styles.container}>
+      <div style={styles.header}>
+        <button style={styles.backBtn} onClick={() => navigate('/')}>← volver</button>
+        <div style={styles.headerTitle}>
+          <h1 style={styles.title}>Reglas</h1>
+          <div style={styles.titleLine} />
+        </div>
+        <p style={styles.subtitle}>SnapGoal — el partido más rápido del mundo</p>
+      </div>
+
+      <div style={styles.list}>
+        {SECTIONS.map((section, i) => (
+          <div key={i} style={{ ...styles.section, animation: `rulesFadeIn 0.3s ease ${i * 0.05}s both` }}>
+            <p style={{ ...styles.sectionTitle, color: section.color }}>{section.title}</p>
+            <div style={styles.rulesList}>
+              {section.rules.map((rule, j) => (
+                <div key={j} style={styles.ruleRow}>
+                  <div style={styles.ruleDot} />
+                  <p style={styles.ruleText}>{rule}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+        <div style={{ height: '2rem' }} />
+      </div>
+    </div>
+  )
+}
+
+const styles = {
+  container: { height: '100%', display: 'flex', flexDirection: 'column', background: '#141414', overflow: 'hidden' },
+  header: { padding: '2.5rem 1.75rem 1rem', flexShrink: 0 },
+  backBtn: { background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.25)', fontSize: '0.8rem', cursor: 'pointer', padding: 0, marginBottom: '1rem', letterSpacing: '0.5px' },
+  headerTitle: { display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '0.5rem' },
+  title: { fontSize: '2.5rem', fontWeight: '900', color: '#fff', letterSpacing: '-2px', margin: 0, lineHeight: 1 },
+  titleLine: { height: '3px', width: '36px', background: '#ffb400', borderRadius: '2px' },
+  subtitle: { fontSize: '0.8rem', color: 'rgba(255,255,255,0.2)', margin: 0, letterSpacing: '0.5px' },
+  list: { flex: 1, overflowY: 'auto', padding: '1rem 1.75rem 0' },
+  section: { marginBottom: '1.5rem' },
+  sectionTitle: { fontSize: '0.85rem', fontWeight: '800', letterSpacing: '1px', textTransform: 'uppercase', margin: '0 0 0.6rem' },
+  rulesList: { display: 'flex', flexDirection: 'column', gap: '0.4rem' },
+  ruleRow: { display: 'flex', alignItems: 'flex-start', gap: '0.6rem' },
+  ruleDot: { width: '4px', height: '4px', borderRadius: '50%', background: '#ffb400', flexShrink: 0, marginTop: '0.45rem' },
+  ruleText: { fontSize: '0.9rem', color: 'rgba(255,255,255,0.55)', lineHeight: 1.5, margin: 0 },
+}

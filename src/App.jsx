@@ -4,6 +4,7 @@ import Queue from './screens/Queue'
 import Game from './screens/Game'
 import Result from './screens/Result'
 import Ranking from './screens/Ranking'
+import Rules from './screens/Rules'
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <Route path="/game/:matchId" element={<Game />} />
         <Route path="/result/:matchId" element={<Result />} />
         <Route path="/ranking" element={<Ranking />} />
+        <Route path="/rules" element={<Rules />} />
       </Routes>
     </BrowserRouter>
   )
