@@ -216,8 +216,17 @@ export default function Result() {
       pending_type: null, ended_at: new Date().toISOString(),
     }).eq('id', matchId)
 
-    await supabase.rpc('update_player_stats', { p_player_id: player.id, p_points: myPts, p_won: myScore > oppScore ? 1 : 0, p_drawn: myScore === oppScore ? 1 : 0, p_lost: myScore < oppScore ? 1 : 0 })
-    await supabase.rpc('update_player_stats', { p_player_id: oppId, p_points: oppPts, p_won: oppScore > myScore ? 1 : 0, p_drawn: myScore === oppScore ? 1 : 0, p_lost: oppScore < myScore ? 1 : 0 })
+    // Lock para evitar doble actualización
+    const { error: lockError } = await supabase
+      .from('matches')
+      .update({ stats_updated: true })
+      .eq('id', matchId)
+      .eq('stats_updated', false)
+
+    if (!lockError) {
+      await supabase.rpc('update_player_stats', { p_player_id: player.id, p_points: myPts, p_won: myScore > oppScore ? 1 : 0, p_drawn: myScore === oppScore ? 1 : 0, p_lost: myScore < oppScore ? 1 : 0 })
+      await supabase.rpc('update_player_stats', { p_player_id: oppId, p_points: oppPts, p_won: oppScore > myScore ? 1 : 0, p_drawn: myScore === oppScore ? 1 : 0, p_lost: oppScore < myScore ? 1 : 0 })
+    }
 
     const { data: updP } = await supabase.from('players').select('*').eq('id', player.id).single()
     setUpdatedPlayer(updP)

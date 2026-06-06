@@ -179,7 +179,11 @@ export default function Game() {
           stopInactivityTimer()
         }
 
-        if (updated.status === 'finished') navigate('/result/' + matchId)
+        if (updated.status === 'finished') {
+          stopInactivityTimer()
+          navigate('/result/' + matchId)
+          return
+        }
       })
 
     channelRef.current = channel
@@ -589,6 +593,7 @@ export default function Game() {
     }).eq('id', matchId)
 
     if (finished) {
+      // Solo el jugador que hizo la última jugada actualiza stats
       await updateStats(sp1, sp2, m, p)
       navigate('/result/' + matchId)
     }
