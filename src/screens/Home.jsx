@@ -24,6 +24,8 @@ export default function Home() {
   const [saving, setSaving] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [showInstall, setShowInstall] = useState(false)
+  const [showRegisterInfo, setShowRegisterInfo] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -31,6 +33,9 @@ export default function Home() {
     s.textContent = HOME_CSS
     document.head.appendChild(s)
   }, [])
+
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+  const isAndroid = /Android/.test(navigator.userAgent)
 
   async function handleRegister() {
     const name = username.trim()
@@ -83,9 +88,60 @@ export default function Home() {
         </div>
       )}
 
+      {showInstall && (
+        <div style={styles.overlay}>
+          <div style={styles.modal}>
+            <p style={styles.modalTitle}>Instalar SnapGoal</p>
+            {isIOS ? (
+              <>
+                <p style={styles.modalText}>En tu iPhone o iPad:</p>
+                <div style={styles.installStep}><span style={styles.installNum}>1</span><p style={styles.installText}>Abre SnapGoal en <strong style={{color:'#fff'}}>Safari</strong> (no Chrome)</p></div>
+                <div style={styles.installStep}><span style={styles.installNum}>2</span><p style={styles.installText}>Pulsa el botón de compartir <strong style={{color:'#fff'}}>⎙</strong> en la barra inferior</p></div>
+                <div style={styles.installStep}><span style={styles.installNum}>3</span><p style={styles.installText}>Selecciona <strong style={{color:'#fff'}}>"Añadir a pantalla de inicio"</strong></p></div>
+                <div style={styles.installStep}><span style={styles.installNum}>4</span><p style={styles.installText}>Pulsa <strong style={{color:'#fff'}}>"Añadir"</strong> — ya tienes SnapGoal en tu pantalla</p></div>
+              </>
+            ) : isAndroid ? (
+              <>
+                <p style={styles.modalText}>En tu Android:</p>
+                <div style={styles.installStep}><span style={styles.installNum}>1</span><p style={styles.installText}>Abre SnapGoal en <strong style={{color:'#fff'}}>Chrome</strong></p></div>
+                <div style={styles.installStep}><span style={styles.installNum}>2</span><p style={styles.installText}>Pulsa los <strong style={{color:'#fff'}}>tres puntos ⋮</strong> arriba a la derecha</p></div>
+                <div style={styles.installStep}><span style={styles.installNum}>3</span><p style={styles.installText}>Selecciona <strong style={{color:'#fff'}}>"Añadir a pantalla de inicio"</strong></p></div>
+                <div style={styles.installStep}><span style={styles.installNum}>4</span><p style={styles.installText}>Confirma — ya tienes SnapGoal en tu pantalla</p></div>
+              </>
+            ) : (
+              <p style={styles.modalText}>Abre SnapGoal desde tu móvil para ver las instrucciones de instalación según tu dispositivo.</p>
+            )}
+            <button style={styles.btnCancelDelete} onClick={() => setShowInstall(false)}>Cerrar</button>
+          </div>
+        </div>
+      )}
+
+      {showRegisterInfo && (
+        <div style={styles.overlay}>
+          <div style={styles.modal}>
+            <p style={styles.modalTitle}>Crea tu perfil</p>
+            <p style={styles.modalText}>Solo necesitas elegir un nombre de usuario. Sin email, sin contraseña, sin formularios.</p>
+            <div style={styles.registerInfoList}>
+              <div style={styles.registerInfoRow}><span style={styles.registerInfoDot}/><p style={styles.registerInfoText}>Elige un nombre único — ese será tu identidad en SnapGoal</p></div>
+              <div style={styles.registerInfoRow}><span style={styles.registerInfoDot}/><p style={styles.registerInfoText}>Tu perfil se guarda automáticamente en este dispositivo</p></div>
+              <div style={styles.registerInfoRow}><span style={styles.registerInfoDot}/><p style={styles.registerInfoText}>Acumula puntos, sube en el ranking y reta a cualquier jugador del mundo</p></div>
+              <div style={styles.registerInfoRow}><span style={styles.registerInfoDot}/><p style={styles.registerInfoText}>En menos de 10 segundos estás jugando</p></div>
+            </div>
+            <button style={styles.btnPrimary} onClick={() => setShowRegisterInfo(false)}>Empezar</button>
+          </div>
+        </div>
+      )}
+
       <div style={styles.top}>
-        <div style={styles.wordmark}>SnapGoal</div>
-        <div style={styles.wordmarkLine} />
+        <div style={styles.topRow}>
+          <div>
+            <div style={styles.wordmark}>SnapGoal</div>
+            <div style={styles.wordmarkLine} />
+          </div>
+          <div style={styles.topBtns}>
+            <button style={styles.topBtn} onClick={() => setShowInstall(true)}>Instalar</button>
+          </div>
+        </div>
       </div>
 
       <div style={styles.playerSection}>
@@ -112,8 +168,15 @@ export default function Home() {
   return (
     <div style={styles.container}>
       <div style={styles.top}>
-        <div style={styles.wordmark}>SnapGoal</div>
-        <div style={styles.wordmarkLine} />
+        <div style={styles.topRow}>
+          <div>
+            <div style={styles.wordmark}>SnapGoal</div>
+            <div style={styles.wordmarkLine} />
+          </div>
+          <div style={styles.topBtns}>
+            <button style={styles.topBtn} onClick={() => setShowInstall(true)}>Instalar</button>
+          </div>
+        </div>
         <p style={styles.tagline}>El partido más rápido del mundo</p>
       </div>
 
@@ -141,6 +204,7 @@ export default function Home() {
         </button>
         <button style={styles.btnSecondary} onClick={() => navigate('/ranking')}>Ranking</button>
         <button style={styles.btnSecondary} onClick={() => navigate('/rules')}>Reglas</button>
+        <button style={styles.btnGhost} onClick={() => setShowRegisterInfo(true)}>¿Cómo crear mi perfil?</button>
       </div>
     </div>
   )
@@ -167,6 +231,16 @@ const styles = {
   btnPrimary: { background:'#ffb400', color:'#141414', border:'none', borderRadius:'12px', padding:'1.1rem', fontSize:'1rem', fontWeight:'800', cursor:'pointer', width:'100%', letterSpacing:'0.5px' },
   btnSecondary: { background:'transparent', color:'rgba(255,255,255,0.4)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:'12px', padding:'0.9rem', fontSize:'0.9rem', cursor:'pointer', width:'100%' },
   btnGhost: { background:'transparent', color:'rgba(255,80,80,0.4)', border:'none', padding:'0.5rem', fontSize:'0.8rem', cursor:'pointer', width:'100%' },
+  topRow: { display:'flex', justifyContent:'space-between', alignItems:'flex-start' },
+  topBtns: { display:'flex', flexDirection:'column', alignItems:'flex-end', gap:'0.4rem', paddingTop:'0.25rem' },
+  topBtn: { background:'rgba(255,180,0,0.1)', border:'1px solid rgba(255,180,0,0.2)', borderRadius:'8px', color:'#ffb400', fontSize:'0.72rem', fontWeight:'700', cursor:'pointer', padding:'5px 10px', letterSpacing:'0.3px' },
+  installStep: { display:'flex', alignItems:'flex-start', gap:'0.75rem', padding:'0.4rem 0' },
+  installNum: { width:'22px', height:'22px', borderRadius:'50%', background:'#ffb400', color:'#141414', fontSize:'0.75rem', fontWeight:'900', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 },
+  installText: { fontSize:'0.85rem', color:'rgba(255,255,255,0.5)', lineHeight:1.5, margin:0 },
+  registerInfoList: { display:'flex', flexDirection:'column', gap:'0.6rem' },
+  registerInfoRow: { display:'flex', alignItems:'flex-start', gap:'0.6rem' },
+  registerInfoDot: { width:'6px', height:'6px', borderRadius:'50%', background:'#ffb400', flexShrink:0, marginTop:'0.4rem' },
+  registerInfoText: { fontSize:'0.9rem', color:'rgba(255,255,255,0.55)', lineHeight:1.5, margin:0 },
   overlay: { position:'absolute', inset:0, background:'rgba(0,0,0,0.9)', display:'flex', alignItems:'center', justifyContent:'center', padding:'2rem', zIndex:100 },
   modal: { background:'#1a1a1a', border:'1px solid rgba(255,255,255,0.08)', borderRadius:'20px', padding:'1.75rem', display:'flex', flexDirection:'column', gap:'1rem', width:'100%' },
   modalTitle: { fontSize:'1.1rem', fontWeight:'700', color:'#fff', margin:0 },
