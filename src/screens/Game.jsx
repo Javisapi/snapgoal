@@ -69,6 +69,7 @@ export default function Game() {
   const warnRef = useRef(null)
   const inactivityIntervalRef = useRef(null)
   const inactivityStartRef = useRef(null)
+  const startPerfRef = useRef(null)
   const lastTapRef = useRef(0)
   const preShootOffsetRef = useRef(0)
 
@@ -184,16 +185,19 @@ export default function Game() {
 
         // Cronómetro
         if (updated.timer_running && updated.timer_started_at) {
-          startLocalTimer(updated.elapsed_centesimas || 0, new Date(updated.timer_started_at).getTime())
-        } else {
-          // Cronómetro parado — mostrar valor autoritativo de Supabase
+          // Solo arrancar timer local si NO somos nosotros los que estamos corriendo
+          if (!runningRef.current) {
+            startLocalTimer(updated.elapsed_centesimas || 0, new Date(updated.timer_started_at).getTime())
+          }
+        } else if (!runningRef.current) {
+          // Cronómetro parado — solo actualizar si no somos nosotros los que acabamos de parar
+          // (si runningRef es false aquí significa que ya lo paramos nosotros o es el rival)
           clearInterval(intervalRef.current)
           intervalRef.current = null
-          runningRef.current = false
-          setRunning(false)
           const val = updated.elapsed_centesimas || 0
           offsetRef.current = val
           setCentesimas(val)
+          setRunning(false)
         }
 
         // Pending
@@ -282,13 +286,13 @@ export default function Game() {
   }
 
   function startLocalTimer(base, startedAtMs) {
+    // Si somos nosotros los que tiramos, el intervalo ya está corriendo — no tocar nada
+    if (runningRef.current) return
     // Limpiar cualquier intervalo existente antes de arrancar uno nuevo
     if (intervalRef.current) {
       clearInterval(intervalRef.current)
       intervalRef.current = null
     }
-    // Solo arrancar si no somos nosotros los que estamos corriendo
-    if (runningRef.current) return
     // Calcular cuánto tiempo ha pasado ya desde que arrancó (compensar latencia)
     const alreadyElapsed = Math.floor((Date.now() - startedAtMs) / 10)
     const adjustedBase = base + alreadyElapsed
@@ -431,6 +435,7 @@ export default function Game() {
     const startedAtMs = Date.now()
     const startedAtPerf = performance.now()
     startTimeRef.current = startedAtMs
+    startPerfRef.current = startedAtPerf
     runningRef.current = true
     setRunning(true)
 
@@ -492,15 +497,15 @@ export default function Game() {
     processingRef.current = true
     runningRef.current = false
 
-    // Limpiar intervalo PRIMERO para que no ejecute más ticks
+    // Limpiar intervalo INMEDIATAMENTE para congelar el display
     clearInterval(intervalRef.current)
     intervalRef.current = null
     clearTimeout(timeoutWarnRef.current)
     clearTimeout(timeoutRedRef.current)
 
-    // Calcular el tiempo exacto DESPUÉS de limpiar el intervalo
-    // Mínimo 1 centésima para evitar tiradas de 0 centésimas
-    const elapsed = Math.max(1, Math.floor((Date.now() - startTimeRef.current) / 10))
+    // Calcular elapsed con performance.now() — mismo método que el display
+    // Así el valor guardado = exactamente lo que vio el jugador
+    const elapsed = Math.max(1, Math.floor((performance.now() - startPerfRef.current) / 10))
     const total = offsetRef.current + elapsed
     offsetRef.current = total
 
