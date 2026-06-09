@@ -939,10 +939,7 @@ export default function Game() {
       )}
 
       <div style={styles.topBar}>
-        <div style={{ position: 'absolute', top: '1.25rem', right: '1.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          {leagueId && (
-            <button style={styles.chatBtn} onClick={() => setShowChat(true)}>💬</button>
-          )}
+        <div style={{ position: 'absolute', top: '1.25rem', right: '1.5rem' }}>
           <LatencyIndicator />
         </div>
         <div style={styles.playerChip}>
@@ -1102,6 +1099,11 @@ export default function Game() {
           <span style={styles.bottomLabel}>TIEMPO</span>
           <span style={styles.bottomVal}>{Math.max(0, 30 - secs)}s</span>
         </div>
+        {leagueId && (
+          <button style={styles.chatBtnBottom} onClick={() => setShowChat(true)}>
+            💬
+          </button>
+        )}
         <div style={styles.bottomItem}>
           <span style={styles.bottomLabel}>DIFERENCIA</span>
           <span style={styles.bottomVal}>{Math.abs(scoreMe - scoreOpp)} goles</span>
@@ -1151,6 +1153,7 @@ const styles = {
   disconnectBanner: { background: 'rgba(255,180,0,0.1)', border: '1px solid rgba(255,180,0,0.3)', borderRadius: '10px', padding: '0.6rem 1rem', textAlign: 'center', marginBottom: '0.5rem' },
   disconnectBannerText: { color: '#ffb400', fontSize: '0.85rem', fontWeight: '600' },
   chatBtn: { background: 'rgba(255,255,255,0.08)', border: 'none', borderRadius: '8px', color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem', cursor: 'pointer', padding: '4px 8px' },
+  chatBtnBottom: { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '50%', width: '48px', height: '48px', fontSize: '1.4rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', WebkitTapHighlightColor: 'transparent' },
   chatFloat: { position: 'absolute', bottom: '160px', left: '50%', transform: 'translateX(-50%)', background: 'rgba(30,30,30,0.95)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '20px', padding: '8px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', animation: 'chatMsgIn 0.3s ease forwards', zIndex: 40, whiteSpace: 'nowrap' },
   chatFloatFrom: { fontSize: '0.65rem', color: '#ffb400', fontWeight: '700' },
   chatFloatText: { fontSize: '0.9rem', color: '#fff', fontWeight: '600' },
