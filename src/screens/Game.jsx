@@ -103,7 +103,7 @@ export default function Game() {
     // Verificar si el turno lleva más de 30 segundos sin actividad al cargar
     if (m.status === 'playing' && m.turn_started_at) {
       const turnAge = (Date.now() - new Date(m.turn_started_at).getTime()) / 1000
-      if (turnAge > 30) {
+      if (turnAge > 45) {
         const inactivePlayer = m.current_turn
         const isInactiveMe = inactivePlayer === p.id
         const sp1 = m.player1_id === inactivePlayer ? 0 : 5
@@ -232,7 +232,7 @@ export default function Game() {
       if (!current || current.status === 'finished') return
       if (current.turn_started_at && !current.timer_running) {
         const turnAge = (Date.now() - new Date(current.turn_started_at).getTime()) / 1000
-        if (turnAge > 10) {
+        if (turnAge > 15) {
           const inactivePlayer = current.current_turn
           const sp1 = current.player1_id === inactivePlayer ? 0 : 5
           const sp2 = current.player2_id === inactivePlayer ? 0 : 5
@@ -322,14 +322,14 @@ export default function Game() {
 
     inactivityIntervalRef.current = setInterval(async () => {
       const elapsed = (Date.now() - inactivityStartRef.current) / 1000
-      const progress = Math.min(elapsed / 10, 1)
+      const progress = Math.min(elapsed / 15, 1)
       setInactivityProgress(progress)
 
-      if (elapsed >= 5 && elapsed < 10) {
+      if (elapsed >= 8 && elapsed < 15) {
         setInactivityWarning(true)
       }
 
-      if (elapsed >= 10) {
+      if (elapsed >= 15) {
         clearInterval(inactivityIntervalRef.current)
         setInactivityWarning(false)
         // Usar matchRef.current para tener el estado más reciente

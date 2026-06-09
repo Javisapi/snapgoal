@@ -106,8 +106,18 @@ export default function Result() {
     const s = document.createElement('style')
     s.textContent = CSS
     document.head.appendChild(s)
+
+    // Si este partido ya fue visto, volver a home
+    const seenMatches = JSON.parse(sessionStorage.getItem('seen_matches') || '[]')
+    if (seenMatches.includes(matchId)) {
+      navigate('/')
+      return
+    }
+
     init()
-    return () => { if (channelRef.current) supabase.removeChannel(channelRef.current) }
+    return () => {
+      if (channelRef.current) supabase.removeChannel(channelRef.current)
+    }
   }, [])
 
   async function init() {
@@ -130,6 +140,15 @@ export default function Result() {
     const myScore = isP1 ? m.score_p1 : m.score_p2
     const oppScore = isP1 ? m.score_p2 : m.score_p1
     setPointsEarned(myScore > oppScore ? 3 : myScore === oppScore ? 1 : 0)
+
+    // Marcar este partido como visto para no mostrarlo de nuevo
+    const seenMatches = JSON.parse(sessionStorage.getItem('seen_matches') || '[]')
+    if (!seenMatches.includes(matchId)) {
+      seenMatches.push(matchId)
+      // Guardar solo los últimos 10 partidos
+      if (seenMatches.length > 10) seenMatches.shift()
+      sessionStorage.setItem('seen_matches', JSON.stringify(seenMatches))
+    }
 
     if (m.pending_type === 'SHOOTOUT' && m.status !== 'finished') {
       const state = JSON.parse(m.shootout_state || '{}')
