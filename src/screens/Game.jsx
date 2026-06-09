@@ -217,9 +217,20 @@ export default function Game() {
 
         // Reiniciar timer cuando turn_sequence cambia y es mi turno
         const sequenceChanged = (updated.turn_sequence || 0) !== (prevMatch?.turn_sequence || 0)
+        console.log('REALTIME UPDATE:', {
+          isMyTurn,
+          timerRunning: updated.timer_running,
+          sequenceChanged,
+          prevSeq: prevMatch?.turn_sequence,
+          newSeq: updated.turn_sequence,
+          currentTurn: updated.current_turn,
+          myId: playerRef.current?.id,
+        })
         if (isMyTurn && !updated.timer_running && sequenceChanged) {
+          console.log('STARTING INACTIVITY TIMER')
           startInactivityTimer(playerRef.current, updated)
         } else if (!isMyTurn || updated.timer_running) {
+          console.log('STOPPING INACTIVITY TIMER')
           stopInactivityTimer()
         }
 
