@@ -88,6 +88,53 @@ Tira de nuevo → si para en múltiplo de 10 = GOL
 
 ---
 
+## Sistema de Ligas privadas
+
+### Concepto
+Un jugador crea una liga privada con nombre y duración. Se genera un código de 6 caracteres que comparte con sus amigos. Dentro de la liga los jugadores solo se emparejan entre ellos y tienen su propio ranking.
+
+### Flujo
+1. **Crear liga** — nombre + duración predefinida → código generado automáticamente
+2. **Invitar** — compartir código por WhatsApp (link directo) o manualmente
+3. **Unirse** — introducir el código de 6 caracteres
+4. **Jugar** — "Buscar rival en la liga" empareja solo con miembros de esa liga
+5. **Ranking** — clasificación interna con puntos, V/E/D, goles
+
+### Duraciones disponibles
+2 días · 1 semana · 2 semanas · 1 mes · 1 año
+
+### Reglas de liga
+- Máximo **50 jugadores** por liga
+- Mínimo **10 partidos** jugados en total para declarar ganador
+- Gana quien más puntos tenga al expirar la liga
+- **Empate a puntos** → partido de desempate entre los empatados
+- Liga expirada → visible pero no jugable (ranking final permanente)
+
+### Roles
+- **Admin** — creador de la liga, puede expulsar jugadores y eliminar la liga
+- **Miembro** — puede jugar y ver el ranking, puede salir de la liga
+
+### Chat en partido de liga
+Durante un partido de liga aparece un botón 💬 en la barra inferior. Los jugadores pueden enviar mensajes preconfigurados que aparecen 3 segundos y desaparecen:
+- ⚽ ¡Vaya golazo!
+- 💥 BOOOM
+- 😂 ahahahahah
+- 🚩 ¡Exijo VAR!
+- 🤨 El árbitro está comprado
+- 🤝 Buen partido
+
+### Tablas de base de datos
+- `leagues` — ligas con código, fecha de expiración y creador
+- `league_members` — miembros con estadísticas internas de liga
+- `league_messages` — mensajes de chat por partido
+
+### Funciones SQL
+- `generate_league_code()` — genera código único de 6 caracteres
+- `do_league_matchmaking(player_id, league_id)` — emparejamiento atómico dentro de una liga
+- `finalize_match_stats(...)` — actualiza stats globales Y de liga si el partido tiene `league_id`
+
+---
+
 ## Versiones estables
 
 | Tag | Descripción |
