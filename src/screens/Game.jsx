@@ -70,6 +70,7 @@ export default function Game() {
   const inactivityIntervalRef = useRef(null)
   const inactivityStartRef = useRef(null)
   const startPerfRef = useRef(null)
+  const iAmTheShooterRef = useRef(false)
   const lastTapRef = useRef(0)
   const preShootOffsetRef = useRef(0)
 
@@ -185,19 +186,25 @@ export default function Game() {
 
         // Cronómetro
         if (updated.timer_running && updated.timer_started_at) {
-          // Solo arrancar timer local si NO somos nosotros los que estamos corriendo
-          if (!runningRef.current) {
+          // Arrancar timer local solo si soy el OBSERVADOR (no el tirador)
+          if (!iAmTheShooterRef.current) {
             startLocalTimer(updated.elapsed_centesimas || 0, new Date(updated.timer_started_at).getTime())
           }
-        } else if (!runningRef.current) {
-          // Cronómetro parado — solo actualizar si no somos nosotros los que acabamos de parar
-          // (si runningRef es false aquí significa que ya lo paramos nosotros o es el rival)
-          clearInterval(intervalRef.current)
-          intervalRef.current = null
-          const val = updated.elapsed_centesimas || 0
-          offsetRef.current = val
-          setCentesimas(val)
-          setRunning(false)
+        } else {
+          // Cronómetro parado
+          if (iAmTheShooterRef.current) {
+            // Soy el tirador — el display ya está congelado, solo limpiar el intervalo
+            clearInterval(intervalRef.current)
+            intervalRef.current = null
+          } else {
+            // Soy el observador — mostrar el valor final autoritativo
+            clearInterval(intervalRef.current)
+            intervalRef.current = null
+            const val = updated.elapsed_centesimas || 0
+            offsetRef.current = val
+            setCentesimas(val)
+            setRunning(false)
+          }
         }
 
         // Pending
@@ -286,8 +293,8 @@ export default function Game() {
   }
 
   function startLocalTimer(base, startedAtMs) {
-    // Si somos nosotros los que tiramos, el intervalo ya está corriendo — no tocar nada
-    if (runningRef.current) return
+    // Si somos el tirador, nunca tocar nuestro intervalo
+    if (iAmTheShooterRef.current) return
     // Limpiar cualquier intervalo existente antes de arrancar uno nuevo
     if (intervalRef.current) {
       clearInterval(intervalRef.current)
@@ -436,6 +443,7 @@ export default function Game() {
     const startedAtPerf = performance.now()
     startTimeRef.current = startedAtMs
     startPerfRef.current = startedAtPerf
+    iAmTheShooterRef.current = true
     runningRef.current = true
     setRunning(true)
 
@@ -496,6 +504,7 @@ export default function Game() {
     // Bloquear inmediatamente cualquier evento posterior
     processingRef.current = true
     runningRef.current = false
+    iAmTheShooterRef.current = false
 
     // Limpiar intervalo INMEDIATAMENTE para congelar el display
     clearInterval(intervalRef.current)
