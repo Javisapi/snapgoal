@@ -27,6 +27,7 @@ const CSS = `
 
 export default function Leagues() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [player, setPlayer] = useState(null)
   const [leagues, setLeagues] = useState([])
   const [loading, setLoading] = useState(true)
