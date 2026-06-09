@@ -62,6 +62,7 @@ export default function Game() {
   const channelRef = useRef(null)
   const runningRef = useRef(false)
   const processingRef = useRef(false)
+  const mountedRef = useRef(true)
   const heartbeatRef = useRef(null)
   const disconnectRef = useRef(null)
   const warnRef = useRef(null)
@@ -76,10 +77,22 @@ export default function Game() {
     document.head.appendChild(s)
     init()
     return () => {
+      // Bloquear TODOS los callbacks pendientes inmediatamente
+      mountedRef.current = false
+      processingRef.current = true
+
       clearInterval(intervalRef.current)
+      clearInterval(heartbeatRef.current)
+      clearInterval(inactivityIntervalRef.current)
       clearTimeout(timeoutWarnRef.current)
       clearTimeout(timeoutRedRef.current)
-      if (channelRef.current) supabase.removeChannel(channelRef.current)
+      clearTimeout(disconnectRef.current)
+      clearTimeout(warnRef.current)
+
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current)
+        channelRef.current = null
+      }
     }
   }, [])
 
@@ -212,7 +225,7 @@ export default function Game() {
           stopInactivityTimer()
           clearInterval(heartbeatRef.current)
           clearInterval(intervalRef.current)
-          navigate('/result/' + matchId)
+          if (mountedRef.current) navigate('/result/' + matchId)
           return
         }
       })
@@ -245,7 +258,7 @@ export default function Game() {
             last_event: JSON.stringify({ emoji: '⏱', label: 'Partido terminado por inactividad' }),
           }).eq('id', matchId)
           await updateStats(sp1, sp2, { ...current, score_p1: sp1, score_p2: sp2 }, p)
-          navigate('/result/' + matchId)
+          if (mountedRef.current) navigate('/result/' + matchId)
         }
       }
     }, 5000)
@@ -255,6 +268,11 @@ export default function Game() {
     // Si hay falta pendiente y soy el rival sin barrera aún
     if (m.pending_type === 'FALTA' && m.current_turn !== p.id && !m.barrier_range) {
       setBarrierOptions(true)
+    }
+
+    // Arrancar timer de inactividad si es mi turno al cargar
+    if (m.current_turn === p.id && m.status === 'playing') {
+      startInactivityTimer(p, m)
     }
   }
 
@@ -290,7 +308,7 @@ export default function Game() {
         last_event: JSON.stringify({ emoji: '🔌', label: 'Rival desconectado — victoria 5-0' }),
       }).eq('id', matchId)
       await updateStats(sp1, sp2, matchRef.current, p)
-      navigate('/result/' + matchId)
+      if (mountedRef.current) navigate('/result/' + matchId)
     }, 30000)
   }
 
@@ -349,7 +367,7 @@ export default function Game() {
         }).eq('id', matchId)
         // Pasar scores correctos directamente, no desde matchRef que puede estar desactualizado
         await updateStats(sp1, sp2, { ...currentMatch, score_p1: sp1, score_p2: sp2 }, p)
-        navigate('/result/' + matchId)
+        if (mountedRef.current) navigate('/result/' + matchId)
       }
     }, 50)
   }
@@ -683,7 +701,7 @@ export default function Game() {
     if (finished) {
       // Solo el jugador que hizo la última jugada actualiza stats
       await updateStats(sp1, sp2, m, p)
-      navigate('/result/' + matchId)
+      if (mountedRef.current) navigate('/result/' + matchId)
     }
   }
 
@@ -887,19 +905,46 @@ export default function Game() {
 
       <div style={styles.btnArea}>
         {canShoot ? (
-          <button
-            style={{
-              ...styles.btnStop,
-              background: running ? '#ff4444' : '#ffb400',
-              boxShadow: running
-                ? '0 0 0 8px rgba(255,68,68,0.1),0 0 0 16px rgba(255,68,68,0.05)'
-                : '0 0 0 8px rgba(255,180,0,0.1),0 0 0 16px rgba(255,180,0,0.05)',
-            }}
-            onClick={() => handleClick()}
-          >
-            <div style={{ width: running ? '22px' : '16px', height: running ? '22px' : '16px', background: '#141414', borderRadius: running ? '4px' : '50%' }} />
-            <span style={styles.btnStopText}>{running ? 'PARAR' : 'START'}</span>
-          </button>
+          <div style={{ position: 'relative', width: '150px', height: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {!running && (
+              <svg style={{ position: 'absolute', top: 0, left: 0, width: '150px', height: '150px', transform: 'rotate(-90deg)', pointerEvents: 'none' }}>
+                <circle cx="75" cy="75" r="68" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="5"/>
+                <circle
+                  cx="75" cy="75" r="68"
+                  fill="none"
+                  strokeWidth="5"
+                  strokeDasharray={`${2 * Math.PI * 68}`}
+                  strokeDashoffset={`${2 * Math.PI * 68 * (1 - inactivityProgress)}`}
+                  stroke={
+                    inactivityProgress < 0.35 ? '#00c853' :
+                    inactivityProgress < 0.55 ? '#7ed321' :
+                    inactivityProgress < 0.70 ? '#ffb400' :
+                    inactivityProgress < 0.85 ? '#ff6d00' : '#ff4444'
+                  }
+                  strokeLinecap="round"
+                  style={{
+                    transition: 'stroke-dashoffset 0.05s linear, stroke 0.5s ease',
+                    filter: inactivityProgress > 0.7
+                      ? 'drop-shadow(0 0 6px #ff4444)'
+                      : 'drop-shadow(0 0 4px rgba(0,200,80,0.5))',
+                  }}
+                />
+              </svg>
+            )}
+            <button
+              style={{
+                ...styles.btnStop,
+                background: running ? '#ff4444' : '#ffb400',
+                boxShadow: running
+                  ? '0 0 0 8px rgba(255,68,68,0.1),0 0 0 16px rgba(255,68,68,0.05)'
+                  : '0 0 0 8px rgba(255,180,0,0.1),0 0 0 16px rgba(255,180,0,0.05)',
+              }}
+              onClick={() => handleClick()}
+            >
+              <div style={{ width: running ? '22px' : '16px', height: running ? '22px' : '16px', background: '#141414', borderRadius: running ? '4px' : '50%' }} />
+              <span style={styles.btnStopText}>{running ? 'PARAR' : 'START'}</span>
+            </button>
+          </div>
         ) : (
           <div style={styles.btnWaiting}>
             <span style={{ fontSize: '2rem' }}>⏳</span>
