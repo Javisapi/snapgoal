@@ -188,13 +188,13 @@ export default function Game() {
         // Cronómetro
         if (updated.timer_running && updated.timer_started_at) {
           // Solo el OBSERVADOR arranca timer local
-          // Si soy tirador (iAmTheShooterRef) o ya estoy corriendo, ignorar
-          if (!iAmTheShooterRef.current && !runningRef.current) {
+          // Ignorar si: soy el tirador, ya estoy corriendo, o procesando una jugada
+          if (!iAmTheShooterRef.current && !runningRef.current && !processingRef.current) {
             startLocalTimer(updated.elapsed_centesimas || 0, new Date(updated.timer_started_at).getTime())
           }
         } else if (!updated.timer_running) {
-          if (iAmTheShooterRef.current) {
-            // Soy el tirador — display ya congelado en stopTimer, ignorar
+          if (iAmTheShooterRef.current || processingRef.current) {
+            // Soy el tirador o estoy procesando — display ya congelado, ignorar
           } else if (!runningRef.current) {
             // Soy el observador con cronómetro parado — mostrar valor final
             timerVersionRef.current += 1
@@ -752,6 +752,13 @@ export default function Game() {
     }
 
     stopInactivityTimer()
+
+    // Limpiar pending_type localmente para que la siguiente tirada no lo use
+    if (matchRef.current) {
+      matchRef.current.pending_type = null
+      matchRef.current.barrier_range = null
+      matchRef.current.penalty_choice = null
+    }
 
     await supabase.from('plays').insert({
       match_id: matchId, player_id: p.id,
