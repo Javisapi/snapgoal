@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
 async function getPlayer() {
@@ -17,6 +17,8 @@ const QUEUE_TIMEOUT_MS = 10000 // 10 segundos máximo de búsqueda
 
 export default function Queue() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const leagueId = searchParams.get('league')
   const [dots, setDots] = useState('')
   const [noMatch, setNoMatch] = useState(false)
   const stateRef = useRef({
@@ -143,6 +145,14 @@ export default function Queue() {
   }
 
   async function tryMatchOnServer(playerId) {
+    if (leagueId) {
+      const { data, error } = await supabase.rpc('do_league_matchmaking', {
+        p_player_id: playerId,
+        p_league_id: leagueId,
+      })
+      if (error || !data) return null
+      return data
+    }
     const { data, error } = await supabase.rpc('do_matchmaking', { p_player_id: playerId })
     if (error || !data) return null
     return data
@@ -180,7 +190,7 @@ export default function Queue() {
           <span style={styles.radarEmoji}>⚽</span>
         </div>
         <h2 style={styles.title}>Buscando rival{dots}</h2>
-        <p style={styles.subtitle}>Tienes 10 segundos para encontrar partido</p>
+        <p style={styles.subtitle}>{leagueId ? 'Buscando rival en tu liga' : 'Tienes 10 segundos para encontrar partido'}</p>
       </div>
       <button style={styles.btnCancel} onClick={() => { cleanup(); navigate('/') }}>Cancelar</button>
     </div>

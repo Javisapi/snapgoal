@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
+import { useSearchParams } from 'react-router-dom'
 
 async function deleteAccount(playerId) {
   await supabase.from('plays').delete().eq('player_id', playerId)
@@ -29,6 +30,8 @@ export default function Home() {
   const [showRegisterInfo, setShowRegisterInfo] = useState(false)
   const [onlineCount, setOnlineCount] = useState(0)
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const joinCode = searchParams.get('join')
 
   useEffect(() => {
     const s = document.createElement('style')
@@ -70,6 +73,12 @@ export default function Home() {
     if (authError) { setError(authError); setSaving(false); return }
     navigate('/queue')
   }
+
+  useEffect(() => {
+    if (joinCode && player) {
+      navigate('/leagues?join=' + joinCode)
+    }
+  }, [joinCode, player])
 
   async function handlePlay() {
     const { data: { session } } = await supabase.auth.getSession()
@@ -182,6 +191,7 @@ export default function Home() {
       <div style={styles.actions}>
         <button style={styles.btnPrimary} onClick={handlePlay}>Buscar partido</button>
         <button style={styles.btnSecondary} onClick={() => navigate('/ranking')}>Ranking</button>
+        <button style={styles.btnSecondary} onClick={() => navigate('/leagues')}>🏆 Mis Ligas</button>
         <button style={styles.btnSecondary} onClick={() => navigate('/rules')}>Reglas</button>
         <button style={styles.btnGhost} onClick={() => setShowDeleteConfirm(true)}>Borrar cuenta</button>
       </div>
@@ -232,6 +242,7 @@ export default function Home() {
           {saving ? 'Creando...' : 'Empezar a jugar'}
         </button>
         <button style={styles.btnSecondary} onClick={() => navigate('/ranking')}>Ranking</button>
+        <button style={styles.btnSecondary} onClick={() => navigate('/leagues')}>🏆 Mis Ligas</button>
         <button style={styles.btnSecondary} onClick={() => navigate('/rules')}>Reglas</button>
         <button style={styles.btnGhost} onClick={() => setShowRegisterInfo(true)}>¿Cómo crear mi perfil?</button>
       </div>

@@ -6,6 +6,8 @@ import Result from './screens/Result'
 import Ranking from './screens/Ranking'
 import Rules from './screens/Rules'
 import Announce from './screens/Announce'
+import Leagues from './screens/Leagues'
+import League from './screens/League'
 
 function App() {
   return (
@@ -17,6 +19,8 @@ function App() {
         <Route path="/result/:matchId" element={<Result />} />
         <Route path="/ranking" element={<Ranking />} />
         <Route path="/announce/:matchId" element={<Announce />} />
+        <Route path="/leagues" element={<Leagues />} />
+        <Route path="/league/:leagueId" element={<League />} />
         <Route path="/rules" element={<Rules />} />
       </Routes>
     </BrowserRouter>

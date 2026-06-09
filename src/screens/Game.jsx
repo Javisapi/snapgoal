@@ -46,6 +46,9 @@ export default function Game() {
   const [showAbandon, setShowAbandon] = useState(false)
   const [opponentGone, setOpponentGone] = useState(false)
   const [flashEvent, setFlashEvent] = useState(null)
+  const [chatMsg, setChatMsg] = useState(null)
+  const [showChat, setShowChat] = useState(false)
+  const [leagueId, setLeagueId] = useState(null)
   const [inactivityProgress, setInactivityProgress] = useState(0)
   const [inactivityWarning, setInactivityWarning] = useState(false)
   const [cards, setCards] = useState({ p1: { yellow: 0, red: 0 }, p2: { yellow: 0, red: 0 } })
@@ -290,6 +293,24 @@ export default function Game() {
     if (m.current_turn === p.id && m.status === 'playing') {
       startInactivityTimer(p, m)
     }
+
+    // Guardar league_id si el partido es de liga
+    if (m.league_id) {
+      setLeagueId(m.league_id)
+      // Escuchar mensajes de chat
+      supabase.channel('chat-' + matchId)
+        .on('postgres_changes', {
+          event: 'INSERT', schema: 'public',
+          table: 'league_messages',
+          filter: `match_id=eq.${matchId}`,
+        }, async (payload) => {
+          const { data: sender } = await supabase
+            .from('players').select('username').eq('id', payload.new.player_id).single()
+          setChatMsg({ text: payload.new.message, from: sender?.username || '?' })
+          setTimeout(() => setChatMsg(null), 3000)
+        })
+        .subscribe()
+    }
   }
 
   function startLocalTimer(base, startedAtMs) {
@@ -334,6 +355,17 @@ export default function Game() {
       await updateStats(sp1, sp2, matchRef.current, p)
       if (mountedRef.current) navigate('/result/' + matchId)
     }, 30000)
+  }
+
+  async function sendChatMessage(message) {
+    if (!leagueId) return
+    setShowChat(false)
+    await supabase.from('league_messages').insert({
+      league_id: leagueId,
+      match_id: matchId,
+      player_id: playerRef.current.id,
+      message,
+    })
   }
 
   async function handleAbandon() {
@@ -858,6 +890,28 @@ export default function Game() {
         </div>
       )}
 
+      {/* Chat message floating */}
+      {chatMsg && (
+        <div style={styles.chatFloat}>
+          <span style={styles.chatFloatFrom}>{chatMsg.from}</span>
+          <span style={styles.chatFloatText}>{chatMsg.text}</span>
+        </div>
+      )}
+
+      {/* Chat popup */}
+      {showChat && leagueId && (
+        <div style={styles.chatOverlay} onClick={() => setShowChat(false)}>
+          <div style={styles.chatBox} onClick={e => e.stopPropagation()}>
+            <p style={styles.chatTitle}>💬 Mensaje rápido</p>
+            {['⚽ ¡Vaya golazo!', '💥 BOOOM', '😂 ahahahahah', '🚩 ¡Exijo VAR!', '🤨 El árbitro está comprado', '🤝 Buen partido'].map(msg => (
+              <button key={msg} style={styles.chatMsgBtn} onClick={() => sendChatMessage(msg)}>
+                {msg}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Modal abandono */}
       {showAbandon && (
         <div style={styles.overlay}>
@@ -885,7 +939,10 @@ export default function Game() {
       )}
 
       <div style={styles.topBar}>
-        <div style={{ position: 'absolute', top: '1.25rem', right: '1.5rem' }}>
+        <div style={{ position: 'absolute', top: '1.25rem', right: '1.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {leagueId && (
+            <button style={styles.chatBtn} onClick={() => setShowChat(true)}>💬</button>
+          )}
           <LatencyIndicator />
         </div>
         <div style={styles.playerChip}>
@@ -1093,6 +1150,14 @@ const styles = {
   btnCancelAbandon: { background: 'transparent', color: 'rgba(255,255,255,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '0.9rem', fontSize: '0.95rem', cursor: 'pointer', width: '100%' },
   disconnectBanner: { background: 'rgba(255,180,0,0.1)', border: '1px solid rgba(255,180,0,0.3)', borderRadius: '10px', padding: '0.6rem 1rem', textAlign: 'center', marginBottom: '0.5rem' },
   disconnectBannerText: { color: '#ffb400', fontSize: '0.85rem', fontWeight: '600' },
+  chatBtn: { background: 'rgba(255,255,255,0.08)', border: 'none', borderRadius: '8px', color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem', cursor: 'pointer', padding: '4px 8px' },
+  chatFloat: { position: 'absolute', bottom: '160px', left: '50%', transform: 'translateX(-50%)', background: 'rgba(30,30,30,0.95)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '20px', padding: '8px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', animation: 'chatMsgIn 0.3s ease forwards', zIndex: 40, whiteSpace: 'nowrap' },
+  chatFloatFrom: { fontSize: '0.65rem', color: '#ffb400', fontWeight: '700' },
+  chatFloatText: { fontSize: '0.9rem', color: '#fff', fontWeight: '600' },
+  chatOverlay: { position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: '2rem', zIndex: 60 },
+  chatBox: { background: '#1e1e1e', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', padding: '1.25rem', width: '100%', display: 'flex', flexDirection: 'column', gap: '0.5rem' },
+  chatTitle: { fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', fontWeight: '700', letterSpacing: '1px', textTransform: 'uppercase', margin: '0 0 0.25rem' },
+  chatMsgBtn: { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '10px', color: '#fff', fontSize: '0.95rem', padding: '0.75rem 1rem', cursor: 'pointer', textAlign: 'left', fontWeight: '500' },
   bottomBar: { display: 'flex', justifyContent: 'space-around', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.06)' },
   bottomItem: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' },
   bottomLabel: { fontSize: '0.65rem', color: 'rgba(255,255,255,0.25)', letterSpacing: '1px' },
