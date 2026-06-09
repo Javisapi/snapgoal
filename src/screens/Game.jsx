@@ -214,10 +214,10 @@ export default function Game() {
         setOpponentGone(false)
         startDisconnectWatcher(updated, playerRef.current)
 
-        // Gestionar timer de inactividad
-        if (updated.current_turn === playerRef.current?.id) {
+        // Gestionar timer de inactividad — solo cuando cambia el turno A mi favor
+        if (updated.current_turn === playerRef.current?.id && !isMyTurn) {
           startInactivityTimer(playerRef.current, updated)
-        } else {
+        } else if (updated.current_turn !== playerRef.current?.id) {
           stopInactivityTimer()
         }
 
@@ -243,7 +243,7 @@ export default function Game() {
       const { data: current } = await supabase
         .from('matches').select('*').eq('id', matchId).single()
       if (!current || current.status === 'finished') return
-      if (current.turn_started_at && !current.timer_running) {
+      if (current.turn_started_at && !current.timer_running && !runningRef.current) {
         const turnAge = (Date.now() - new Date(current.turn_started_at).getTime()) / 1000
         if (turnAge > 15) {
           const inactivePlayer = current.current_turn
@@ -441,6 +441,7 @@ export default function Game() {
     await supabase.from('matches').update({
       timer_running: true,
       timer_started_at: now,
+      turn_started_at: now,
     }).eq('id', matchId)
   }
 
