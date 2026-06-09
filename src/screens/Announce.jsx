@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import LatencyIndicator from '../components/LatencyIndicator'
 
 async function getPlayer() {
   const { data: { session } } = await supabase.auth.getSession()
@@ -157,7 +158,10 @@ export default function Announce() {
   return (
     <div style={styles.container}>
       <div style={styles.content}>
-        <p style={styles.foundLabel}>¡Rival encontrado!</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <p style={styles.foundLabel}>¡Rival encontrado!</p>
+          <LatencyIndicator />
+        </div>
 
         <div style={styles.playersRow}>
           <div style={styles.playerCard}>

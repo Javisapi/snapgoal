@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import LatencyIndicator from '../components/LatencyIndicator'
 
 const GAME_CSS = `
   @keyframes eventFlash { 0%{opacity:0;transform:scale(0.5) translateY(20px)} 20%{opacity:1;transform:scale(1.05) translateY(0)} 70%{opacity:1;transform:scale(1) translateY(0)} 100%{opacity:0;transform:scale(0.95) translateY(-15px)} }
@@ -190,7 +191,10 @@ export default function Game() {
           setRunning(false)
           const val = updated.elapsed_centesimas || 0
           offsetRef.current = val
-          setCentesimas(val)
+          // Solo actualizar display si no somos nosotros los que acabamos de parar
+          if (!processingRef.current) {
+            setCentesimas(val)
+          }
         }
 
         // Pending
@@ -217,20 +221,9 @@ export default function Game() {
 
         // Reiniciar timer cuando turn_sequence cambia y es mi turno
         const sequenceChanged = (updated.turn_sequence || 0) !== (prevMatch?.turn_sequence || 0)
-        console.log('REALTIME UPDATE:', {
-          isMyTurn,
-          timerRunning: updated.timer_running,
-          sequenceChanged,
-          prevSeq: prevMatch?.turn_sequence,
-          newSeq: updated.turn_sequence,
-          currentTurn: updated.current_turn,
-          myId: playerRef.current?.id,
-        })
         if (isMyTurn && !updated.timer_running && sequenceChanged) {
-          console.log('STARTING INACTIVITY TIMER')
           startInactivityTimer(playerRef.current, updated)
         } else if (!isMyTurn || updated.timer_running) {
-          console.log('STOPPING INACTIVITY TIMER')
           stopInactivityTimer()
         }
 
@@ -290,14 +283,18 @@ export default function Game() {
   }
 
   function startLocalTimer(base, startedAtMs) {
-    clearInterval(intervalRef.current)
+    // Limpiar cualquier intervalo existente antes de arrancar uno nuevo
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current)
+      intervalRef.current = null
+    }
+    // Solo arrancar si no somos nosotros los que estamos corriendo
+    if (runningRef.current) return
     // Calcular cuánto tiempo ha pasado ya desde que arrancó (compensar latencia)
     const alreadyElapsed = Math.floor((Date.now() - startedAtMs) / 10)
     const adjustedBase = base + alreadyElapsed
     offsetRef.current = base
     setCentesimas(adjustedBase)
-    runningRef.current = true
-    setRunning(true)
     intervalRef.current = setInterval(() => {
       setCentesimas(base + Math.floor((Date.now() - startedAtMs) / 10))
     }, 10)
@@ -399,10 +396,16 @@ export default function Game() {
   function handleClick() {
     if (processingRef.current) return
     const now = Date.now()
-    if (now - lastTapRef.current < 50) return
+    if (now - lastTapRef.current < 10) return
     lastTapRef.current = now
-    if (runningRef.current) stopTimer()
-    else startTimer()
+    if (runningRef.current) {
+      // Mínimo 1 centésima (10ms) corriendo antes de poder parar
+      const elapsed = Date.now() - startTimeRef.current
+      if (elapsed < 10) return
+      stopTimer()
+    } else {
+      startTimer()
+    }
   }
 
   async function startTimer() {
@@ -451,6 +454,8 @@ export default function Game() {
       stopTimer(true)
     }, 5000)
 
+    // Guardar timestamp de inicio — si STOP llega muy rápido,
+    // processPlay ya habrá calculado el tiempo correcto localmente
     await supabase.from('matches').update({
       timer_running: true,
       timer_started_at: now,
@@ -470,13 +475,19 @@ export default function Game() {
     processingRef.current = true
     runningRef.current = false
 
+    // Limpiar intervalo PRIMERO para que no ejecute más ticks
     clearInterval(intervalRef.current)
+    intervalRef.current = null
     clearTimeout(timeoutWarnRef.current)
     clearTimeout(timeoutRedRef.current)
 
-    const elapsed = Math.floor((Date.now() - startTimeRef.current) / 10)
+    // Calcular el tiempo exacto DESPUÉS de limpiar el intervalo
+    // Mínimo 1 centésima para evitar tiradas de 0 centésimas
+    const elapsed = Math.max(1, Math.floor((Date.now() - startTimeRef.current) / 10))
     const total = offsetRef.current + elapsed
     offsetRef.current = total
+
+    // Actualizar display inmediatamente y de forma definitiva
     setCentesimas(total)
     setRunning(false)
     setWarning(null)
@@ -484,7 +495,6 @@ export default function Game() {
     try {
       await processPlay(total, forced)
     } finally {
-      // Siempre liberar el lock aunque haya error
       processingRef.current = false
     }
   }
@@ -827,6 +837,9 @@ export default function Game() {
       )}
 
       <div style={styles.topBar}>
+        <div style={{ position: 'absolute', top: '1.25rem', right: '1.5rem' }}>
+          <LatencyIndicator />
+        </div>
         <div style={styles.playerChip}>
           <span style={styles.playerName}>
             {player.username.toUpperCase()}
