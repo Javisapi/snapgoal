@@ -187,19 +187,17 @@ export default function Game() {
 
         // Cronómetro
         if (updated.timer_running && updated.timer_started_at) {
-          // Arrancar timer local solo si soy el OBSERVADOR (no el tirador)
-          if (!iAmTheShooterRef.current) {
+          // Solo el OBSERVADOR arranca timer local
+          // Si soy tirador (iAmTheShooterRef) o ya estoy corriendo, ignorar
+          if (!iAmTheShooterRef.current && !runningRef.current) {
             startLocalTimer(updated.elapsed_centesimas || 0, new Date(updated.timer_started_at).getTime())
           }
-        } else {
-          // Cronómetro parado
+        } else if (!updated.timer_running) {
           if (iAmTheShooterRef.current) {
-            // Soy el tirador — el display ya está congelado, solo limpiar el intervalo
+            // Soy el tirador — display ya congelado en stopTimer, ignorar
+          } else if (!runningRef.current) {
+            // Soy el observador con cronómetro parado — mostrar valor final
             timerVersionRef.current += 1
-            clearInterval(intervalRef.current)
-            intervalRef.current = null
-          } else {
-            // Soy el observador — mostrar el valor final autoritativo
             clearInterval(intervalRef.current)
             intervalRef.current = null
             const val = updated.elapsed_centesimas || 0
@@ -524,9 +522,10 @@ export default function Game() {
     clearTimeout(timeoutRedRef.current)
 
     // Calcular elapsed con performance.now() — mismo método que el display
-    // Así el valor guardado = exactamente lo que vio el jugador
+    // Usar preShootOffsetRef que fue capturado al inicio de startTimer
+    // para evitar que un update de Supabase haya modificado offsetRef
     const elapsed = Math.max(1, Math.floor((performance.now() - startPerfRef.current) / 10))
-    const total = offsetRef.current + elapsed
+    const total = preShootOffsetRef.current + elapsed
     offsetRef.current = total
 
     // Actualizar display inmediatamente y de forma definitiva
