@@ -172,9 +172,9 @@ export default function Game() {
         const updated = payload.new
         // Ignorar eventos de otros partidos
         if (updated.id !== matchId) return
+        const prevMatch = matchRef.current ? { ...matchRef.current } : null
         matchRef.current = updated
         setMatch({ ...updated })
-        const prevMatch = { ...matchRef.current }
         const isMyTurn = updated.current_turn === playerRef.current?.id
         if (updated.cards_p1 && updated.cards_p2) setCards({ p1: updated.cards_p1, p2: updated.cards_p2 })
         if (updated.penalty_choice) setPenaltyChoice(updated.penalty_choice)
