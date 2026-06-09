@@ -71,6 +71,7 @@ export default function Game() {
   const inactivityStartRef = useRef(null)
   const startPerfRef = useRef(null)
   const iAmTheShooterRef = useRef(false)
+  const timerVersionRef = useRef(0)
   const lastTapRef = useRef(0)
   const preShootOffsetRef = useRef(0)
 
@@ -194,6 +195,7 @@ export default function Game() {
           // Cronómetro parado
           if (iAmTheShooterRef.current) {
             // Soy el tirador — el display ya está congelado, solo limpiar el intervalo
+            timerVersionRef.current += 1
             clearInterval(intervalRef.current)
             intervalRef.current = null
           } else {
@@ -302,11 +304,15 @@ export default function Game() {
     }
     // Calcular cuánto tiempo ha pasado ya desde que arrancó (compensar latencia)
     const alreadyElapsed = Math.floor((Date.now() - startedAtMs) / 10)
-    const adjustedBase = base + alreadyElapsed
     offsetRef.current = base
-    setCentesimas(adjustedBase)
+    setCentesimas(base + alreadyElapsed)
+    timerVersionRef.current += 1
+    const localVersion = timerVersionRef.current
+    const observerBase = base      // Constante para este intervalo
+    const observerStart = startedAtMs  // Constante para este intervalo
     intervalRef.current = setInterval(() => {
-      setCentesimas(base + Math.floor((Date.now() - startedAtMs) / 10))
+      if (timerVersionRef.current !== localVersion) return
+      setCentesimas(observerBase + Math.floor((Date.now() - observerStart) / 10))
     }, 10)
   }
   function startDisconnectWatcher(m, p) {
@@ -437,7 +443,7 @@ export default function Game() {
     if (runningRef.current) return
     if (processingRef.current) return
     preShootOffsetRef.current = offsetRef.current
-    const base = offsetRef.current
+    const base = offsetRef.current  // Capturado al inicio, no cambia durante la tirada
     const now = new Date().toISOString()
     const startedAtMs = Date.now()
     const startedAtPerf = performance.now()
@@ -445,14 +451,18 @@ export default function Game() {
     startPerfRef.current = startedAtPerf
     iAmTheShooterRef.current = true
     runningRef.current = true
+    timerVersionRef.current += 1
     setRunning(true)
 
     stopInactivityTimer()
 
+    const myVersion = timerVersionRef.current
+    const shooterBase = base  // Constante — no cambia aunque offsetRef cambie
     intervalRef.current = setInterval(() => {
-      // performance.now() es más preciso que Date.now() para intervalos cortos
-      const elapsed = Math.floor((performance.now() - startedAtPerf) / 10)
-      setCentesimas(base + elapsed)
+      if (timerVersionRef.current !== myVersion) return
+      if (!startPerfRef.current) return
+      const elapsed = Math.floor((performance.now() - startPerfRef.current) / 10)
+      setCentesimas(shooterBase + elapsed)
     }, 10)
 
     timeoutWarnRef.current = setTimeout(async () => {
@@ -505,6 +515,7 @@ export default function Game() {
     processingRef.current = true
     runningRef.current = false
     iAmTheShooterRef.current = false
+    timerVersionRef.current += 1  // Invalida ticks pendientes
 
     // Limpiar intervalo INMEDIATAMENTE para congelar el display
     clearInterval(intervalRef.current)
