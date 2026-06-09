@@ -215,10 +215,10 @@ export default function Game() {
         setOpponentGone(false)
         startDisconnectWatcher(updated, playerRef.current)
 
-        // Gestionar timer de inactividad — arrancar cuando el turno cambia A mi favor
-        if (isMyTurn && !wasMyTurn) {
+        // Gestionar timer de inactividad — reiniciar en cada update cuando es mi turno
+        if (isMyTurn && !updated.timer_running) {
           startInactivityTimer(playerRef.current, updated)
-        } else if (!isMyTurn) {
+        } else if (!isMyTurn || updated.timer_running) {
           stopInactivityTimer()
         }
 
