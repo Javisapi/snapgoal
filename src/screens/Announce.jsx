@@ -133,7 +133,12 @@ export default function Announce() {
     <div style={styles.container}>
       <div style={styles.cancelBox}>
         <p style={styles.cancelTitle}>Partido cancelado</p>
-        <p style={styles.cancelText}>Ningún jugador confirmó a tiempo.</p>
+        <p style={styles.cancelText}>
+          {iReady
+            ? 'Tu rival no confirmó a tiempo.'
+            : 'Ningún jugador confirmó a tiempo.'
+          }
+        </p>
         <button style={styles.btnPrimary} onClick={() => navigate('/')}>Volver al inicio</button>
       </div>
     </div>
