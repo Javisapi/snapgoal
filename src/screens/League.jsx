@@ -37,6 +37,7 @@ export default function League() {
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState('ranking')
   const [showKick, setShowKick] = useState(null)
+  const [showDeleteLeague, setShowDeleteLeague] = useState(false)
   const channelRef = useRef(null)
 
   useEffect(() => {
@@ -81,6 +82,14 @@ export default function League() {
     await supabase.from('league_members').delete().eq('id', memberId)
     setShowKick(null)
     await loadLeague(player)
+  }
+
+  async function handleDeleteLeague() {
+    await supabase.from('matches').update({ league_id: null }).eq('league_id', leagueId)
+    await supabase.from('league_messages').delete().eq('league_id', leagueId)
+    await supabase.from('league_members').delete().eq('league_id', leagueId)
+    await supabase.from('leagues').delete().eq('id', leagueId)
+    navigate('/leagues')
   }
 
   async function handleLeave() {
@@ -238,6 +247,11 @@ export default function League() {
             {!isAdmin() && !expired && (
               <button style={styles.leaveBtn} onClick={handleLeave}>Salir de la liga</button>
             )}
+            {isAdmin() && (
+              <button style={styles.deleteLeagueBtn} onClick={() => setShowDeleteLeague(true)}>
+                Eliminar liga
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -251,6 +265,18 @@ export default function League() {
           >
             ⚡ Buscar rival en la liga
           </button>
+        </div>
+      )}
+
+      {/* Modal eliminar liga */}
+      {showDeleteLeague && (
+        <div style={styles.overlay}>
+          <div style={styles.modal}>
+            <p style={styles.modalTitle}>Eliminar liga</p>
+            <p style={styles.modalText}>Se eliminarán permanentemente la liga, todos los miembros y el historial. Esta acción no se puede deshacer.</p>
+            <button style={styles.btnConfirm} onClick={handleDeleteLeague}>Sí, eliminar liga</button>
+            <button style={styles.btnCancel} onClick={() => setShowDeleteLeague(false)}>Cancelar</button>
+          </div>
         </div>
       )}
 
@@ -304,6 +330,7 @@ const styles = {
   memberPtsLabel: { fontSize: '0.6rem', color: 'rgba(255,255,255,0.25)' },
   kickBtn: { background: 'rgba(255,68,68,0.1)', border: '1px solid rgba(255,68,68,0.2)', borderRadius: '8px', color: '#ff4444', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer', padding: '4px 10px' },
   leaveBtn: { background: 'transparent', border: '1px solid rgba(255,68,68,0.2)', borderRadius: '10px', color: 'rgba(255,68,68,0.5)', fontSize: '0.85rem', cursor: 'pointer', padding: '0.75rem', marginTop: '0.5rem' },
+  deleteLeagueBtn: { background: 'rgba(255,68,68,0.08)', border: '1px solid rgba(255,68,68,0.2)', borderRadius: '10px', color: '#ff4444', fontSize: '0.85rem', cursor: 'pointer', padding: '0.75rem', marginTop: '0.5rem', fontWeight: '700' },
   footer: { padding: '1rem 1.75rem 2rem', flexShrink: 0 },
   btnPlay: { width: '100%', background: '#ffb400', color: '#141414', border: 'none', borderRadius: '12px', padding: '1.1rem', fontSize: '1rem', fontWeight: '800', cursor: 'pointer' },
   overlay: { position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem', zIndex: 100 },
