@@ -89,15 +89,19 @@ export default function Announce() {
     // Countdown de 10 segundos
     countdownRef.current = setInterval(async () => {
       setCountdown(prev => {
-        if (prev <= 1) {
+        const next = prev - 1
+        if (next <= 0) {
           clearInterval(countdownRef.current)
           if (!cancelledRef.current) {
-            // Cancelar partido
+            cancelledRef.current = true
+            // Cancelar partido en Supabase
             supabase.from('matches').update({ status: 'cancelled' }).eq('id', matchId)
+            // Navegar directamente sin esperar Realtime
+            setCancelled(true)
           }
           return 0
         }
-        return prev - 1
+        return next
       })
     }, 1000)
   }

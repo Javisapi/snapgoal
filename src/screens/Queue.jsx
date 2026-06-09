@@ -99,16 +99,24 @@ export default function Queue() {
       }, async (payload) => {
         if (payload.new.status === 'matched' && !stateRef.current.cancelled) {
           clearTimeout(stateRef.current.timeoutId)
-          const { data: match } = await supabase
-            .from('matches')
-            .select('id')
-            .or(`player1_id.eq.${p.id},player2_id.eq.${p.id}`)
-            .eq('status', 'announcing')
-            .order('started_at', { ascending: false })
-            .limit(1)
-            .single()
-          if (match && !stateRef.current.cancelled) {
-            navigate('/announce/' + match.id)
+          // Reintentar hasta 10 veces con 500ms entre intentos
+          let found = false
+          for (let i = 0; i < 10; i++) {
+            if (stateRef.current.cancelled) break
+            const { data: match } = await supabase
+              .from('matches')
+              .select('id')
+              .or(`player1_id.eq.${p.id},player2_id.eq.${p.id}`)
+              .in('status', ['announcing', 'playing'])
+              .order('started_at', { ascending: false })
+              .limit(1)
+              .single()
+            if (match) {
+              navigate('/announce/' + match.id)
+              found = true
+              break
+            }
+            await new Promise(r => setTimeout(r, 500))
           }
         }
       })
