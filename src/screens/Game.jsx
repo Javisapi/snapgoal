@@ -174,7 +174,7 @@ export default function Game() {
         if (updated.id !== matchId) return
         matchRef.current = updated
         setMatch({ ...updated })
-        const wasMyTurn = matchRef.current?.current_turn === playerRef.current?.id
+        const prevMatch = { ...matchRef.current }
         const isMyTurn = updated.current_turn === playerRef.current?.id
         if (updated.cards_p1 && updated.cards_p2) setCards({ p1: updated.cards_p1, p2: updated.cards_p2 })
         if (updated.penalty_choice) setPenaltyChoice(updated.penalty_choice)
@@ -215,12 +215,11 @@ export default function Game() {
         setOpponentGone(false)
         startDisconnectWatcher(updated, playerRef.current)
 
-        // Solo reiniciar timer si cambió el turno o el estado del cronómetro
-        const turnChanged = updated.current_turn !== matchRef.current?.current_turn
-        const timerStopped = matchRef.current?.timer_running && !updated.timer_running
-        if (isMyTurn && !updated.timer_running && (turnChanged || timerStopped)) {
+        // Reiniciar timer cuando turn_sequence cambia y es mi turno
+        const sequenceChanged = (updated.turn_sequence || 0) !== (prevMatch?.turn_sequence || 0)
+        if (isMyTurn && !updated.timer_running && sequenceChanged) {
           startInactivityTimer(playerRef.current, updated)
-        } else if (!isMyTurn) {
+        } else if (!isMyTurn || updated.timer_running) {
           stopInactivityTimer()
         }
 
@@ -534,7 +533,10 @@ export default function Game() {
         pending_type: 'FALTA',
         barrier_range: null,
         last_event: JSON.stringify(event),
+        turn_started_at: new Date().toISOString(),
+        turn_sequence: (matchRef.current?.turn_sequence || 0) + 1,
       }).eq('id', matchId)
+      if (matchRef.current) matchRef.current.turn_sequence = (matchRef.current.turn_sequence || 0) + 1
       return
     }
 
@@ -547,6 +549,8 @@ export default function Game() {
         timer_running: false,
         pending_type: 'CORNER',
         last_event: JSON.stringify(event),
+        turn_started_at: new Date().toISOString(),
+        turn_sequence: (matchRef.current?.turn_sequence || 0) + 1,
       }).eq('id', matchId)
       return
     }
@@ -562,6 +566,8 @@ export default function Game() {
         pending_type: 'PENALTY',
         penalty_choice: null,
         last_event: JSON.stringify(event),
+        turn_started_at: new Date().toISOString(),
+        turn_sequence: (matchRef.current?.turn_sequence || 0) + 1,
       }).eq('id', matchId)
       return
     }
@@ -630,7 +636,10 @@ export default function Game() {
     await supabase.from('matches').update({
       barrier_range: range,
       last_event: JSON.stringify(event),
+      turn_started_at: new Date().toISOString(),
+      turn_sequence: (matchRef.current?.turn_sequence || 0) + 1,
     }).eq('id', matchId)
+    if (matchRef.current) matchRef.current.turn_sequence = (matchRef.current.turn_sequence || 0) + 1
   }
 
   async function selectPenaltyChoice(choice) {
@@ -700,7 +709,9 @@ export default function Game() {
       winner_id: winnerId,
       ended_at: finished ? new Date().toISOString() : null,
       turn_started_at: finished ? null : new Date().toISOString(),
+      turn_sequence: (matchRef.current?.turn_sequence || 0) + 1,
     }).eq('id', matchId)
+    if (matchRef.current) matchRef.current.turn_sequence = (matchRef.current.turn_sequence || 0) + 1
 
     if (finished) {
       // Solo el jugador que hizo la última jugada actualiza stats
