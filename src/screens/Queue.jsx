@@ -123,16 +123,23 @@ export default function Queue() {
       .subscribe()
     stateRef.current.channel = channel
 
-    // Polling cada 2 segundos como respaldo
-    const pollInterval = setInterval(async () => {
+    // Polling con jitter aleatorio entre 1-4 segundos para distribuir carga
+    function scheduleNextPoll() {
       if (stateRef.current.cancelled) return
-      const matchId = await tryMatchOnServer(p.id)
-      if (matchId && !stateRef.current.cancelled) {
-        clearTimeout(stateRef.current.timeoutId)
-        navigate('/announce/' + matchId)
-      }
-    }, 2000)
-    stateRef.current.intervals.push(pollInterval)
+      const jitter = 1000 + Math.random() * 3000
+      const t = setTimeout(async () => {
+        if (stateRef.current.cancelled) return
+        const matchId = await tryMatchOnServer(p.id)
+        if (matchId && !stateRef.current.cancelled) {
+          clearTimeout(stateRef.current.timeoutId)
+          navigate('/announce/' + matchId)
+        } else {
+          scheduleNextPoll()
+        }
+      }, jitter)
+      stateRef.current.intervals.push(t)
+    }
+    scheduleNextPoll()
   }
 
   async function tryMatchOnServer(playerId) {

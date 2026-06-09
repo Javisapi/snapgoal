@@ -129,6 +129,23 @@ Vercel usa `pnpm` — configurado en `package.json` con `"packageManager": "pnpm
 
 ---
 
+## Escalabilidad
+
+### Situación actual (Opción B — hasta ~100 jugadores simultáneos)
+- Cada cliente hace polling con **jitter aleatorio de 1-4 segundos** para distribuir la carga
+- La función SQL `do_matchmaking` usa `FOR UPDATE SKIP LOCKED` para emparejamiento atómico sin duplicados
+- Supabase free tier soporta 60 conexiones simultáneas — suficiente para decenas de jugadores
+
+### Para escalar a cientos de jugadores (Opción A — pendiente de implementar)
+Implementar un **matchmaker centralizado** via **Supabase Edge Function**:
+- Una función serverless que corre cada 2 segundos
+- Empareja a TODOS los jugadores en cola de una vez en un solo proceso
+- Los clientes solo escuchan via Realtime — sin polling
+- 0 contención de locks
+- Escala a cientos de jugadores simultáneos sin cambios en el cliente
+
+---
+
 ## Decisiones técnicas importantes
 
 ### Cronómetro
