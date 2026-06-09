@@ -186,15 +186,14 @@ export default function Game() {
         if (updated.timer_running && updated.timer_started_at) {
           startLocalTimer(updated.elapsed_centesimas || 0, new Date(updated.timer_started_at).getTime())
         } else {
+          // Cronómetro parado — mostrar valor autoritativo de Supabase
           clearInterval(intervalRef.current)
+          intervalRef.current = null
           runningRef.current = false
           setRunning(false)
           const val = updated.elapsed_centesimas || 0
           offsetRef.current = val
-          // Solo actualizar display si no somos nosotros los que acabamos de parar
-          if (!processingRef.current) {
-            setCentesimas(val)
-          }
+          setCentesimas(val)
         }
 
         // Pending
@@ -393,13 +392,28 @@ export default function Game() {
     setTimeout(() => setFlashEvent(null), 1800)
   }
 
+  const touchFiredRef = useRef(false)
+
+  function handleTouch(e) {
+    e.preventDefault()
+    touchFiredRef.current = true
+    handleAction()
+  }
+
   function handleClick() {
+    if (touchFiredRef.current) {
+      touchFiredRef.current = false
+      return
+    }
+    handleAction()
+  }
+
+  function handleAction() {
     if (processingRef.current) return
     const now = Date.now()
-    if (now - lastTapRef.current < 10) return
+    if (now - lastTapRef.current < 30) return
     lastTapRef.current = now
     if (runningRef.current) {
-      // Mínimo 1 centésima (10ms) corriendo antes de poder parar
       const elapsed = Date.now() - startTimeRef.current
       if (elapsed < 10) return
       stopTimer()
@@ -415,6 +429,7 @@ export default function Game() {
     const base = offsetRef.current
     const now = new Date().toISOString()
     const startedAtMs = Date.now()
+    const startedAtPerf = performance.now()
     startTimeRef.current = startedAtMs
     runningRef.current = true
     setRunning(true)
@@ -422,7 +437,9 @@ export default function Game() {
     stopInactivityTimer()
 
     intervalRef.current = setInterval(() => {
-      setCentesimas(base + Math.floor((Date.now() - startedAtMs) / 10))
+      // performance.now() es más preciso que Date.now() para intervalos cortos
+      const elapsed = Math.floor((performance.now() - startedAtPerf) / 10)
+      setCentesimas(base + elapsed)
     }, 10)
 
     timeoutWarnRef.current = setTimeout(async () => {
@@ -978,7 +995,8 @@ export default function Game() {
                   ? '0 0 0 8px rgba(255,68,68,0.1),0 0 0 16px rgba(255,68,68,0.05)'
                   : '0 0 0 8px rgba(255,180,0,0.1),0 0 0 16px rgba(255,180,0,0.05)',
               }}
-              onClick={() => handleClick()}
+              onTouchEnd={(e) => handleTouch(e)}
+            onClick={() => handleClick()}
             >
               <div style={{ width: running ? '22px' : '16px', height: running ? '22px' : '16px', background: '#141414', borderRadius: running ? '4px' : '50%' }} />
               <span style={styles.btnStopText}>{running ? 'PARAR' : 'START'}</span>
