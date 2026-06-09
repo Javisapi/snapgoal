@@ -174,6 +174,7 @@ export default function Game() {
         if (updated.id !== matchId) return
         matchRef.current = updated
         setMatch({ ...updated })
+        const wasMyTurn = matchRef.current?.current_turn === playerRef.current?.id
         const isMyTurn = updated.current_turn === playerRef.current?.id
         if (updated.cards_p1 && updated.cards_p2) setCards({ p1: updated.cards_p1, p2: updated.cards_p2 })
         if (updated.penalty_choice) setPenaltyChoice(updated.penalty_choice)
@@ -214,10 +215,10 @@ export default function Game() {
         setOpponentGone(false)
         startDisconnectWatcher(updated, playerRef.current)
 
-        // Gestionar timer de inactividad — solo cuando cambia el turno A mi favor
-        if (updated.current_turn === playerRef.current?.id && !isMyTurn) {
+        // Gestionar timer de inactividad — arrancar cuando el turno cambia A mi favor
+        if (isMyTurn && !wasMyTurn) {
           startInactivityTimer(playerRef.current, updated)
-        } else if (updated.current_turn !== playerRef.current?.id) {
+        } else if (!isMyTurn) {
           stopInactivityTimer()
         }
 
