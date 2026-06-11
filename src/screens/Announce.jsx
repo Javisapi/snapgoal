@@ -168,7 +168,7 @@ export default function Announce() {
             <p style={styles.playerName}>{player.username}</p>
             <div style={styles.statsRow}>
               <span style={styles.statItem}>{player.matches_won}<span style={styles.statLabel}>V</span></span>
-              <span style={styles.statItem}>{player.matches_drawn}<span style={styles.statLabel}>E</span></span>
+              
               <span style={styles.statItem}>{player.matches_lost}<span style={styles.statLabel}>D</span></span>
             </div>
             <p style={styles.pts}>{player.total_points} pts</p>
@@ -188,7 +188,7 @@ export default function Announce() {
             <p style={styles.playerName}>{opponent.username}</p>
             <div style={styles.statsRow}>
               <span style={styles.statItem}>{opponent.matches_won}<span style={styles.statLabel}>V</span></span>
-              <span style={styles.statItem}>{opponent.matches_drawn}<span style={styles.statLabel}>E</span></span>
+              
               <span style={styles.statItem}>{opponent.matches_lost}<span style={styles.statLabel}>D</span></span>
             </div>
             <p style={styles.pts}>{opponent.total_points} pts</p>

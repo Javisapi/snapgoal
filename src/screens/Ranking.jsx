@@ -96,7 +96,7 @@ export default function Ranking() {
                   <div style={styles.playerWDL}>
                     <span style={styles.wVal}>{p.matches_won}<span style={styles.wLabel}>V</span></span>
                     <span style={styles.wDot}>·</span>
-                    <span style={styles.wVal}>{p.matches_drawn}<span style={styles.wLabel}>E</span></span>
+                    
                     <span style={styles.wDot}>·</span>
                     <span style={styles.wVal}>{p.matches_lost}<span style={styles.wLabel}>D</span></span>
                   </div>

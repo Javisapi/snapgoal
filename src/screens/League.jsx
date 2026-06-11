@@ -172,7 +172,7 @@ export default function League() {
               <span style={styles.myStatsLabel}>partidos</span>
             </div>
             <div style={styles.myStatsItem}>
-              <span style={styles.myStatsVal}>{myMember.matches_won}V {myMember.matches_drawn}E {myMember.matches_lost}D</span>
+              <span style={styles.myStatsVal}>{myMember.matches_won}V {myMember.matches_lost}D</span>
               <span style={styles.myStatsLabel}>resultados</span>
             </div>
           </div>
@@ -208,7 +208,7 @@ export default function League() {
                       {isAdminMember && <span style={styles.adminBadge}>Admin</span>}
                       {isMe && <span style={styles.meBadge}>tú</span>}
                     </div>
-                    <span style={styles.memberWDL}>{m.matches_won}V · {m.matches_drawn}E · {m.matches_lost}D</span>
+                    <span style={styles.memberWDL}>{m.matches_won}V · {m.matches_lost}D</span>
                   </div>
                   <div style={styles.memberPtsBlock}>
                     <span style={styles.memberPts}>{m.points}</span>

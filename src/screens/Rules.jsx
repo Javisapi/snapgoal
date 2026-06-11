@@ -72,13 +72,13 @@ const SECTIONS = [
     ]
   },
   {
-    title: 'Empate — penaltis',
+    title: 'Penaltis a muerte súbita',
     color: 'rgba(255,255,255,0.7)',
     rules: [
-      'Si hay empate al llegar a 30 segundos → penaltis a muerte súbita.',
-      'Máximo 3 tandas. En cada tanda lanza A y luego B.',
+      'Si hay empate al llegar a 30 segundos → penaltis a muerte súbita hasta que haya un ganador.',
+      'En cada tanda lanza primero A y luego B.',
       'Si A marca y B falla → gana A (y viceversa).',
-      'Si tras 3 tandas sigue el empate → empate definitivo.',
+      'Se repiten tandas hasta que uno marque y el otro falle en la misma ronda.',
     ]
   },
   {
@@ -86,7 +86,7 @@ const SECTIONS = [
     color: '#ffb400',
     rules: [
       'Victoria → 3 puntos',
-      'Empate → 1 punto',
+      'No hay empates — siempre hay un ganador.',
       'Derrota → 0 puntos',
     ]
   },
