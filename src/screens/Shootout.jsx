@@ -174,6 +174,8 @@ export default function Shootout() {
 
     // Actualizar estado local inmediatamente para que canShoot sea true
     setShootoutState(newState)
+    matchRef.current = { ...matchRef.current, shootout_state: newState }
+    setMatch(m => ({ ...m, shootout_state: newState }))
     setLastMsg(`Elegiste ${choice.toUpperCase()} — tira ahora`)
 
     await supabase.from('matches').update({
@@ -335,8 +337,6 @@ export default function Shootout() {
   const oppScore = isP1 ? shootoutScore.b : shootoutScore.a
   const myChoice = isP1 ? shootoutState.a_choice : shootoutState.b_choice
   const myScored = isP1 ? shootoutState.a_scored : shootoutState.b_scored
-    ? shootoutState.a_scored === null
-    : shootoutState.a_scored !== null && shootoutState.b_scored === null
   const canShoot = isMyTurn && myChoice !== null && myScored === null
   console.log('SHOOTOUT STATE:', { isMyTurn, myChoice, myScored, canShoot, shootoutState })
   const secs = Math.floor(centesimas / 100)
