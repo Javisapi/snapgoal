@@ -210,7 +210,7 @@ export default function Leagues() {
                     </div>
                     <div style={styles.leagueCardBottom}>
                       <span style={styles.leagueStat}>{m.matches_played} partidos</span>
-                      <span style={styles.leagueStat}>{m.matches_won}V {m.matches_drawn}E {m.matches_lost}D</span>
+                      <span style={styles.leagueStat}>{m.matches_won}V {m.matches_lost}D</span>
                     </div>
                   </div>
                 )

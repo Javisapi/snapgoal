@@ -774,7 +774,7 @@ export default function Game() {
         shootout_round: 1,
         shootout_state: { round: 1, a_scored: null, b_scored: null, a_choice: null, b_choice: null },
         shootout_score: { a: 0, b: 0 },
-        last_event: JSON.stringify({ emoji: '🥅', label: 'Empate — penaltis a muerte súbita' }),
+        last_event: JSON.stringify({ emoji: '🥅', label: 'Penaltis a muerte súbita' }),
         current_turn: m.player1_id,
       }).eq('id', matchId)
       if (mountedRef.current) navigate('/shootout/' + matchId)

@@ -233,7 +233,7 @@ export default function Result() {
           <div style={{ ...styles.defeatLabel, animation: 'defeatDrop 0.5s ease forwards' }}>DERROTA</div>
         )}
         {drew && (
-          <div style={styles.drawLabel}>EMPATE</div>
+          <div style={styles.drawLabel}>PENALTIS</div>
         )}
 
         <div style={{ ...styles.scoreRow, animation: 'slideUp 0.4s ease 0.2s both' }}>
@@ -267,7 +267,7 @@ export default function Result() {
         <div style={styles.statDivider} />
         <div style={styles.statRow}>
           <span style={styles.statLabel}>V / E / D</span>
-          <span style={styles.statVal}>{updatedPlayer.matches_won} / {updatedPlayer.matches_drawn} / {updatedPlayer.matches_lost}</span>
+          <span style={styles.statVal}>{updatedPlayer.matches_won}V / {updatedPlayer.matches_lost}D</span>
         </div>
       </div>
 

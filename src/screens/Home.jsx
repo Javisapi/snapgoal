@@ -184,7 +184,7 @@ export default function Home() {
           <span style={styles.playerMetaDot} />
           <span style={styles.playerMetaItem}>{player.matches_played} partidos</span>
           <span style={styles.playerMetaDot} />
-          <span style={styles.playerMetaItem}>{player.matches_won}V {player.matches_drawn}E {player.matches_lost}D</span>
+          <span style={styles.playerMetaItem}>{player.matches_won}V {player.matches_lost}D</span>
         </div>
       </div>
 

@@ -39,6 +39,7 @@ export default function Shootout() {
   const [running, setRunning] = useState(false)
   const [shootoutState, setShootoutState] = useState(null)
   const [shootoutScore, setShootoutScore] = useState({ a: 0, b: 0 })
+  const shootoutScoreRef = useRef({ a: 0, b: 0 })
   const [penaltyChoice, setPenaltyChoice] = useState(null)
   const [showChoicePopup, setShowChoicePopup] = useState(false)
   const [lastMsg, setLastMsg] = useState(null)
@@ -82,6 +83,7 @@ export default function Shootout() {
     const score = parseJ(m.shootout_score, {a:0,b:0})
     setShootoutState(state)
     setShootoutScore(score)
+    shootoutScoreRef.current = score
 
     const oppId = m.player1_id === p.id ? m.player2_id : m.player1_id
     const { data: opp } = await supabase.from('players').select('*').eq('id', oppId).single()
@@ -110,6 +112,7 @@ export default function Shootout() {
         const score = parseJ(updated.shootout_score, {a:0,b:0})
         setShootoutState(state)
         setShootoutScore(score)
+        shootoutScoreRef.current = score
 
         const isP1 = updated.player1_id === playerRef.current?.id
         const myTurnNow = updated.current_turn === playerRef.current?.id
@@ -241,7 +244,7 @@ export default function Shootout() {
     const p = playerRef.current
     const isP1 = m.player1_id === p.id
     const state = parseJ(m.shootout_state, {})
-    const score = parseJ(m.shootout_score, {a:0,b:0})
+    const score = { ...shootoutScoreRef.current }
     const choice = isP1 ? state.a_choice : state.b_choice
 
     if (!choice) return
@@ -290,7 +293,6 @@ export default function Shootout() {
       const round = state.round || 1
       if (aScored && !bScored) { await finishShootout(m, m.player1_id, newScore, updates); return }
       if (!aScored && bScored) { await finishShootout(m, m.player2_id, newScore, updates); return }
-      if (round >= 3) { await finishShootout(m, null, newScore, updates); return }
       updates.shootout_round = round + 1
       updates.shootout_state = { round: round + 1, a_scored: null, b_scored: null, a_choice: null, b_choice: null }
       updates.current_turn = m.player1_id
@@ -355,7 +357,7 @@ export default function Shootout() {
         <div style={{ position: 'absolute', top: '1.5rem', right: '1.5rem' }}>
           <LatencyIndicator />
         </div>
-        <p style={styles.roundLabel}>Tanda {shootoutState.round || 1} de 3</p>
+        <p style={styles.roundLabel}>Tanda {shootoutState.round || 1}</p>
         <h1 style={{ ...styles.title, animation: 'tensionPulse 1.5s ease-in-out infinite' }}>PENALTIS</h1>
         <div style={styles.titleLine} />
       </div>
