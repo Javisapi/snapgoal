@@ -225,7 +225,12 @@ export default function Game() {
         }
 
         if (updated.last_event) {
-          try { setLastPlay(JSON.parse(updated.last_event)) } catch(e) {}
+          try {
+            const ev = JSON.parse(updated.last_event)
+            setLastPlay(ev)
+            if (ev.emoji === '⚽') triggerFlash('goal', 'GOL')
+            else if (ev.emoji === '💥') triggerFlash('owngoal', 'GOL PROPIO')
+          } catch(e) {}
         }
 
         // El rival sigue vivo — reiniciar watcher
@@ -699,8 +704,8 @@ export default function Game() {
       if (range) {
         gol = last2 >= range.min && last2 < range.max
         label = gol
-          ? `⚽ Gol de falta de ${p.username} (${last2} en ${range.min}-${range.max})`
-          : `🧤 Falta fallada por ${p.username} (${last2} fuera de ${range.min}-${range.max})`
+          ? `⚽ Gol de falta de ${p.username} (${last2} en ${range.min}-${range.max-1})`
+          : `🧤 Falta fallada por ${p.username} (${last2} fuera de ${range.min}-${range.max-1})`
         emoji = gol ? '⚽' : '🧤'
         if (gol) { if (p1) sp1 += 1; else sp2 += 1 }
       }
@@ -713,6 +718,9 @@ export default function Game() {
       emoji = '💥'
       if (p1) sp2 += 1; else sp1 += 1
     }
+
+    if (gol) triggerFlash('goal', 'GOL')
+    if (ev.result === 'GOL_PROPIO') triggerFlash('owngoal', 'GOL PROPIO')
 
     const event = label ? { emoji, label } : null
     if (event) setLastPlay(event)
@@ -1023,7 +1031,7 @@ export default function Game() {
           <p style={styles.barrierTitle}>🧱 Colocando la barrera</p>
           <p style={styles.barrierSub}>Elige entre qué valores debe parar el rival para marcar</p>
           <div style={styles.barrierBtns}>
-            {[[20,30],[30,40],[40,50]].map(([min,max]) => (
+            {[[20,25],[30,35],[40,45]].map(([min,max]) => (
               <button key={min} style={styles.barrierBtn} onClick={() => selectBarrier(min, max)}>
                 {min} — {max}
               </button>
@@ -1043,7 +1051,7 @@ export default function Game() {
       {pendingType === 'FALTA' && myTurn && barrierRange && (
         <div style={styles.faltaInstructions}>
           <span style={styles.faltaInstructionsText}>
-            Para entre {barrierRange.min} y {barrierRange.max} para marcar
+            Para entre {barrierRange.min} y {barrierRange.max - 1} para marcar
           </span>
         </div>
       )}
