@@ -70,8 +70,8 @@ export default function Shootout() {
     matchRef.current = m
     setMatch(m)
 
-    const state = JSON.parse(m.shootout_state || '{"round":1,"a_scored":null,"b_scored":null,"a_choice":null,"b_choice":null}')
-    const score = JSON.parse(m.shootout_score || '{"a":0,"b":0}')
+    const state = parseJ(m.shootout_state, {round:1,a_scored:null,b_scored:null,a_choice:null,b_choice:null})
+    const score = parseJ(m.shootout_score, {a:0,b:0})
     setShootoutState(state)
     setShootoutScore(score)
 
@@ -98,8 +98,8 @@ export default function Shootout() {
         matchRef.current = updated
         setMatch({ ...updated })
 
-        const state = JSON.parse(updated.shootout_state || '{}')
-        const score = JSON.parse(updated.shootout_score || '{"a":0,"b":0}')
+        const state = parseJ(updated.shootout_state, {})
+        const score = parseJ(updated.shootout_score, {a:0,b:0})
         setShootoutState(state)
         setShootoutScore(score)
 
@@ -161,7 +161,7 @@ export default function Shootout() {
     setPenaltyChoice(choice)
     setShowChoicePopup(false)
 
-    const state = JSON.parse(match.shootout_state || '{}')
+    const state = parseJ(match.shootout_state, {})
     const newState = { ...state }
     if (isP1) newState.a_choice = choice
     else newState.b_choice = choice
@@ -232,8 +232,8 @@ export default function Shootout() {
     const m = matchRef.current
     const p = playerRef.current
     const isP1 = m.player1_id === p.id
-    const state = JSON.parse(m.shootout_state || '{}')
-    const score = JSON.parse(m.shootout_score || '{"a":0,"b":0}')
+    const state = parseJ(m.shootout_state, {})
+    const score = parseJ(m.shootout_score, {a:0,b:0})
     const choice = isP1 ? state.a_choice : state.b_choice
 
     if (!choice) return
