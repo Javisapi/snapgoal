@@ -113,8 +113,6 @@ export default function Shootout() {
 
         const isP1 = updated.player1_id === playerRef.current?.id
         const myTurnNow = updated.current_turn === playerRef.current?.id
-          ? state.a_scored === null
-          : state.a_scored !== null && state.b_scored === null
 
         if (myTurnNow && !state[isP1 ? 'a_choice' : 'b_choice'] && !showChoicePopup) {
           setShowChoicePopup(true)
