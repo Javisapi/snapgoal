@@ -108,10 +108,15 @@ export default function Shootout() {
           ? state.a_scored === null
           : state.a_scored !== null && state.b_scored === null
 
-        if (myTurnNow && !state[isP1 ? 'a_choice' : 'b_choice']) {
+        if (myTurnNow && !state[isP1 ? 'a_choice' : 'b_choice'] && !showChoicePopup) {
           setShowChoicePopup(true)
           offsetRef.current = updated.elapsed_centesimas || 0
           setCentesimas(updated.elapsed_centesimas || 0)
+        }
+
+        if (updated.status === 'finished') {
+          navigate('/result/' + matchId)
+          return
         }
 
         if (updated.timer_running && updated.timer_started_at) {
@@ -255,6 +260,10 @@ export default function Shootout() {
       if (gol) newScore.b = (newScore.b || 0) + 1
     }
 
+    // Actualizar estado local inmediatamente
+    setShootoutState(newState)
+    setShootoutScore(newScore)
+
     const aScored = isP1 ? gol : state.a_scored
     const bScored = isP1 ? state.b_scored : gol
     const aDone = isP1 ? true : state.a_scored !== null
@@ -304,6 +313,8 @@ export default function Shootout() {
       p_cards_p1: m.cards_p1 || { yellow: 0, red: 0 },
       p_cards_p2: m.cards_p2 || { yellow: 0, red: 0 },
     })
+
+    navigate('/result/' + matchId)
   }
 
   if (!match || !opponent || !player || !shootoutState) return (
