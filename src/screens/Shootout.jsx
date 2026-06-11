@@ -3,6 +3,14 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import LatencyIndicator from '../components/LatencyIndicator'
 
+
+const parseJ = (val, fallback) => {
+  if (!val) return fallback
+  if (typeof val === 'object') return val
+  try { return JSON.parse(val) } catch(e) { return fallback }
+}
+
+
 async function getPlayer() {
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) return null
@@ -81,7 +89,7 @@ export default function Shootout() {
 
     // Soy jugador A (player1) o B (player2)?
     const isP1 = m.player1_id === p.id
-    const myTurn = isP1
+    const myTurn = m.current_turn === p.id
       ? state.a_scored === null
       : state.a_scored !== null && state.b_scored === null
 
@@ -104,7 +112,7 @@ export default function Shootout() {
         setShootoutScore(score)
 
         const isP1 = updated.player1_id === playerRef.current?.id
-        const myTurnNow = isP1
+        const myTurnNow = updated.current_turn === playerRef.current?.id
           ? state.a_scored === null
           : state.a_scored !== null && state.b_scored === null
 
@@ -171,7 +179,7 @@ export default function Shootout() {
     setLastMsg(`Elegiste ${choice.toUpperCase()} — tira ahora`)
 
     await supabase.from('matches').update({
-      shootout_state: JSON.stringify(newState),
+      shootout_state: newState,
       last_event: JSON.stringify({ label: `${player.username} eligió ${choice.toUpperCase()}` }),
     }).eq('id', matchId)
   }
@@ -272,8 +280,8 @@ export default function Shootout() {
     let updates = {
       elapsed_centesimas: total,
       timer_running: false,
-      shootout_state: JSON.stringify(newState),
-      shootout_score: JSON.stringify(newScore),
+      shootout_state: newState,
+      shootout_score: newScore,
       last_event: JSON.stringify({ label: msg }),
       current_turn: isP1 ? m.player2_id : m.player1_id,
     }
@@ -284,7 +292,7 @@ export default function Shootout() {
       if (!aScored && bScored) { await finishShootout(m, m.player2_id, newScore, updates); return }
       if (round >= 3) { await finishShootout(m, null, newScore, updates); return }
       updates.shootout_round = round + 1
-      updates.shootout_state = JSON.stringify({ round: round + 1, a_scored: null, b_scored: null, a_choice: null, b_choice: null })
+      updates.shootout_state = { round: round + 1, a_scored: null, b_scored: null, a_choice: null, b_choice: null }
       updates.current_turn = m.player1_id
     }
 
@@ -324,11 +332,11 @@ export default function Shootout() {
   )
 
   const isP1 = match.player1_id === player.id
+  const isMyTurn = match.current_turn === player.id
   const myScore = isP1 ? shootoutScore.a : shootoutScore.b
   const oppScore = isP1 ? shootoutScore.b : shootoutScore.a
   const myChoice = isP1 ? shootoutState.a_choice : shootoutState.b_choice
   const myScored = isP1 ? shootoutState.a_scored : shootoutState.b_scored
-  const isMyTurn = isP1
     ? shootoutState.a_scored === null
     : shootoutState.a_scored !== null && shootoutState.b_scored === null
   const canShoot = isMyTurn && myChoice !== null && myScored === null
