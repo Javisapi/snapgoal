@@ -770,10 +770,10 @@ export default function Game() {
         score_p1: sp1, score_p2: sp2,
         elapsed_centesimas: total,
         timer_running: false,
-        pending_type: 'SHOOTOUT',
+        status: 'shootout',
         shootout_round: 1,
-        shootout_state: JSON.stringify({ round: 1, a_scored: null, b_scored: null, a_choice: null, b_choice: null }),
-        shootout_score: JSON.stringify({ a: 0, b: 0 }),
+        shootout_state: { round: 1, a_scored: null, b_scored: null, a_choice: null, b_choice: null },
+        shootout_score: { a: 0, b: 0 },
         last_event: JSON.stringify({ emoji: '🥅', label: 'Empate — penaltis a muerte súbita' }),
         current_turn: m.player1_id,
       }).eq('id', matchId)
