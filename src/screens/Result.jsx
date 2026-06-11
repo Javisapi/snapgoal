@@ -143,8 +143,12 @@ export default function Result() {
       }, async (payload) => {
         if (payload.new.status === 'accepted') {
           supabase.removeChannel(ch)
+          // Soy el requester — creo el partido y guardo el ID en la solicitud
           const newMatch = await createRematch(match)
-          if (newMatch) navigate('/announce/' + newMatch.id)
+          if (newMatch) {
+            await supabase.from('rematch_requests').update({ new_match_id: newMatch.id }).eq('id', req.id)
+            navigate('/announce/' + newMatch.id)
+          }
         } else if (payload.new.status === 'rejected' || payload.new.status === 'expired') {
           supabase.removeChannel(ch)
           setRematchStatus('rejected')
@@ -164,9 +168,23 @@ export default function Result() {
 
   async function acceptRematch() {
     if (!rematchRequest || !match) return
+    // Solo marcar como aceptado — el requester creará el partido y nos notificará
     await supabase.from('rematch_requests').update({ status: 'accepted' }).eq('id', rematchRequest.id)
-    const newMatch = await createRematch(match)
-    if (newMatch) navigate('/announce/' + newMatch.id)
+    setRematchStatus('sent') // Mostrar "esperando..." mientras el requester crea el partido
+
+    // Escuchar cuando el requester crea el partido
+    const ch = supabase.channel('rematch-accepted-' + rematchRequest.id)
+      .on('postgres_changes', {
+        event: 'UPDATE', schema: 'public',
+        table: 'rematch_requests',
+        filter: `id=eq.${rematchRequest.id}`,
+      }, async (payload) => {
+        if (payload.new.new_match_id) {
+          supabase.removeChannel(ch)
+          navigate('/announce/' + payload.new.new_match_id)
+        }
+      })
+      .subscribe()
   }
 
   async function rejectRematch() {
