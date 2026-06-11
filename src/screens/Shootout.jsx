@@ -338,8 +338,6 @@ export default function Shootout() {
   const myChoice = isP1 ? shootoutState.a_choice : shootoutState.b_choice
   const myScored = isP1 ? shootoutState.a_scored : shootoutState.b_scored
   const canShoot = isMyTurn && myChoice !== null && myScored === null
-  console.log('SHOOTOUT DEBUG:', { isMyTurn, myChoice, myScored, canShoot, current_turn: match.current_turn, player_id: player?.id, match_current_turn_equals_player: match.current_turn === player?.id })
-  console.log('SHOOTOUT STATE':, { isMyTurn, myChoice, myScored, canShoot, shootoutState })
   const secs = Math.floor(centesimas / 100)
   const cents = centesimas % 100
 
