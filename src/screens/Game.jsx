@@ -240,6 +240,10 @@ export default function Game() {
           stopInactivityTimer()
         }
 
+        if (updated.pending_type === 'SHOOTOUT' && updated.status !== 'finished') {
+          if (mountedRef.current) navigate('/shootout/' + matchId)
+          return
+        }
         if (updated.status === 'finished') {
           stopInactivityTimer()
           clearInterval(heartbeatRef.current)
@@ -768,12 +772,12 @@ export default function Game() {
         timer_running: false,
         pending_type: 'SHOOTOUT',
         shootout_round: 1,
-        shootout_state: JSON.stringify({ round: 1, turn: 'a', a_scored: null, b_scored: null, a_choice: null, b_choice: null }),
+        shootout_state: JSON.stringify({ round: 1, a_scored: null, b_scored: null, a_choice: null, b_choice: null }),
         shootout_score: JSON.stringify({ a: 0, b: 0 }),
         last_event: JSON.stringify({ emoji: '🥅', label: 'Empate — penaltis a muerte súbita' }),
         current_turn: m.player1_id,
       }).eq('id', matchId)
-      navigate('/result/' + matchId)
+      if (mountedRef.current) navigate('/shootout/' + matchId)
       return
     }
 

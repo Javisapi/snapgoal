@@ -8,6 +8,7 @@ import Rules from './screens/Rules'
 import Announce from './screens/Announce'
 import Leagues from './screens/Leagues'
 import League from './screens/League'
+import Shootout from './screens/Shootout'
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
         <Route path="/announce/:matchId" element={<Announce />} />
         <Route path="/leagues" element={<Leagues />} />
         <Route path="/league/:leagueId" element={<League />} />
+        <Route path="/shootout/:matchId" element={<Shootout />} />
         <Route path="/rules" element={<Rules />} />
       </Routes>
     </BrowserRouter>
