@@ -332,6 +332,7 @@ export default function Shootout() {
     ? shootoutState.a_scored === null
     : shootoutState.a_scored !== null && shootoutState.b_scored === null
   const canShoot = isMyTurn && myChoice !== null && myScored === null
+  console.log('SHOOTOUT STATE:', { isMyTurn, myChoice, myScored, canShoot, shootoutState })
   const secs = Math.floor(centesimas / 100)
   const cents = centesimas % 100
 
