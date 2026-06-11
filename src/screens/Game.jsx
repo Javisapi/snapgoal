@@ -4,10 +4,10 @@ import { supabase } from '../lib/supabase'
 import LatencyIndicator from '../components/LatencyIndicator'
 
 const GAME_CSS = `
-  @keyframes eventFlash { 0%{opacity:0;transform:scale(0.5) translateY(20px)} 20%{opacity:1;transform:scale(1.05) translateY(0)} 70%{opacity:1;transform:scale(1) translateY(0)} 100%{opacity:0;transform:scale(0.95) translateY(-15px)} }
+  @keyframes eventFlash { 0%{opacity:0;transform:scale(0.8)} 30%{opacity:1;transform:scale(1.05)} 60%{opacity:1;transform:scale(1)} 100%{opacity:0;transform:scale(0.95)} }
   @keyframes goalRing { 0%{transform:scale(0.8);opacity:0.8} 100%{transform:scale(2.5);opacity:0} }
   @keyframes cardShake { 0%,100%{transform:translateX(0) rotate(0deg)} 20%{transform:translateX(-10px) rotate(-3deg)} 40%{transform:translateX(10px) rotate(3deg)} 60%{transform:translateX(-6px) rotate(-2deg)} 80%{transform:translateX(6px) rotate(2deg)} }
-  @keyframes flashOverlayGold { 0%{opacity:0} 15%{opacity:1} 100%{opacity:0} }
+  @keyframes flashOverlayGold { 0%{opacity:0} 20%{opacity:1} 100%{opacity:0} }
   @keyframes flashOverlayRed { 0%{opacity:0} 15%{opacity:1} 100%{opacity:0} }
 `
 
@@ -445,7 +445,7 @@ export default function Game() {
 
   function triggerFlash(type, text) {
     setFlashEvent({ type, text, key: Date.now() })
-    setTimeout(() => setFlashEvent(null), 1800)
+    setTimeout(() => setFlashEvent(null), 600)
   }
 
   const touchFiredRef = useRef(false)
@@ -874,7 +874,7 @@ export default function Game() {
           <div style={{
             position:'absolute', inset:0,
             background: flashEvent.type === 'goal' || flashEvent.type === 'owngoal' ? 'rgba(255,180,0,0.12)' : flashEvent.type === 'red' ? 'rgba(255,68,68,0.15)' : 'rgba(255,200,0,0.1)',
-            animation: 'flashOverlayGold 1.8s ease forwards',
+            animation: 'flashOverlayGold 0.5s ease forwards',
           }}/>
           {/* Anillo expansivo para gol */}
           {(flashEvent.type === 'goal') && (
@@ -892,7 +892,7 @@ export default function Game() {
             fontWeight:'900',
             letterSpacing:'-1px',
             color: flashEvent.type === 'goal' ? '#ffb400' : flashEvent.type === 'owngoal' ? '#ff8800' : flashEvent.type === 'red' ? '#ff4444' : '#ffc800',
-            animation: flashEvent.type === 'red' || flashEvent.type === 'yellow' ? 'cardShake 0.5s ease, eventFlash 1.8s ease forwards' : 'eventFlash 1.8s ease forwards',
+            animation: flashEvent.type === 'red' || flashEvent.type === 'yellow' ? 'cardShake 0.4s ease, eventFlash 0.5s ease forwards' : 'eventFlash 0.5s ease forwards',
             textShadow: flashEvent.type === 'goal' ? '0 0 40px rgba(255,180,0,0.5)' : 'none',
             textAlign:'center',
             lineHeight:1,
