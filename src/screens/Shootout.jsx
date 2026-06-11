@@ -161,6 +161,8 @@ export default function Shootout() {
     if (isP1) newState.a_choice = choice
     else newState.b_choice = choice
 
+    // Actualizar estado local inmediatamente para que canShoot sea true
+    setShootoutState(newState)
     setLastMsg(`Elegiste ${choice.toUpperCase()} — tira ahora`)
 
     await supabase.from('matches').update({
