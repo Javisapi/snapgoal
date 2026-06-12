@@ -75,8 +75,22 @@ export default function Result() {
     setPlayer(p)
 
     const { data: m } = await supabase.from('matches').select('*').eq('id', matchId).single()
-    if (m?.xp_result) setXpDelta(m.player1_id === p.id ? m.xp_result.p1_delta : m.xp_result.p2_delta)
     if (!m) { navigate('/'); return }
+    if (m?.xp_result) {
+      setXpDelta(m.player1_id === p.id ? m.xp_result.p1_delta : m.xp_result.p2_delta)
+    } else {
+      // xp_result puede no estar listo aún — reintentar hasta 3 veces
+      let attempts = 0
+      const pollXp = setInterval(async () => {
+        attempts++
+        const { data: mRetry } = await supabase.from('matches').select('xp_result,player1_id').eq('id', matchId).single()
+        if (mRetry?.xp_result) {
+          setXpDelta(mRetry.player1_id === p.id ? mRetry.xp_result.p1_delta : mRetry.xp_result.p2_delta)
+          clearInterval(pollXp)
+        }
+        if (attempts >= 5) clearInterval(pollXp)
+      }, 1000)
+    }
 
     // Si el partido tiene penaltis pendientes, redirigir a shootout
     if (m.pending_type === 'SHOOTOUT' && m.status !== 'finished') {
