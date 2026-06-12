@@ -200,36 +200,36 @@ export default function Home() {
 
       <div style={styles.mainCards}>
         <button style={styles.cardPlay} onClick={handlePlay}>
-          <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" style={{width:'48px',height:'48px',marginBottom:'0.75rem'}}>
-            <circle cx="24" cy="24" r="22" stroke="#141414" strokeWidth="2" fill="none"/>
-            <polygon points="18,14 36,24 18,34" fill="#141414"/>
-            <circle cx="24" cy="24" r="6" fill="none" stroke="#141414" strokeWidth="1.5"/>
+          <svg viewBox="0 0 40 40" fill="none" style={{width:'36px',height:'36px',marginBottom:'10px'}}>
+            <circle cx="20" cy="20" r="18" fill="rgba(0,0,0,0.15)"/>
+            <polygon points="15,12 30,20 15,28" fill="#141414"/>
           </svg>
-          <span style={styles.cardLabel}>Buscar Partido</span>
+          <span style={styles.cardPlayLabel}>Buscar Partido</span>
+          <span style={styles.cardSub}>Jugar ahora</span>
         </button>
         <button style={styles.cardLeague} onClick={() => navigate('/leagues')}>
-          <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" style={{width:'48px',height:'48px',marginBottom:'0.75rem'}}>
-            <path d="M24 4L28.5 16.5H42L31.5 24.5L35.5 37L24 29.5L12.5 37L16.5 24.5L6 16.5H19.5L24 4Z" fill="rgba(255,180,0,0.3)" stroke="rgba(255,180,0,0.8)" strokeWidth="1.5" strokeLinejoin="round"/>
-            <circle cx="24" cy="22" r="5" fill="rgba(255,180,0,0.6)"/>
+          <svg viewBox="0 0 40 40" fill="none" style={{width:'36px',height:'36px',marginBottom:'10px'}}>
+            <path d="M20 3L23.5 13.5H35L25.5 19.5L29 30L20 24L11 30L14.5 19.5L5 13.5H16.5L20 3Z" fill="rgba(255,180,0,0.25)" stroke="rgba(255,180,0,0.9)" strokeWidth="1.5" strokeLinejoin="round"/>
           </svg>
-          <span style={styles.cardLabel}>Mis Ligas</span>
+          <span style={styles.cardLeagueLabel}>Mis Ligas</span>
+          <span style={styles.cardSubLight}>Competir</span>
         </button>
       </div>
       <div style={styles.secondaryRow}>
         <button style={styles.btnIcon} onClick={() => navigate('/ranking')}>
-          <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style={{width:'24px',height:'24px',marginBottom:'4px'}}>
-            <rect x="4" y="18" width="6" height="10" rx="1.5" fill="rgba(255,180,0,0.7)"/>
-            <rect x="13" y="11" width="6" height="17" rx="1.5" fill="rgba(255,180,0,0.9)"/>
-            <rect x="22" y="5" width="6" height="23" rx="1.5" fill="#ffb400"/>
+          <svg viewBox="0 0 28 28" fill="none" style={{width:'22px',height:'22px',marginBottom:'5px'}}>
+            <rect x="3" y="16" width="5" height="9" rx="1.5" fill="rgba(255,180,0,0.5)"/>
+            <rect x="11" y="10" width="5" height="15" rx="1.5" fill="rgba(255,180,0,0.75)"/>
+            <rect x="19" y="4" width="5" height="21" rx="1.5" fill="#ffb400"/>
           </svg>
           <span style={styles.btnIconLabel}>Ranking</span>
         </button>
         <button style={styles.btnIcon} onClick={() => navigate('/rules')}>
-          <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style={{width:'24px',height:'24px',marginBottom:'4px'}}>
-            <rect x="6" y="3" width="20" height="26" rx="3" stroke="rgba(255,180,0,0.8)" strokeWidth="1.5" fill="none"/>
-            <line x1="11" y1="10" x2="21" y2="10" stroke="rgba(255,180,0,0.8)" strokeWidth="1.5" strokeLinecap="round"/>
-            <line x1="11" y1="15" x2="21" y2="15" stroke="rgba(255,180,0,0.8)" strokeWidth="1.5" strokeLinecap="round"/>
-            <line x1="11" y1="20" x2="17" y2="20" stroke="rgba(255,180,0,0.8)" strokeWidth="1.5" strokeLinecap="round"/>
+          <svg viewBox="0 0 28 28" fill="none" style={{width:'22px',height:'22px',marginBottom:'5px'}}>
+            <rect x="5" y="2" width="18" height="24" rx="3" stroke="rgba(255,180,0,0.7)" strokeWidth="1.5" fill="none"/>
+            <line x1="9" y1="9" x2="19" y2="9" stroke="rgba(255,180,0,0.7)" strokeWidth="1.5" strokeLinecap="round"/>
+            <line x1="9" y1="14" x2="19" y2="14" stroke="rgba(255,180,0,0.7)" strokeWidth="1.5" strokeLinecap="round"/>
+            <line x1="9" y1="19" x2="14" y2="19" stroke="rgba(255,180,0,0.7)" strokeWidth="1.5" strokeLinecap="round"/>
           </svg>
           <span style={styles.btnIconLabel}>Reglas</span>
         </button>
@@ -308,13 +308,16 @@ const styles = {
   inputHint: { fontSize:'0.75rem', color:'rgba(255,255,255,0.2)', margin:0 },
   error: { fontSize:'0.85rem', color:'#ff4444', margin:0 },
   actions: { display:'flex', flexDirection:'column', gap:'0.75rem' },
-  mainCards: { display:'flex', gap:'0.75rem', width:'100%', flex:1, minHeight:0 },
-  cardPlay: { flex:1, background:'linear-gradient(135deg, #ffb400 0%, #ff8c00 100%)', border:'none', borderRadius:'20px', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', cursor:'pointer', padding:'1.5rem 1rem', minHeight:'160px' },
-  cardLeague: { flex:1, background:'linear-gradient(135deg, rgba(255,180,0,0.15) 0%, rgba(255,120,0,0.08) 100%)', border:'1.5px solid rgba(255,180,0,0.3)', borderRadius:'20px', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', cursor:'pointer', padding:'1.5rem 1rem', minHeight:'160px' },
-  cardLabel: { fontSize:'1rem', fontWeight:'800', color:'#141414', letterSpacing:'0.3px' },
+  mainCards: { display:'flex', gap:'0.75rem', width:'100%' },
+  cardPlay: { flex:1, background:'linear-gradient(145deg, #ffb400 0%, #e07800 100%)', border:'none', borderRadius:'20px', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', cursor:'pointer', padding:'1.25rem 0.75rem', minHeight:'130px', boxShadow:'0 8px 32px rgba(255,180,0,0.25)' },
+  cardPlayLabel: { fontSize:'0.95rem', fontWeight:'800', color:'#141414', letterSpacing:'0.2px', margin:0 },
+  cardLeague: { flex:1, background:'rgba(255,180,0,0.07)', border:'1.5px solid rgba(255,180,0,0.2)', borderRadius:'20px', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', cursor:'pointer', padding:'1.25rem 0.75rem', minHeight:'130px' },
+  cardLeagueLabel: { fontSize:'0.95rem', fontWeight:'800', color:'rgba(255,180,0,0.9)', letterSpacing:'0.2px', margin:0 },
+  cardSub: { fontSize:'0.7rem', color:'rgba(0,0,0,0.35)', marginTop:'2px', fontWeight:'500' },
+  cardSubLight: { fontSize:'0.7rem', color:'rgba(255,180,0,0.4)', marginTop:'2px', fontWeight:'500' },
   secondaryRow: { display:'flex', gap:'0.75rem', width:'100%' },
-  btnIcon: { flex:1, background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:'16px', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', cursor:'pointer', padding:'1rem', gap:'2px' },
-  btnIconLabel: { fontSize:'0.8rem', fontWeight:'600', color:'rgba(255,255,255,0.5)', letterSpacing:'0.5px' },
+  btnIcon: { flex:1, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:'14px', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', cursor:'pointer', padding:'0.85rem 0.5rem' },
+  btnIconLabel: { fontSize:'0.72rem', fontWeight:'600', color:'rgba(255,255,255,0.4)', letterSpacing:'0.5px' },
   btnPrimary: { background:'#ffb400', color:'#141414', border:'none', borderRadius:'12px', padding:'1.1rem', fontSize:'1rem', fontWeight:'800', cursor:'pointer', width:'100%', letterSpacing:'0.5px' },
   btnSecondary: { background:'transparent', color:'rgba(255,255,255,0.4)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:'12px', padding:'0.9rem', fontSize:'0.9rem', cursor:'pointer', width:'100%' },
   btnGhost: { background:'transparent', color:'rgba(255,80,80,0.4)', border:'none', padding:'0.5rem', fontSize:'0.8rem', cursor:'pointer', width:'100%' },
