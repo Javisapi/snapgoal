@@ -5,20 +5,10 @@ const CSS = `
   @keyframes skillsFadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
 `
 
-const HOW_TO_GET = [
-  'Cada jugador empieza con 3 Iron Fists y 3 Snipers gratis.',
-  'Por cada 100 XP ganados por encima de 1500 (es decir, al llegar a 1600, 1700, 1800...) recibes automáticamente 3 Iron Fists y 3 Snipers adicionales.',
-  'No hay límite de acumulación — puedes tener tantos como quieras.',
-  'En el futuro se podrán conseguir más habilidades especiales.',
-]
-
 const SKILLS = [
   {
     id: 'iron_fist',
     name: 'Iron Fist',
-    icon: null,
-    color: '#ffb400',
-    stock: 3,
     description: 'Habilidad defensiva para usar en los penalties.',
     howto: [
       'Cuando tu rival lanza un penalty y elige par o impar, se te pregunta si quieres usar el Iron Fist.',
@@ -28,15 +18,12 @@ const SKILLS = [
       '← IZQUIERDA: bloqueas las centésimas 00–49. Tu rival solo puede marcar entre 50–99 (y acertando par/impar).',
       'Tu rival no sabe qué lado has elegido hasta después de tirar.',
       'Si el penalty se para gracias al Iron Fist, aparece una animación especial.',
-      'Cada jugador empieza con 3 Iron Fist. Una vez usados, se agotan.',
+      'Cada jugador empieza con 3 Iron Fists. Una vez usados, se agotan.',
     ]
   },
   {
     id: 'sniper',
     name: 'Sniper',
-    icon: null,
-    color: '#ffb400',
-    stock: 3,
     description: 'Habilidad ofensiva para usar en las faltas.',
     howto: [
       'Cuando te toca lanzar una falta y el rival ya ha elegido la barrera, se te pregunta si quieres usar el Sniper.',
@@ -46,6 +33,13 @@ const SKILLS = [
       'Cada jugador empieza con 3 Snipers. Una vez usados, se agotan.',
     ]
   }
+]
+
+const HOW_TO_GET = [
+  'Cada jugador empieza con 3 Iron Fists y 3 Snipers gratis.',
+  'Por cada 100 XP ganados por encima de 1500 (es decir, al llegar a 1600, 1700, 1800...) recibes automáticamente 3 Iron Fists y 3 Snipers adicionales.',
+  'No hay límite de acumulación — puedes tener tantos como quieras.',
+  'En el futuro se podrán conseguir más habilidades especiales.',
 ]
 
 export default function Skills() {
@@ -76,7 +70,7 @@ export default function Skills() {
                 <p style={styles.skillDesc}>{skill.description}</p>
               </div>
               <div style={styles.stockBadge}>
-                <span style={styles.stockNum}>{skill.stock}</span>
+                <span style={styles.stockNum}>3</span>
                 <span style={styles.stockLabel}>iniciales</span>
               </div>
             </div>
@@ -91,16 +85,17 @@ export default function Skills() {
             </div>
           </div>
         ))}
-      </div>
-      <div style={styles.card}>
-        <p style={{...styles.skillName, marginBottom:'0.5rem'}}>¿Cómo conseguir más?</p>
-        <div style={styles.howto}>
-          {HOW_TO_GET.map((line, i) => (
-            <div key={i} style={styles.howtoRow}>
-              <span style={styles.howtoDot} />
-              <p style={styles.howtoText}>{line}</p>
-            </div>
-          ))}
+
+        <div style={styles.card}>
+          <p style={{...styles.skillName, marginBottom:'0.5rem'}}>¿Cómo conseguir más?</p>
+          <div style={styles.howto}>
+            {HOW_TO_GET.map((line, i) => (
+              <div key={i} style={styles.howtoRow}>
+                <span style={styles.howtoDot} />
+                <p style={styles.howtoText}>{line}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
