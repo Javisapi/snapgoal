@@ -72,6 +72,9 @@ export default function Game() {
   const [gloveUsed, setGloveUsed] = useState(false)
   const [waitingForGlove, setWaitingForGlove] = useState(false)
   const gloveTimerRef = useRef(null)
+  const [proShooterStock, setProShooterStock] = useState(0)
+  const [proShooterActive, setProShooterActive] = useState(false)
+  const [showProShooterPopup, setShowProShooterPopup] = useState(false)
   const [showPenaltyPopup, setShowPenaltyPopup] = useState(false)
 
   const intervalRef = useRef(null)
@@ -183,12 +186,17 @@ export default function Game() {
     if (myItems) {
       const gg = myItems.find(i => i.item_type === 'golden_glove')
       setGoldenGloveStock(gg?.stock || 0)
+      const ps = myItems.find(i => i.item_type === 'pro_shooter')
+      setProShooterStock(ps?.stock || 0)
     }
     if (oppItems) {
       const gg = oppItems.find(i => i.item_type === 'golden_glove')
       setOppGoldenGloveStock(gg?.stock || 0)
     }
     if (m.barrier_range && m.pending_type === 'FALTA' && m.current_turn === p.id) {
+      // Mostrar popup pro shooter si el tirador tiene stock
+      const { data: psItem } = await supabase.from('player_items').select('stock').eq('player_id', p.id).eq('item_type', 'pro_shooter').single().catch(() => ({ data: null }))
+      if (psItem && psItem.stock > 0) setShowProShooterPopup(true)
       setBarrierOptions(null)
     }
     if (m.last_event) {
@@ -276,6 +284,7 @@ export default function Game() {
         if (updated.pending_type) {
           setPendingType(updated.pending_type)
           // Si hay falta y soy el rival (el que pone la barrera)
+          if (updated.pending_type === 'FALTA' && isMyTurn && updated.barrier_range && proShooterStock > 0 && !proShooterActive) { setShowProShooterPopup(true) }
           if (updated.pending_type === 'FALTA' && !isMyTurn && !updated.barrier_range) {
             setBarrierOptions(true)
           } else {
@@ -283,6 +292,8 @@ export default function Game() {
           }
         } else {
           setPendingType(null)
+    setProShooterActive(false)
+    setShowProShooterPopup(false)
           setBarrierOptions(null)
         }
 
@@ -669,6 +680,8 @@ export default function Game() {
       const event = { emoji: '🟥', label: `🟥 Roja a ${p.username} — gol para ${opp.username}` }
       setLastPlay(event)
       setPendingType(null)
+    setProShooterActive(false)
+    setShowProShooterPopup(false)
       // 2 rojas = partido terminado 5-0
       if (newRed >= 2) {
         const winnerId = p1 ? m.player2_id : m.player1_id
@@ -793,10 +806,12 @@ export default function Game() {
       const last2 = total % 100
       const range = m.barrier_range ? JSON.parse(m.barrier_range) : null
       if (range) {
-        gol = last2 >= range.min && last2 <= range.max
+        const effectiveMax = m.pro_shooter_active ? range.min + 10 : range.max
+        gol = last2 >= range.min && last2 <= effectiveMax
+        const rangeLabel = m.pro_shooter_active ? `${range.min}-${effectiveMax} 🎯` : `${range.min}-${range.max}`
         label = gol
-          ? `⚽ Gol de falta de ${p.username} (${last2} en ${range.min}-${range.max})`
-          : `🧤 Falta fallada por ${p.username} (${last2} fuera de ${range.min}-${range.max})`
+          ? `⚽ Gol de falta de ${p.username} (${last2} en ${rangeLabel})`
+          : `🧤 Falta fallada por ${p.username} (${last2} fuera de ${rangeLabel})`
         emoji = gol ? '⚽' : '🧤'
         if (gol) { if (p1) sp1 += 1; else sp2 += 1 }
       }
@@ -819,8 +834,27 @@ export default function Game() {
     if (event) setLastPlay(event)
     else setLastPlay(null)
     setPendingType(null)
+    setProShooterActive(false)
+    setShowProShooterPopup(false)
 
     await commitPlay(total, ev.result, sp1, sp2, true, m, p, event)
+  }
+
+  async function activateProShooter(use) {
+    setShowProShooterPopup(false)
+    if (!use) return
+    const p = playerRef.current
+    await supabase.from('player_items').update({ stock: proShooterStock - 1 }).eq('player_id', p.id).eq('item_type', 'pro_shooter')
+    setProShooterStock(s => s - 1)
+    setProShooterActive(true)
+    // Notificar al rival
+    const m = matchRef.current
+    const event = { emoji: '🎯', label: `🎯 ${p.username} usa el Lanzador Pro — ventana ampliada` }
+    setLastPlay(event)
+    await supabase.from('matches').update({
+      last_event: JSON.stringify(event),
+      pro_shooter_active: true,
+    }).eq('id', matchId)
   }
 
   async function selectBarrier(min, max) {
@@ -1115,6 +1149,20 @@ export default function Game() {
         </div>
       </div>
 
+      {/* Popup lanzador pro — solo el tirador */}
+      {showProShooterPopup && (
+        <div style={{position:'absolute',inset:0,background:'rgba(0,0,0,0.85)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:60,flexDirection:'column',gap:'1rem',padding:'2rem'}}>
+          <span style={{fontSize:'3rem'}}>🎯</span>
+          <p style={{color:'#fff',fontWeight:'800',fontSize:'1.2rem',textAlign:'center'}}>¿Usar Lanzador Pro?</p>
+          <p style={{color:'rgba(255,255,255,0.4)',fontSize:'0.85rem',textAlign:'center'}}>Amplía la ventana a 10 centésimas — Te quedan {proShooterStock}</p>
+          <p style={{color:'rgba(255,180,0,0.7)',fontSize:'0.8rem',textAlign:'center'}}>Barrera actual: {barrierRange?.min}–{barrierRange?.max} → se ampliaría a {barrierRange?.min}–{barrierRange ? barrierRange.min+10 : ''}</p>
+          <div style={{display:'flex',flexDirection:'column',gap:'0.75rem',width:'100%'}}>
+            <button style={{background:'rgba(255,180,0,0.15)',border:'1px solid rgba(255,180,0,0.4)',borderRadius:'12px',padding:'0.9rem',color:'#ffb400',fontWeight:'800',fontSize:'1rem',cursor:'pointer'}} onClick={() => activateProShooter(true)}>🎯 Usar Lanzador Pro</button>
+            <button style={{background:'transparent',border:'none',color:'rgba(255,255,255,0.3)',fontSize:'0.9rem',cursor:'pointer',padding:'0.5rem'}} onClick={() => activateProShooter(false)}>No usar</button>
+          </div>
+        </div>
+      )}
+
       {/* Popup guante de oro — solo el defensor */}
       {showGlovePopup && (
         <div style={{position:'absolute',inset:0,background:'rgba(0,0,0,0.85)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:60,flexDirection:'column',gap:'1rem',padding:'2rem'}}>
@@ -1211,7 +1259,7 @@ export default function Game() {
       {pendingType === 'FALTA' && myTurn && barrierRange && (
         <div style={styles.faltaInstructions}>
           <span style={styles.faltaInstructionsText}>
-            Para entre {barrierRange.min} y {barrierRange.max} para marcar
+            Para entre {barrierRange.min} y {proShooterActive ? barrierRange.min + 10 : barrierRange.max} para marcar{proShooterActive && ' 🎯'}
           </span>
         </div>
       )}
