@@ -706,10 +706,10 @@ export default function Game() {
       const last2 = total % 100
       const range = m.barrier_range ? JSON.parse(m.barrier_range) : null
       if (range) {
-        gol = last2 >= range.min && last2 < range.max
+        gol = last2 >= range.min && last2 <= range.max
         label = gol
-          ? `⚽ Gol de falta de ${p.username} (${last2} en ${range.min}-${range.max-1})`
-          : `🧤 Falta fallada por ${p.username} (${last2} fuera de ${range.min}-${range.max-1})`
+          ? `⚽ Gol de falta de ${p.username} (${last2} en ${range.min}-${range.max})`
+          : `🧤 Falta fallada por ${p.username} (${last2} fuera de ${range.min}-${range.max})`
         emoji = gol ? '⚽' : '🧤'
         if (gol) { if (p1) sp1 += 1; else sp2 += 1 }
       }
@@ -1055,7 +1055,7 @@ export default function Game() {
       {pendingType === 'FALTA' && myTurn && barrierRange && (
         <div style={styles.faltaInstructions}>
           <span style={styles.faltaInstructionsText}>
-            Para entre {barrierRange.min} y {barrierRange.max - 1} para marcar
+            Para entre {barrierRange.min} y {barrierRange.max} para marcar
           </span>
         </div>
       )}
