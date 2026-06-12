@@ -315,7 +315,7 @@ export default function Game() {
         if (updated.pending_type) {
           setPendingType(updated.pending_type)
           // Si hay falta y soy el rival (el que pone la barrera)
-          if (updated.pending_type === 'FALTA' && isMyTurn && updated.barrier_range && !proShooterActive) {
+          if (updated.pending_type === 'FALTA' && isMyTurn && updated.barrier_range && !proShooterActive && !updated.timer_running && !proShooterPopupShownRef.current) {
             supabase.from('player_items').select('stock').eq('player_id', playerRef.current.id).eq('item_type', 'pro_shooter').single().then(({ data }) => {
               if (data && data.stock > 0 && !proShooterPopupShownRef.current) {
                 proShooterStockRef.current = data.stock
