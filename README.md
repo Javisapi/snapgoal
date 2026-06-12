@@ -137,6 +137,18 @@ Durante un partido de liga aparece un botón 💬 en la barra inferior. Los juga
 
 ## Versiones estables
 
+### v1.7-stable
+- **Academy**: centro de entrenamiento con penalties y faltas
+  - 3 modos de dificultad: Amateur, National Class, World Class
+  - Penalties: Amateur (solo par/impar), National (ventana 20-80), World Class (ventana 40-60)
+  - Faltas: Amateur (ventana 15 cents), National (10 cents), World Class (5 cents)
+  - Stats por sesión: goles/tiros, racha actual, mejor racha
+  - Historial guardado en tabla training_sessions
+  - Vista SQL training_stats con % acierto agregado
+- Botón Academy en Home entre cards principales y fila secundaria
+- Entrenamiento gratuito e ilimitado, sin skills
+
+
 ### v1.6-stable
 - Popup Iron Fist rediseñado: botones IZQUIERDA/DERECHA grandes, glow rojo en "No usar"
 - Popup Sniper rediseñado: visualización de barrera antes/después, glow verde en "Activar", glow rojo en "No usar"
@@ -180,6 +192,18 @@ Durante un partido de liga aparece un botón 💬 en la barra inferior. Los juga
 - Confirmación de borrado de cuenta por nombre de usuario
 
 ## Versiones estables
+
+### v1.7-stable
+- **Academy**: centro de entrenamiento con penalties y faltas
+  - 3 modos de dificultad: Amateur, National Class, World Class
+  - Penalties: Amateur (solo par/impar), National (ventana 20-80), World Class (ventana 40-60)
+  - Faltas: Amateur (ventana 15 cents), National (10 cents), World Class (5 cents)
+  - Stats por sesión: goles/tiros, racha actual, mejor racha
+  - Historial guardado en tabla training_sessions
+  - Vista SQL training_stats con % acierto agregado
+- Botón Academy en Home entre cards principales y fila secundaria
+- Entrenamiento gratuito e ilimitado, sin skills
+
 
 ### v1.6-stable
 - Popup Iron Fist rediseñado: botones IZQUIERDA/DERECHA grandes, glow rojo en "No usar"
