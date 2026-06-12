@@ -33,6 +33,8 @@ export default function Announce() {
   const channelRef = useRef(null)
   const countdownRef = useRef(null)
   const cancelledRef = useRef(false)
+  const [headToHead, setHeadToHead] = useState(null)
+  const [leagueStats, setLeagueStats] = useState(null)
 
   useEffect(() => {
     const s = document.createElement('style')
@@ -59,6 +61,30 @@ export default function Announce() {
     const { data: opp } = await supabase
       .from('players').select('*').eq('id', oppId).single()
     setOpponent(opp)
+
+    // Historial enfrentamientos directos
+    const { data: h2h } = await supabase.from('matches')
+      .select('winner_id,player1_id,player2_id')
+      .eq('status', 'finished')
+      .or(`and(player1_id.eq.${p.id},player2_id.eq.${oppId}),and(player1_id.eq.${oppId},player2_id.eq.${p.id})`)
+    if (h2h) {
+      const myWins = h2h.filter(x => x.winner_id === p.id).length
+      const oppWins = h2h.filter(x => x.winner_id === oppId).length
+      setHeadToHead({ total: h2h.length, myWins, oppWins })
+    }
+
+    // Stats de liga si aplica
+    if (m.league_id) {
+      const { data: lm } = await supabase.from('league_members')
+        .select('points,matches_won,matches_lost')
+        .eq('league_id', m.league_id)
+        .in('player_id', [p.id, oppId])
+      if (lm) {
+        const mine = lm.find(x => x.player_id === p.id) || lm.find((_, i) => i === 0)
+        const opps = lm.find(x => x.player_id === oppId) || lm.find((_, i) => i === 1)
+        setLeagueStats({ mine, opps })
+      }
+    }
 
     // Si ya está en playing navegar directo
     if (m.status === 'playing') { navigate('/game/' + matchId); return }
@@ -168,11 +194,12 @@ export default function Announce() {
             <p style={styles.playerName}>{player.username}</p>
             <div style={styles.statsRow}>
               <span style={styles.statItem}>{player.matches_won}<span style={styles.statLabel}>V</span></span>
-              <span style={styles.statItem}>{player.xp_rating || 1500}<span style={styles.statLabel}>XP</span></span>
-              
               <span style={styles.statItem}>{player.matches_lost}<span style={styles.statLabel}>D</span></span>
             </div>
-            <p style={styles.pts}>{player.total_points} pts</p>
+            {match?.league_id && leagueStats?.mine
+              ? <p style={styles.pts}>{leagueStats.mine.points} pts liga</p>
+              : <p style={styles.pts}>{player.xp_rating || 1500} XP</p>
+            }
             <div style={styles.readyStatus}>
               {iReady
                 ? <span style={styles.readyYes}>Listo ✓</span>
@@ -189,11 +216,12 @@ export default function Announce() {
             <p style={styles.playerName}>{opponent.username}</p>
             <div style={styles.statsRow}>
               <span style={styles.statItem}>{opponent.matches_won}<span style={styles.statLabel}>V</span></span>
-              <span style={styles.statItem}>{opponent.xp_rating || 1500}<span style={styles.statLabel}>XP</span></span>
-              
               <span style={styles.statItem}>{opponent.matches_lost}<span style={styles.statLabel}>D</span></span>
             </div>
-            <p style={styles.pts}>{opponent.total_points} pts</p>
+            {match?.league_id && leagueStats?.opps
+              ? <p style={styles.pts}>{leagueStats.opps.points} pts liga</p>
+              : <p style={styles.pts}>{opponent.xp_rating || 1500} XP</p>
+            }
             <div style={styles.readyStatus}>
               {opponentReady
                 ? <span style={styles.readyYes}>Listo ✓</span>
@@ -202,6 +230,23 @@ export default function Announce() {
             </div>
           </div>
         </div>
+
+        {headToHead && headToHead.total > 0 && (
+          <div style={{background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.07)',borderRadius:'14px',padding:'0.9rem 1rem',marginBottom:'0.75rem'}}>
+            <p style={{fontSize:'0.7rem',color:'rgba(255,255,255,0.3)',letterSpacing:'1px',textTransform:'uppercase',margin:'0 0 0.5rem'}}>Enfrentamientos directos ({headToHead.total})</p>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+              <div style={{textAlign:'center'}}>
+                <span style={{fontSize:'1.4rem',fontWeight:'900',color:'#ffb400'}}>{headToHead.myWins}</span>
+                <p style={{fontSize:'0.7rem',color:'rgba(255,255,255,0.3)',margin:0}}>{player.username}</p>
+              </div>
+              <span style={{fontSize:'0.8rem',color:'rgba(255,255,255,0.2)',fontWeight:'700'}}>VS</span>
+              <div style={{textAlign:'center'}}>
+                <span style={{fontSize:'1.4rem',fontWeight:'900',color:'rgba(255,255,255,0.6)'}}>{headToHead.oppWins}</span>
+                <p style={{fontSize:'0.7rem',color:'rgba(255,255,255,0.3)',margin:0}}>{opponent.username}</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div style={styles.countdownBar}>
           <div style={{
