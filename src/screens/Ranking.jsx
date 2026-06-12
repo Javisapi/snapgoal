@@ -103,7 +103,7 @@ export default function Ranking() {
                 </div>
                 <div style={styles.ptsBlock}>
                   <span style={styles.ptsNum}>{p.xp_rating || 1500} <span style={{fontSize:'0.6rem',color:'rgba(255,180,0,0.5)'}}>XP</span></span>
-                  <span style={styles.ptsLabel}>pts</span>
+                  <span style={styles.ptsLabel}>{p.total_points} pts</span>
                 </div>
               </div>
 
