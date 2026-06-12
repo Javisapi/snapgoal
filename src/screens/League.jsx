@@ -257,8 +257,10 @@ export default function League() {
 
             {/* Botón salir de liga */}
             {!isAdmin() && !expired && (
-              <button style={{...styles.leaveBtn, background:"rgba(255,180,0,0.1)", color:"#ffb400", border:"1px solid rgba(255,180,0,0.2)"}} onClick={handleNotifyPlayers}>🔔 Alertar a jugadores</button>
-              <button style={styles.leaveBtn} onClick={handleLeave}>Salir de la liga</button>
+              <>
+                <button style={{...styles.leaveBtn, background:"rgba(255,180,0,0.1)", color:"#ffb400", border:"1px solid rgba(255,180,0,0.2)"}} onClick={handleNotifyPlayers}>🔔 Alertar a jugadores</button>
+                <button style={styles.leaveBtn} onClick={handleLeave}>Salir de la liga</button>
+              </>
             )}
             {isAdmin() && (
               <button style={styles.deleteLeagueBtn} onClick={() => setShowDeleteLeague(true)}>
