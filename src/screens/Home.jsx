@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { registerPushSW, requestPermissionAndSubscribe } from '../lib/pushNotifications'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
 import { useSearchParams } from 'react-router-dom'
@@ -82,6 +82,18 @@ export default function Home() {
       navigate('/leagues?join=' + joinCode)
     }
   }, [joinCode, player])
+
+  useEffect(() => {
+    if (!player) return
+    registerPushSW()
+    const asked = localStorage.getItem('push_asked_' + player.id)
+    if (!asked) {
+      setTimeout(async () => {
+        await requestPermissionAndSubscribe(supabase, player.id)
+        localStorage.setItem('push_asked_' + player.id, '1')
+      }, 3000)
+    }
+  }, [player])
 
   async function handlePlay() {
     const { data: { session } } = await supabase.auth.getSession()
