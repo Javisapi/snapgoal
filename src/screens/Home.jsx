@@ -25,6 +25,7 @@ export default function Home() {
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deleteConfirmName, setDeleteConfirmName] = useState('')
   const [deleting, setDeleting] = useState(false)
   const [showInstall, setShowInstall] = useState(false)
   const [showRegisterInfo, setShowRegisterInfo] = useState(false)
@@ -94,6 +95,7 @@ export default function Home() {
     await deleteAccount(player.id)
     setDeleting(false)
     setShowDeleteConfirm(false)
+    setDeleteConfirmName('')
     window.location.reload()
   }
 
@@ -110,10 +112,18 @@ export default function Home() {
           <div style={styles.modal}>
             <p style={styles.modalTitle}>Borrar cuenta</p>
             <p style={styles.modalText}>Se eliminarán permanentemente tu perfil, historial y estadísticas. Esta acción no se puede deshacer.</p>
-            <button style={styles.btnConfirmDelete} onClick={handleDeleteAccount} disabled={deleting}>
+            <p style={styles.modalText}>Escribe tu nombre de usuario para confirmar:</p>
+            <input
+              style={{...styles.input, marginBottom:'0.75rem'}}
+              type="text"
+              placeholder={player?.username}
+              value={deleteConfirmName}
+              onChange={e => setDeleteConfirmName(e.target.value.toLowerCase())}
+            />
+            <button style={{...styles.btnConfirmDelete, opacity: deleteConfirmName === player?.username ? 1 : 0.3}} onClick={handleDeleteAccount} disabled={deleting || deleteConfirmName !== player?.username}>
               {deleting ? 'Borrando...' : 'Confirmar borrado'}
             </button>
-            <button style={styles.btnCancelDelete} onClick={() => setShowDeleteConfirm(false)}>Cancelar</button>
+            <button style={styles.btnCancelDelete} onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmName('') }}>Cancelar</button>
           </div>
         </div>
       )}
@@ -188,13 +198,43 @@ export default function Home() {
         </div>
       </div>
 
-      <div style={styles.actions}>
-        <button style={styles.btnPrimary} onClick={handlePlay}>Buscar partido</button>
-        <button style={styles.btnSecondary} onClick={() => navigate('/ranking')}>Ranking</button>
-        <button style={styles.btnSecondary} onClick={() => navigate('/leagues')}>🏆 Mis Ligas</button>
-        <button style={styles.btnSecondary} onClick={() => navigate('/rules')}>Reglas</button>
-        <button style={styles.btnGhost} onClick={() => setShowDeleteConfirm(true)}>Borrar cuenta</button>
+      <div style={styles.mainCards}>
+        <button style={styles.cardPlay} onClick={handlePlay}>
+          <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" style={{width:'48px',height:'48px',marginBottom:'0.75rem'}}>
+            <circle cx="24" cy="24" r="22" stroke="#141414" strokeWidth="2" fill="none"/>
+            <polygon points="18,14 36,24 18,34" fill="#141414"/>
+            <circle cx="24" cy="24" r="6" fill="none" stroke="#141414" strokeWidth="1.5"/>
+          </svg>
+          <span style={styles.cardLabel}>Buscar Partido</span>
+        </button>
+        <button style={styles.cardLeague} onClick={() => navigate('/leagues')}>
+          <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" style={{width:'48px',height:'48px',marginBottom:'0.75rem'}}>
+            <path d="M24 4L28.5 16.5H42L31.5 24.5L35.5 37L24 29.5L12.5 37L16.5 24.5L6 16.5H19.5L24 4Z" fill="rgba(255,180,0,0.3)" stroke="rgba(255,180,0,0.8)" strokeWidth="1.5" strokeLinejoin="round"/>
+            <circle cx="24" cy="22" r="5" fill="rgba(255,180,0,0.6)"/>
+          </svg>
+          <span style={styles.cardLabel}>Mis Ligas</span>
+        </button>
       </div>
+      <div style={styles.secondaryRow}>
+        <button style={styles.btnIcon} onClick={() => navigate('/ranking')}>
+          <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style={{width:'24px',height:'24px',marginBottom:'4px'}}>
+            <rect x="4" y="18" width="6" height="10" rx="1.5" fill="rgba(255,180,0,0.7)"/>
+            <rect x="13" y="11" width="6" height="17" rx="1.5" fill="rgba(255,180,0,0.9)"/>
+            <rect x="22" y="5" width="6" height="23" rx="1.5" fill="#ffb400"/>
+          </svg>
+          <span style={styles.btnIconLabel}>Ranking</span>
+        </button>
+        <button style={styles.btnIcon} onClick={() => navigate('/rules')}>
+          <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style={{width:'24px',height:'24px',marginBottom:'4px'}}>
+            <rect x="6" y="3" width="20" height="26" rx="3" stroke="rgba(255,180,0,0.8)" strokeWidth="1.5" fill="none"/>
+            <line x1="11" y1="10" x2="21" y2="10" stroke="rgba(255,180,0,0.8)" strokeWidth="1.5" strokeLinecap="round"/>
+            <line x1="11" y1="15" x2="21" y2="15" stroke="rgba(255,180,0,0.8)" strokeWidth="1.5" strokeLinecap="round"/>
+            <line x1="11" y1="20" x2="17" y2="20" stroke="rgba(255,180,0,0.8)" strokeWidth="1.5" strokeLinecap="round"/>
+          </svg>
+          <span style={styles.btnIconLabel}>Reglas</span>
+        </button>
+      </div>
+      <button style={styles.btnGhost} onClick={() => setShowDeleteConfirm(true)}>Borrar cuenta</button>
     </div>
   )
 
@@ -268,6 +308,13 @@ const styles = {
   inputHint: { fontSize:'0.75rem', color:'rgba(255,255,255,0.2)', margin:0 },
   error: { fontSize:'0.85rem', color:'#ff4444', margin:0 },
   actions: { display:'flex', flexDirection:'column', gap:'0.75rem' },
+  mainCards: { display:'flex', gap:'0.75rem', width:'100%', flex:1, minHeight:0 },
+  cardPlay: { flex:1, background:'linear-gradient(135deg, #ffb400 0%, #ff8c00 100%)', border:'none', borderRadius:'20px', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', cursor:'pointer', padding:'1.5rem 1rem', minHeight:'160px' },
+  cardLeague: { flex:1, background:'linear-gradient(135deg, rgba(255,180,0,0.15) 0%, rgba(255,120,0,0.08) 100%)', border:'1.5px solid rgba(255,180,0,0.3)', borderRadius:'20px', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', cursor:'pointer', padding:'1.5rem 1rem', minHeight:'160px' },
+  cardLabel: { fontSize:'1rem', fontWeight:'800', color:'#141414', letterSpacing:'0.3px' },
+  secondaryRow: { display:'flex', gap:'0.75rem', width:'100%' },
+  btnIcon: { flex:1, background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:'16px', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', cursor:'pointer', padding:'1rem', gap:'2px' },
+  btnIconLabel: { fontSize:'0.8rem', fontWeight:'600', color:'rgba(255,255,255,0.5)', letterSpacing:'0.5px' },
   btnPrimary: { background:'#ffb400', color:'#141414', border:'none', borderRadius:'12px', padding:'1.1rem', fontSize:'1rem', fontWeight:'800', cursor:'pointer', width:'100%', letterSpacing:'0.5px' },
   btnSecondary: { background:'transparent', color:'rgba(255,255,255,0.4)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:'12px', padding:'0.9rem', fontSize:'0.9rem', cursor:'pointer', width:'100%' },
   btnGhost: { background:'transparent', color:'rgba(255,80,80,0.4)', border:'none', padding:'0.5rem', fontSize:'0.8rem', cursor:'pointer', width:'100%' },
