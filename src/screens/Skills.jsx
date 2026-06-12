@@ -5,6 +5,13 @@ const CSS = `
   @keyframes skillsFadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
 `
 
+const HOW_TO_GET = [
+  'Cada jugador empieza con 3 Iron Fists y 3 Snipers gratis.',
+  'Por cada 100 XP ganados por encima de 1500 (es decir, al llegar a 1600, 1700, 1800...) recibes automáticamente 3 Iron Fists y 3 Snipers adicionales.',
+  'No hay límite de acumulación — puedes tener tantos como quieras.',
+  'En el futuro se podrán conseguir más habilidades especiales.',
+]
+
 const SKILLS = [
   {
     id: 'iron_fist',
@@ -84,6 +91,17 @@ export default function Skills() {
             </div>
           </div>
         ))}
+      </div>
+      <div style={styles.card}>
+        <p style={{...styles.skillName, marginBottom:'0.5rem'}}>¿Cómo conseguir más?</p>
+        <div style={styles.howto}>
+          {HOW_TO_GET.map((line, i) => (
+            <div key={i} style={styles.howtoRow}>
+              <span style={styles.howtoDot} />
+              <p style={styles.howtoText}>{line}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )
