@@ -137,6 +137,17 @@ Durante un partido de liga aparece un botón 💬 en la barra inferior. Los juga
 
 ## Versiones estables
 
+### v1.3-stable
+- Penaltis de desempate funcionando: turnos basados en `current_turn`, jsonb sin stringify, muerte súbita infinita
+- Eliminados los empates del juego — siempre hay un ganador
+- Función SQL `finalize_match_stats` actualizada sin empates
+- Ventana de falta reducida a 5 centésimas (20-25, 30-35, 40-45) inclusive en ambos extremos
+- Flash de gol en todos los partidos, duración 0.5s, sin repetición por Realtime
+- Home redesign: cards con iconos SVG, copa del mundial en Mis Ligas
+- Confirmación de borrado de cuenta por nombre de usuario
+
+## Versiones estables
+
 | Tag | Descripción |
 |---|---|
 | `v1.0-stable` | Primera versión estable — estadísticas correctas, matchmaking robusto, timer mejorado |
