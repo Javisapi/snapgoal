@@ -256,9 +256,6 @@ export default function League() {
             })}
 
             {/* Botón salir de liga */}
-            {!expired && (
-              <button style={{...styles.leaveBtn, background:"rgba(255,180,0,0.1)", color:"#ffb400", border:"1px solid rgba(255,180,0,0.2)"}} onClick={handleNotifyPlayers}>🔔 Alertar a jugadores</button>
-            )}
             {!isAdmin() && !expired && (
               <button style={styles.leaveBtn} onClick={handleLeave}>Salir de la liga</button>
             )}
@@ -279,6 +276,12 @@ export default function League() {
             onClick={() => navigate('/queue?league=' + leagueId)}
           >
             ⚡ Buscar rival en la liga
+          </button>
+          <button
+            style={styles.btnAlert}
+            onClick={handleNotifyPlayers}
+          >
+            🔔 Alertar a jugadores
           </button>
         </div>
       )}
@@ -345,6 +348,7 @@ const styles = {
   memberPtsLabel: { fontSize: '0.6rem', color: 'rgba(255,255,255,0.25)' },
   kickBtn: { background: 'rgba(255,68,68,0.1)', border: '1px solid rgba(255,68,68,0.2)', borderRadius: '8px', color: '#ff4444', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer', padding: '4px 10px' },
   leaveBtn: { background: 'transparent', border: '1px solid rgba(255,68,68,0.2)', borderRadius: '10px', color: 'rgba(255,68,68,0.5)', fontSize: '0.85rem', cursor: 'pointer', padding: '0.75rem', marginTop: '0.5rem' },
+  btnAlert: { background: 'rgba(255,60,60,0.08)', border: '1px solid rgba(255,60,60,0.3)', borderRadius: '12px', color: 'rgba(255,80,80,0.9)', fontSize: '0.9rem', fontWeight: '700', cursor: 'pointer', padding: '0.85rem', marginTop: '0.5rem', boxShadow: '0 0 12px rgba(255,60,60,0.2)' },
   deleteLeagueBtn: { background: 'rgba(255,68,68,0.08)', border: '1px solid rgba(255,68,68,0.2)', borderRadius: '10px', color: '#ff4444', fontSize: '0.85rem', cursor: 'pointer', padding: '0.75rem', marginTop: '0.5rem', fontWeight: '700' },
   footer: { padding: '1rem 1.75rem 2rem', flexShrink: 0 },
   btnPlay: { width: '100%', background: '#ffb400', color: '#141414', border: 'none', borderRadius: '12px', padding: '1.1rem', fontSize: '1rem', fontWeight: '800', cursor: 'pointer' },
