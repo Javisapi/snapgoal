@@ -98,6 +98,34 @@ const SECTIONS = [
       'Sin respuesta durante 30 segundos → derrota 0-5 por desconexión.',
     ]
   },
+,
+  {
+    title: 'Puntuación XP (solo partidos generales)',
+    color: '#22c55e',
+    rules: [
+      'Cada jugador tiene una puntuación XP calculada con el sistema Glicko-1, un algoritmo de clasificación competitiva.',
+      'El XP refleja tu nivel real: ganar contra rivales fuertes da más XP que ganar contra rivales débiles.',
+      'Los jugadores nuevos empiezan con 1500 XP.',
+      'Al ganar sumas XP. Al perder restas XP. La cantidad depende del nivel relativo de ambos jugadores.',
+      'Ejemplo: si tienes 1500 XP y ganas a alguien de 1800 XP, ganas muchos puntos. Si ganas a alguien de 1200 XP, ganas pocos.',
+      'El XP solo se calcula en partidos generales. Los partidos de liga NO afectan al XP.',
+      'Al terminar cada partido verás cuántos XP has ganado o perdido.',
+      'El ranking general está ordenado por XP.',
+    ]
+  },
+  {
+    title: 'Ligas — clasificación y desempate',
+    color: '#ffb400',
+    rules: [
+      'Las ligas usan puntos simples: +3 por victoria, 0 por derrota.',
+      'El ranking de liga está ordenado por puntos acumulados entre los miembros de esa liga.',
+      'En caso de empate a puntos entre dos o más jugadores, se aplican estos criterios en orden:',
+      '1. Mayor número de victorias.',
+      '2. Mejor diferencia de goles (goles marcados menos goles recibidos).',
+      '3. Mayor número de goles marcados.',
+      '4. Si sigue el empate → partido de desempate entre los empatados.',
+    ]
+  }
 ]
 
 export default function Rules() {
