@@ -137,6 +137,15 @@ Durante un partido de liga aparece un botón 💬 en la barra inferior. Los juga
 
 ## Versiones estables
 
+### v1.6-stable
+- Popup Iron Fist rediseñado: botones IZQUIERDA/DERECHA grandes, glow rojo en "No usar"
+- Popup Sniper rediseñado: visualización de barrera antes/después, glow verde en "Activar", glow rojo en "No usar"
+- Chat disponible en todos los partidos con mensajes cortos (⚽ GOOOL, 💥 BOOOM, etc.) en grid 3x2
+- Chat float aparece encima del cronómetro
+- Bug fix: timer no se resetea al enviar mensajes de chat
+- Stock resetado a 3 Iron Fists y 3 Snipers para todos los jugadores
+
+
 ### v1.5-stable
 - **Iron Fist** (ex guante de oro): habilidad defensiva en penalties — elige derecha/izquierda para bloquear mitad del cronómetro
 - **Sniper** (ex lanzador pro): habilidad ofensiva en faltas — amplía ventana de 5 a 10 centésimas
@@ -171,6 +180,15 @@ Durante un partido de liga aparece un botón 💬 en la barra inferior. Los juga
 - Confirmación de borrado de cuenta por nombre de usuario
 
 ## Versiones estables
+
+### v1.6-stable
+- Popup Iron Fist rediseñado: botones IZQUIERDA/DERECHA grandes, glow rojo en "No usar"
+- Popup Sniper rediseñado: visualización de barrera antes/después, glow verde en "Activar", glow rojo en "No usar"
+- Chat disponible en todos los partidos con mensajes cortos (⚽ GOOOL, 💥 BOOOM, etc.) en grid 3x2
+- Chat float aparece encima del cronómetro
+- Bug fix: timer no se resetea al enviar mensajes de chat
+- Stock resetado a 3 Iron Fists y 3 Snipers para todos los jugadores
+
 
 ### v1.5-stable
 - **Iron Fist** (ex guante de oro): habilidad defensiva en penalties — elige derecha/izquierda para bloquear mitad del cronómetro
