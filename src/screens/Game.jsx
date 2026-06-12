@@ -228,8 +228,11 @@ export default function Game() {
           try {
             const ev = JSON.parse(updated.last_event)
             setLastPlay(ev)
-            if (ev.emoji === '⚽') triggerFlash('goal', 'GOL')
-            else if (ev.emoji === '💥') triggerFlash('owngoal', 'GOL PROPIO')
+            if (updated.last_event !== lastFlashedEventRef.current) {
+              lastFlashedEventRef.current = updated.last_event
+              if (ev.emoji === '⚽') triggerFlash('goal', 'GOL')
+              else if (ev.emoji === '💥') triggerFlash('owngoal', 'GOL PROPIO')
+            }
           } catch(e) {}
         }
 
@@ -448,6 +451,7 @@ export default function Game() {
     setTimeout(() => setFlashEvent(null), 600)
   }
 
+  const lastFlashedEventRef = useRef(null)
   const touchFiredRef = useRef(false)
 
   function handleTouch(e) {
