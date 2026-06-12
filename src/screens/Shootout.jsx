@@ -315,7 +315,7 @@ export default function Shootout() {
       ended_at: new Date().toISOString(),
     }).eq('id', matchId)
 
-    await supabase.rpc('finalize_match_stats', {
+    const xpRes = await supabase.rpc('finalize_match_stats', {
       p_match_id: matchId,
       p_player1_id: m.player1_id,
       p_player2_id: m.player2_id,
@@ -323,6 +323,9 @@ export default function Shootout() {
       p_cards_p1: m.cards_p1 || { yellow: 0, red: 0 },
       p_cards_p2: m.cards_p2 || { yellow: 0, red: 0 },
     })
+    if (xpRes.data) {
+      await supabase.from('matches').update({ xp_result: xpRes.data }).eq('id', matchId)
+    }
 
     navigate('/result/' + matchId)
   }

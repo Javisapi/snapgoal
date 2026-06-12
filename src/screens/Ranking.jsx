@@ -43,7 +43,7 @@ export default function Ranking() {
   async function init() {
     const p = await getPlayer()
     setMe(p)
-    const { data } = await supabase.from('players').select('*').order('total_points', { ascending: false })
+    const { data } = await supabase.from('players').select('*').order('xp_rating', { ascending: false })
     setPlayers(data || [])
     setLoading(false)
   }
@@ -102,7 +102,7 @@ export default function Ranking() {
                   </div>
                 </div>
                 <div style={styles.ptsBlock}>
-                  <span style={styles.ptsNum}>{p.total_points}</span>
+                  <span style={styles.ptsNum}>{p.xp_rating || 1500} <span style={{fontSize:'0.6rem',color:'rgba(255,180,0,0.5)'}}>XP</span></span>
                   <span style={styles.ptsLabel}>pts</span>
                 </div>
               </div>

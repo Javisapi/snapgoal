@@ -843,7 +843,7 @@ export default function Game() {
     if (!currentMatch.data) return
 
     const match = currentMatch.data
-    await supabase.rpc('finalize_match_stats', {
+    const xpRes = await supabase.rpc('finalize_match_stats', {
       p_match_id: matchId,
       p_player1_id: match.player1_id,
       p_player2_id: match.player2_id,
@@ -852,6 +852,9 @@ export default function Game() {
       p_cards_p1: match.cards_p1 || { yellow: 0, red: 0 },
       p_cards_p2: match.cards_p2 || { yellow: 0, red: 0 },
     })
+    if (xpRes.data) {
+      await supabase.from('matches').update({ xp_result: xpRes.data }).eq('id', matchId)
+    }
   }
 
   const isP1 = match ? match.player1_id === player?.id : false

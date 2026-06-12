@@ -52,6 +52,7 @@ export default function Result() {
   const [updatedPlayer, setUpdatedPlayer] = useState(null)
   const [pointsEarned, setPointsEarned] = useState(0)
   const [rematchStatus, setRematchStatus] = useState(null)
+  const [xpDelta, setXpDelta] = useState(null)
   const [rematchRequest, setRematchRequest] = useState(null)
   const channelRef = useRef(null)
 
@@ -74,6 +75,7 @@ export default function Result() {
     setPlayer(p)
 
     const { data: m } = await supabase.from('matches').select('*').eq('id', matchId).single()
+    if (m?.xp_result) setXpDelta(m.player1_id === p.id ? m.xp_result.p1_delta : m.xp_result.p2_delta)
     if (!m) { navigate('/'); return }
 
     // Si el partido tiene penaltis pendientes, redirigir a shootout
@@ -255,6 +257,20 @@ export default function Result() {
           <span style={{ ...styles.statVal, color: '#ffb400' }}>+{pointsEarned}</span>
         </div>
         <div style={styles.statDivider} />
+        {xpDelta !== null && (
+          <>
+            <div style={styles.statRow}>
+              <span style={styles.statLabel}>XP</span>
+              <span style={{ ...styles.statVal, color: xpDelta >= 0 ? '#22c55e' : '#ff4444' }}>{xpDelta >= 0 ? '+' : ''}{xpDelta} XP</span>
+            </div>
+            <div style={styles.statDivider} />
+            <div style={styles.statRow}>
+              <span style={styles.statLabel}>XP total</span>
+              <span style={styles.statVal}>{updatedPlayer.xp_rating} XP</span>
+            </div>
+            <div style={styles.statDivider} />
+          </>
+        )}
         <div style={styles.statRow}>
           <span style={styles.statLabel}>total de puntos</span>
           <span style={styles.statVal}>{updatedPlayer.total_points}</span>

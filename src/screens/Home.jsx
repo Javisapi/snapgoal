@@ -192,6 +192,8 @@ export default function Home() {
         <div style={styles.playerMeta}>
           <span style={styles.playerMetaItem}>{player.total_points} pts</span>
           <span style={styles.playerMetaDot} />
+          <span style={styles.playerMetaItem}>{player.xp_rating || 1500} XP</span>
+          <span style={styles.playerMetaDot} />
           <span style={styles.playerMetaItem}>{player.matches_played} partidos</span>
           <span style={styles.playerMetaDot} />
           <span style={styles.playerMetaItem}>{player.matches_won}V {player.matches_lost}D</span>
