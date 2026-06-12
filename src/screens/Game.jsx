@@ -35,6 +35,26 @@ const GloveIcon = () => (
   </svg>
 )
 
+
+const ProShooterIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="16" cy="16" r="11" stroke="#ffb400" strokeWidth="1.5" fill="none"/>
+    <circle cx="16" cy="16" r="6" stroke="#ffb400" strokeWidth="1" fill="none"/>
+    <circle cx="16" cy="16" r="2" fill="#ffb400"/>
+    <line x1="16" y1="2" x2="16" y2="6" stroke="#ffb400" strokeWidth="1.5" strokeLinecap="round"/>
+    <line x1="16" y1="26" x2="16" y2="30" stroke="#ffb400" strokeWidth="1.5" strokeLinecap="round"/>
+    <line x1="2" y1="16" x2="6" y2="16" stroke="#ffb400" strokeWidth="1.5" strokeLinecap="round"/>
+    <line x1="26" y1="16" x2="30" y2="16" stroke="#ffb400" strokeWidth="1.5" strokeLinecap="round"/>
+  </svg>
+)
+
+const ProShooterStock = ({ stock }) => (
+  <span style={{display:'flex',alignItems:'center',gap:'2px',fontSize:'0.65rem',color:'#ffb400',fontWeight:'700'}}>
+    <ProShooterIcon />
+    {stock > 1 && <span>×{stock}</span>}
+  </span>
+)
+
 const GloveStock = ({ stock }) => (
   <span style={{display:'flex',alignItems:'center',gap:'2px',fontSize:'0.65rem',color:'#ffb400',fontWeight:'700'}}>
     <GloveIcon />
@@ -73,6 +93,8 @@ export default function Game() {
   const [waitingForGlove, setWaitingForGlove] = useState(false)
   const gloveTimerRef = useRef(null)
   const [proShooterStock, setProShooterStock] = useState(0)
+  const [oppProShooterStock, setOppProShooterStock] = useState(0)
+  const proShooterStockRef = useRef(0)
   const [proShooterActive, setProShooterActive] = useState(false)
   const [showProShooterPopup, setShowProShooterPopup] = useState(false)
   const [showPenaltyPopup, setShowPenaltyPopup] = useState(false)
@@ -188,15 +210,18 @@ export default function Game() {
       setGoldenGloveStock(gg?.stock || 0)
       const ps = myItems.find(i => i.item_type === 'pro_shooter')
       setProShooterStock(ps?.stock || 0)
+      proShooterStockRef.current = ps?.stock || 0
     }
     if (oppItems) {
       const gg = oppItems.find(i => i.item_type === 'golden_glove')
       setOppGoldenGloveStock(gg?.stock || 0)
+      const ps = oppItems.find(i => i.item_type === 'pro_shooter')
+      setOppProShooterStock(ps?.stock || 0)
     }
     if (m.barrier_range && m.pending_type === 'FALTA' && m.current_turn === p.id) {
       // Mostrar popup pro shooter si el tirador tiene stock
       const { data: psItem } = await supabase.from('player_items').select('stock').eq('player_id', p.id).eq('item_type', 'pro_shooter').single().catch(() => ({ data: null }))
-      if (psItem && psItem.stock > 0) setShowProShooterPopup(true)
+      if (psItem && psItem.stock > 0) { setProShooterStock(psItem.stock); proShooterStockRef.current = psItem.stock; setShowProShooterPopup(true) }
       setBarrierOptions(null)
     }
     if (m.last_event) {
@@ -284,7 +309,15 @@ export default function Game() {
         if (updated.pending_type) {
           setPendingType(updated.pending_type)
           // Si hay falta y soy el rival (el que pone la barrera)
-          if (updated.pending_type === 'FALTA' && isMyTurn && updated.barrier_range && proShooterStock > 0 && !proShooterActive) { setShowProShooterPopup(true) }
+          if (updated.pending_type === 'FALTA' && isMyTurn && updated.barrier_range && !proShooterActive) {
+            supabase.from('player_items').select('stock').eq('player_id', playerRef.current.id).eq('item_type', 'pro_shooter').single().then(({ data }) => {
+              if (data && data.stock > 0) {
+                proShooterStockRef.current = data.stock
+                setProShooterStock(data.stock)
+                setShowProShooterPopup(true)
+              }
+            })
+          }
           if (updated.pending_type === 'FALTA' && !isMyTurn && !updated.barrier_range) {
             setBarrierOptions(true)
           } else {
@@ -845,7 +878,7 @@ export default function Game() {
     if (!use) return
     const p = playerRef.current
     await supabase.from('player_items').update({ stock: proShooterStock - 1 }).eq('player_id', p.id).eq('item_type', 'pro_shooter')
-    setProShooterStock(s => s - 1)
+    setProShooterStock(s => { proShooterStockRef.current = s - 1; return s - 1 })
     setProShooterActive(true)
     // Notificar al rival
     const m = matchRef.current
@@ -1133,6 +1166,7 @@ export default function Game() {
           </span>
           <span style={styles.playerScore}>{scoreMe}</span>
           {goldenGloveStock > 0 && <GloveStock stock={goldenGloveStock} />}
+          {proShooterStock > 0 && <ProShooterStock stock={proShooterStock} />}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
           <button style={styles.abandonBtn} onClick={() => setShowAbandon(true)}>✕</button>
@@ -1146,6 +1180,7 @@ export default function Game() {
           </span>
           <span style={styles.playerScore}>{scoreOpp}</span>
           {oppGoldenGloveStock > 0 && <GloveStock stock={oppGoldenGloveStock} />}
+          {oppProShooterStock > 0 && <ProShooterStock stock={oppProShooterStock} />}
         </div>
       </div>
 
