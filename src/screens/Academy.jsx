@@ -29,6 +29,7 @@ export default function Academy() {
   const [stats, setStats] = useState({})
   const [loading, setLoading] = useState(true)
   const [streaks, setStreaks] = useState({})
+  const [showInfo, setShowInfo] = useState(false)
 
   useEffect(() => {
     const s = document.createElement('style')
@@ -96,6 +97,36 @@ export default function Academy() {
       </div>
 
       <p style={styles.subtitle}>Entrena tu precisión. Sin límites, sin skills.</p>
+
+      <button style={styles.infoBtn} onClick={() => setShowInfo(v => !v)}>
+        {showInfo ? '▲ Ocultar instrucciones' : '▼ ¿Cómo funciona la Academy?'}
+      </button>
+
+      {showInfo && (
+        <div style={styles.infoBox}>
+          <p style={styles.infoTitle}>Cómo funciona</p>
+          <div style={styles.infoSection}>
+            <p style={styles.infoSub}>🥅 Penalties</p>
+            <p style={styles.infoText}>Elige par o impar y para el cronómetro. Para marcar gol la centésima final ha de ser del tipo elegido (par o impar).</p>
+            <p style={styles.infoText}>• <strong style={{color:'#22c55e'}}>Amateur</strong> — solo acertar par/impar, sin restricción de centésima.</p>
+            <p style={styles.infoText}>• <strong style={{color:'#ffb400'}}>National Class</strong> — acertar par/impar y centésima entre 20–80.</p>
+            <p style={styles.infoText}>• <strong style={{color:'#ff4444'}}>World Class</strong> — acertar par/impar y centésima entre 40–60.</p>
+          </div>
+          <div style={styles.infoSection}>
+            <p style={styles.infoSub}>🧤 Faltas</p>
+            <p style={styles.infoText}>El sistema elige una barrera aleatoria. Para marcar gol la centésima final ha de caer dentro de la ventana.</p>
+            <p style={styles.infoText}>• <strong style={{color:'#22c55e'}}>Amateur</strong> — ventana de 15 centésimas (ej: 20–35).</p>
+            <p style={styles.infoText}>• <strong style={{color:'#ffb400'}}>National Class</strong> — ventana de 10 centésimas (ej: 20–30).</p>
+            <p style={styles.infoText}>• <strong style={{color:'#ff4444'}}>World Class</strong> — ventana de 5 centésimas (ej: 20–25).</p>
+          </div>
+          <div style={styles.infoSection}>
+            <p style={styles.infoSub}>📊 Estadísticas</p>
+            <p style={styles.infoText}>• <strong style={{color:'#fff'}}>%</strong> — porcentaje de acierto acumulado desde el primer entrenamiento.</p>
+            <p style={styles.infoText}>• <strong style={{color:'#fff'}}>G/T</strong> — goles marcados sobre total de tiros.</p>
+            <p style={styles.infoText}>• <strong style={{color:'#ffb400'}}>🔥N</strong> — mejor racha de goles consecutivos conseguida hasta la fecha.</p>
+          </div>
+        </div>
+      )}
 
       {/* PENALTIES */}
       <div style={styles.section}>
@@ -179,6 +210,12 @@ const styles = {
   diffPct: { fontSize:'1rem', fontWeight:'900', color:'#ffb400' },
   diffTotal: { fontSize:'0.7rem', color:'rgba(255,255,255,0.3)' },
   diffNew: { fontSize:'0.72rem', color:'rgba(255,255,255,0.2)', fontStyle:'italic' },
+  infoBtn: { background:'transparent', border:'1px solid rgba(255,255,255,0.08)', borderRadius:'10px', padding:'0.6rem 1rem', color:'rgba(255,255,255,0.35)', fontSize:'0.78rem', cursor:'pointer', width:'100%', textAlign:'left', marginBottom:'0.75rem' },
+  infoBox: { background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:'14px', padding:'1rem', marginBottom:'1rem' },
+  infoTitle: { fontSize:'0.75rem', fontWeight:'800', color:'rgba(255,255,255,0.5)', letterSpacing:'1px', textTransform:'uppercase', margin:'0 0 0.75rem' },
+  infoSection: { marginBottom:'0.75rem' },
+  infoSub: { fontSize:'0.82rem', fontWeight:'800', color:'#ffb400', margin:'0 0 0.35rem' },
+  infoText: { fontSize:'0.78rem', color:'rgba(255,255,255,0.45)', lineHeight:1.5, margin:'0 0 0.2rem' },
   streakBadge: { fontSize:'0.78rem', fontWeight:'800', color:'#ffb400' },
   diffArrow: { fontSize:'1.2rem', color:'rgba(255,255,255,0.2)' },
 }
