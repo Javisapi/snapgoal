@@ -1192,29 +1192,52 @@ export default function Game() {
 
       {/* Popup Sniper — solo el tirador */}
       {showProShooterPopup && (
-        <div style={{position:'absolute',inset:0,background:'rgba(0,0,0,0.85)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:60,flexDirection:'column',gap:'1rem',padding:'2rem'}}>
-          <span style={{fontSize:'3rem'}}>🎯</span>
-          <p style={{color:'#fff',fontWeight:'800',fontSize:'1.2rem',textAlign:'center'}}>¿Usar Sniper?</p>
-          <p style={{color:'rgba(255,255,255,0.4)',fontSize:'0.85rem',textAlign:'center'}}>Amplía la ventana a 10 centésimas — Te quedan {proShooterStock}</p>
-          <p style={{color:'rgba(255,180,0,0.7)',fontSize:'0.8rem',textAlign:'center'}}>Barrera actual: {barrierRange?.min}–{barrierRange?.max} → se ampliaría a {barrierRange?.min}–{barrierRange ? barrierRange.min+10 : ''}</p>
-          <div style={{display:'flex',flexDirection:'column',gap:'0.75rem',width:'100%'}}>
-            <button style={{background:'rgba(255,180,0,0.15)',border:'1px solid rgba(255,180,0,0.4)',borderRadius:'12px',padding:'0.9rem',color:'#ffb400',fontWeight:'800',fontSize:'1rem',cursor:'pointer'}} onClick={() => activateProShooter(true)}>🎯 Usar Sniper</button>
-            <button style={{background:'transparent',border:'none',color:'rgba(255,255,255,0.3)',fontSize:'0.9rem',cursor:'pointer',padding:'0.5rem'}} onClick={() => activateProShooter(false)}>No usar</button>
+        <div style={{position:'absolute',inset:0,background:'rgba(0,0,0,0.93)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:60,flexDirection:'column',gap:'14px',padding:'24px 18px'}}>
+          <span style={{fontSize:'4rem',lineHeight:1}}>🎯</span>
+          <p style={{color:'#fff',fontWeight:'900',fontSize:'1.7rem',letterSpacing:'-0.5px',margin:0}}>Sniper</p>
+          <p style={{color:'rgba(255,255,255,0.5)',fontSize:'0.95rem',textAlign:'center',lineHeight:1.5,margin:0}}>Tu rival eligió la barrera {barrierRange?.min}–{barrierRange?.max}.<br/>El Sniper la amplía a {barrierRange?.min}–{barrierRange ? barrierRange.min+10 : ''}.</p>
+          <div style={{fontSize:'0.95rem',fontWeight:'800',color:'#ffb400',background:'rgba(255,180,0,0.15)',borderRadius:'20px',padding:'6px 16px',border:'1px solid rgba(255,180,0,0.4)'}}>🎯 Te quedan {proShooterStock}</div>
+          <div style={{width:'100%',background:'rgba(255,255,255,0.04)',borderRadius:'12px',padding:'14px'}}>
+            <p style={{fontSize:'0.7rem',color:'rgba(255,255,255,0.3)',textAlign:'center',margin:'0 0 8px',letterSpacing:'0.5px'}}>SIN SNIPER</p>
+            <div style={{position:'relative',height:'36px',background:'rgba(255,255,255,0.06)',borderRadius:'8px',overflow:'hidden',marginBottom:'4px'}}>
+              <div style={{position:'absolute',left:`${barrierRange?.min || 30}%`,width:'15%',height:'100%',background:'rgba(255,180,0,0.3)',borderLeft:'2px solid #ffb400',borderRight:'2px solid #ffb400',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                <span style={{fontSize:'0.65rem',fontWeight:'800',color:'#ffb400'}}>{barrierRange?.min}–{barrierRange?.max}</span>
+              </div>
+            </div>
+            <div style={{display:'flex',justifyContent:'space-between',marginBottom:'10px'}}><span style={{fontSize:'0.65rem',color:'rgba(255,255,255,0.25)'}}>00</span><span style={{fontSize:'0.65rem',color:'rgba(255,255,255,0.25)'}}>50</span><span style={{fontSize:'0.65rem',color:'rgba(255,255,255,0.25)'}}>99</span></div>
+            <p style={{fontSize:'0.7rem',color:'#ffb400',textAlign:'center',margin:'0 0 8px',fontWeight:'800',letterSpacing:'0.5px'}}>CON SNIPER ↓</p>
+            <div style={{position:'relative',height:'36px',background:'rgba(255,255,255,0.06)',borderRadius:'8px',overflow:'hidden',marginBottom:'4px'}}>
+              <div style={{position:'absolute',left:`${barrierRange?.min || 30}%`,width:'30%',height:'100%',background:'rgba(255,180,0,0.2)',borderLeft:'2px solid #ffb400',borderRight:'2px dashed rgba(255,180,0,0.6)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                <span style={{fontSize:'0.65rem',fontWeight:'800',color:'#ffb400'}}>{barrierRange?.min}–{barrierRange ? barrierRange.min+10 : ''}</span>
+              </div>
+            </div>
+            <div style={{display:'flex',justifyContent:'space-between'}}><span style={{fontSize:'0.65rem',color:'rgba(255,255,255,0.25)'}}>00</span><span style={{fontSize:'0.65rem',color:'rgba(255,255,255,0.25)'}}>50</span><span style={{fontSize:'0.65rem',color:'rgba(255,255,255,0.25)'}}>99</span></div>
           </div>
+          <button style={{width:'100%',background:'rgba(34,197,94,0.2)',border:'2px solid #22c55e',borderRadius:'14px',padding:'18px',fontSize:'1.1rem',fontWeight:'900',color:'#22c55e',cursor:'pointer',boxShadow:'0 0 16px rgba(34,197,94,0.5),0 0 32px rgba(34,197,94,0.25)'}} onClick={() => activateProShooter(true)}>🎯 Activar Sniper</button>
+          <button style={{width:'100%',background:'rgba(255,40,40,0.2)',border:'2px solid #ff4444',borderRadius:'14px',padding:'16px',color:'#ff4444',fontSize:'1rem',fontWeight:'900',cursor:'pointer',boxShadow:'0 0 12px rgba(255,60,60,0.5),0 0 24px rgba(255,60,60,0.25)'}} onClick={() => activateProShooter(false)}>✕ No usar el Sniper</button>
         </div>
       )}
 
       {/* Popup Iron Fist — solo el defensor */}
       {showGlovePopup && (
-        <div style={{position:'absolute',inset:0,background:'rgba(0,0,0,0.85)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:60,flexDirection:'column',gap:'1rem',padding:'2rem'}}>
-          <svg width='48' height='48' viewBox='0 0 24 24' fill='none'><path d='M6 8V6a2 2 0 0 1 2-2h1a2 2 0 0 1 2 2v1h1V5a2 2 0 0 1 2-2h1a1 1 0 0 1 1 1v4l1-1a1.5 1.5 0 0 1 2 2l-3 4v3a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3v-5L4 10a1.5 1.5 0 0 1 2-2l0 0z' fill='#ffb400' stroke='#cc8800' strokeWidth='0.5'/></svg>
-          <p style={{color:'#fff',fontWeight:'800',fontSize:'1.2rem',textAlign:'center'}}>¿Usar Iron Fist?</p>
-          <p style={{color:'rgba(255,255,255,0.4)',fontSize:'0.85rem',textAlign:'center'}}>Te quedan {goldenGloveStock}</p>
-          <div style={{display:'flex',flexDirection:'column',gap:'0.75rem',width:'100%'}}>
-            <button style={{background:'rgba(255,180,0,0.15)',border:'1px solid rgba(255,180,0,0.4)',borderRadius:'12px',padding:'0.9rem',color:'#ffb400',fontWeight:'800',fontSize:'1rem',cursor:'pointer'}} onClick={() => activateGloveDecision(true, 'izquierda')}>← Izquierda (bloquear 00–49)</button>
-            <button style={{background:'rgba(255,180,0,0.15)',border:'1px solid rgba(255,180,0,0.4)',borderRadius:'12px',padding:'0.9rem',color:'#ffb400',fontWeight:'800',fontSize:'1rem',cursor:'pointer'}} onClick={() => activateGloveDecision(true, 'derecha')}>Derecha (bloquear 50–99) →</button>
-            <button style={{background:'transparent',border:'none',color:'rgba(255,255,255,0.3)',fontSize:'0.9rem',cursor:'pointer',padding:'0.5rem'}} onClick={() => activateGloveDecision(false)}>No usar</button>
+        <div style={{position:'absolute',inset:0,background:'rgba(0,0,0,0.93)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:60,flexDirection:'column',gap:'14px',padding:'24px 18px'}}>
+          <svg width='64' height='64' viewBox='0 0 24 24' fill='none'><path d='M6 8V6a2 2 0 0 1 2-2h1a2 2 0 0 1 2 2v1h1V5a2 2 0 0 1 2-2h1a1 1 0 0 1 1 1v4l1-1a1.5 1.5 0 0 1 2 2l-3 4v3a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3v-5L4 10a1.5 1.5 0 0 1 2-2l0 0z' fill='#ffb400' stroke='#cc8800' strokeWidth='0.5'/></svg>
+          <p style={{color:'#fff',fontWeight:'900',fontSize:'1.7rem',letterSpacing:'-0.5px',margin:0}}>Iron Fist</p>
+          <p style={{color:'rgba(255,255,255,0.5)',fontSize:'0.95rem',textAlign:'center',lineHeight:1.5,margin:0}}>Bloquea la mitad del cronómetro.<br/>Tu rival no sabrá qué lado elegiste.</p>
+          <div style={{fontSize:'0.95rem',fontWeight:'800',color:'#ffb400',background:'rgba(255,180,0,0.15)',borderRadius:'20px',padding:'6px 16px',border:'1px solid rgba(255,180,0,0.4)'}}>🧤 Te quedan {goldenGloveStock}</div>
+          <div style={{display:'flex',gap:'12px',width:'100%'}}>
+            <button style={{flex:1,background:'rgba(255,180,0,0.1)',border:'1.5px solid rgba(255,180,0,0.4)',borderRadius:'18px',padding:'20px 8px',display:'flex',flexDirection:'column',alignItems:'center',gap:'8px',cursor:'pointer'}} onClick={() => activateGloveDecision(true, 'izquierda')}>
+              <span style={{fontSize:'2.2rem',color:'#ffb400',lineHeight:1}}>←</span>
+              <span style={{fontSize:'1.1rem',fontWeight:'900',color:'#ffb400',letterSpacing:'0.5px'}}>IZQUIERDA</span>
+              <span style={{fontSize:'0.78rem',color:'rgba(255,255,255,0.4)',textAlign:'center',lineHeight:1.4}}>bloquear<br/>00–49</span>
+            </button>
+            <button style={{flex:1,background:'rgba(255,180,0,0.1)',border:'1.5px solid rgba(255,180,0,0.4)',borderRadius:'18px',padding:'20px 8px',display:'flex',flexDirection:'column',alignItems:'center',gap:'8px',cursor:'pointer'}} onClick={() => activateGloveDecision(true, 'derecha')}>
+              <span style={{fontSize:'2.2rem',color:'#ffb400',lineHeight:1}}>→</span>
+              <span style={{fontSize:'1.1rem',fontWeight:'900',color:'#ffb400',letterSpacing:'0.5px'}}>DERECHA</span>
+              <span style={{fontSize:'0.78rem',color:'rgba(255,255,255,0.4)',textAlign:'center',lineHeight:1.4}}>bloquear<br/>50–99</span>
+            </button>
           </div>
+          <button style={{width:'100%',background:'rgba(255,40,40,0.2)',border:'2px solid #ff4444',borderRadius:'14px',padding:'16px',color:'#ff4444',fontSize:'1rem',fontWeight:'900',cursor:'pointer',boxShadow:'0 0 12px rgba(255,60,60,0.5),0 0 24px rgba(255,60,60,0.25)'}} onClick={() => activateGloveDecision(false)}>✕ No usar el Iron Fist</button>
         </div>
       )}
 
