@@ -1073,6 +1073,9 @@ export default function Game() {
             {(isP1 ? cards.p1 : cards.p2).red > 0 && ' 🟥'.repeat((isP1 ? cards.p1 : cards.p2).red)}
           </span>
           <span style={styles.playerScore}>{scoreMe}</span>
+          {goldenGloveStock > 0 && (
+            <span style={{fontSize:'0.65rem',color:'rgba(255,180,0,0.7)',letterSpacing:'1px'}}>{'🧤'.repeat(goldenGloveStock)}</span>
+          )}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
           <button style={styles.abandonBtn} onClick={() => setShowAbandon(true)}>✕</button>
@@ -1085,6 +1088,9 @@ export default function Game() {
             {(isP1 ? cards.p2 : cards.p1).red > 0 && ' 🟥'.repeat((isP1 ? cards.p2 : cards.p1).red)}
           </span>
           <span style={styles.playerScore}>{scoreOpp}</span>
+          {oppGoldenGloveStock > 0 && (
+            <span style={{fontSize:'0.65rem',color:'rgba(255,180,0,0.7)',letterSpacing:'1px'}}>{'🧤'.repeat(oppGoldenGloveStock)}</span>
+          )}
         </div>
       </div>
 
