@@ -1415,7 +1415,7 @@ const styles = {
   disconnectBannerText: { color: '#ffb400', fontSize: '0.85rem', fontWeight: '600' },
   chatBtn: { background: 'rgba(255,255,255,0.08)', border: 'none', borderRadius: '8px', color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem', cursor: 'pointer', padding: '4px 8px' },
   chatBtnBottom: { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '50%', width: '48px', height: '48px', fontSize: '1.4rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', WebkitTapHighlightColor: 'transparent' },
-  chatFloat: { position: 'absolute', bottom: '160px', left: '50%', transform: 'translateX(-50%)', background: 'rgba(30,30,30,0.95)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '20px', padding: '12px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', animation: 'chatMsgIn 0.3s ease forwards', zIndex: 40, whiteSpace: 'nowrap' },
+  chatFloat: { position: 'absolute', bottom: '320px', left: '50%', transform: 'translateX(-50%)', background: 'rgba(30,30,30,0.95)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '20px', padding: '12px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', animation: 'chatMsgIn 0.3s ease forwards', zIndex: 40, whiteSpace: 'nowrap' },
   chatFloatFrom: { fontSize: '0.65rem', color: '#ffb400', fontWeight: '700' },
   chatFloatText: { fontSize: '1.8rem', lineHeight: 1.3, color: '#fff', fontWeight: '800' },
   chatOverlay: { position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: '2rem', zIndex: 60 },
