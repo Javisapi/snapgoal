@@ -97,6 +97,7 @@ export default function Game() {
   const proShooterStockRef = useRef(0)
   const [proShooterActive, setProShooterActive] = useState(false)
   const [showProShooterPopup, setShowProShooterPopup] = useState(false)
+  const proShooterPopupShownRef = useRef(false)
   const [showPenaltyPopup, setShowPenaltyPopup] = useState(false)
 
   const intervalRef = useRef(null)
@@ -224,7 +225,7 @@ export default function Game() {
     if (m.barrier_range && m.pending_type === 'FALTA' && m.current_turn === p.id) {
       // Mostrar popup pro shooter si el tirador tiene stock
       const { data: psItem } = await supabase.from('player_items').select('stock').eq('player_id', p.id).eq('item_type', 'pro_shooter').single().catch(() => ({ data: null }))
-      if (psItem && psItem.stock > 0) { setProShooterStock(psItem.stock); proShooterStockRef.current = psItem.stock; setShowProShooterPopup(true) }
+      if (psItem && psItem.stock > 0 && !proShooterPopupShownRef.current) { setProShooterStock(psItem.stock); proShooterStockRef.current = psItem.stock; setShowProShooterPopup(true); proShooterPopupShownRef.current = true }
       setBarrierOptions(null)
     }
     if (m.last_event) {
@@ -318,10 +319,11 @@ export default function Game() {
           // Si hay falta y soy el rival (el que pone la barrera)
           if (updated.pending_type === 'FALTA' && isMyTurn && updated.barrier_range && !proShooterActive) {
             supabase.from('player_items').select('stock').eq('player_id', playerRef.current.id).eq('item_type', 'pro_shooter').single().then(({ data }) => {
-              if (data && data.stock > 0) {
+              if (data && data.stock > 0 && !proShooterPopupShownRef.current) {
                 proShooterStockRef.current = data.stock
                 setProShooterStock(data.stock)
                 setShowProShooterPopup(true)
+                proShooterPopupShownRef.current = true
               }
             })
           }
@@ -334,6 +336,7 @@ export default function Game() {
           setPendingType(null)
     setProShooterActive(false)
     setShowProShooterPopup(false)
+    proShooterPopupShownRef.current = false
           setBarrierOptions(null)
         }
 
@@ -722,6 +725,7 @@ export default function Game() {
       setPendingType(null)
     setProShooterActive(false)
     setShowProShooterPopup(false)
+    proShooterPopupShownRef.current = false
       // 2 rojas = partido terminado 5-0
       if (newRed >= 2) {
         const winnerId = p1 ? m.player2_id : m.player1_id
@@ -876,6 +880,7 @@ export default function Game() {
     setPendingType(null)
     setProShooterActive(false)
     setShowProShooterPopup(false)
+    proShooterPopupShownRef.current = false
 
     await commitPlay(total, ev.result, sp1, sp2, true, m, p, event)
   }
