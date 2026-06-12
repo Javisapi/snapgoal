@@ -208,8 +208,13 @@ export default function Home() {
           <span style={styles.cardSub}>Jugar ahora</span>
         </button>
         <button style={styles.cardLeague} onClick={() => navigate('/leagues')}>
-          <svg viewBox="0 0 40 40" fill="none" style={{width:'36px',height:'36px',marginBottom:'10px'}}>
-            <path d="M20 3L23.5 13.5H35L25.5 19.5L29 30L20 24L11 30L14.5 19.5L5 13.5H16.5L20 3Z" fill="rgba(255,180,0,0.25)" stroke="rgba(255,180,0,0.9)" strokeWidth="1.5" strokeLinejoin="round"/>
+          <svg viewBox="0 0 36 36" fill="none" style={{width:'36px',height:'36px',marginBottom:'10px'}}>
+            <path d="M10 3h16v9c0 6-3.5 10-8 11C13.5 22 10 18 10 12V3z" fill="rgba(255,180,0,0.2)" stroke="rgba(255,180,0,0.9)" strokeWidth="1.4" strokeLinejoin="round"/>
+            <path d="M10 5.5H6.5S5 13 10 16" stroke="rgba(255,180,0,0.9)" strokeWidth="1.4" strokeLinecap="round"/>
+            <path d="M26 5.5h3.5S31 13 26 16" stroke="rgba(255,180,0,0.9)" strokeWidth="1.4" strokeLinecap="round"/>
+            <path d="M18 23v5" stroke="rgba(255,180,0,0.9)" strokeWidth="1.4" strokeLinecap="round"/>
+            <path d="M13.5 28h9" stroke="rgba(255,180,0,0.9)" strokeWidth="1.4" strokeLinecap="round"/>
+            <ellipse cx="18" cy="31.5" rx="6" ry="1.8" fill="rgba(255,180,0,0.15)" stroke="rgba(255,180,0,0.7)" strokeWidth="1.2"/>
           </svg>
           <span style={styles.cardLeagueLabel}>Mis Ligas</span>
           <span style={styles.cardSubLight}>Competir</span>
