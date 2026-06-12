@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
 import { useSearchParams } from 'react-router-dom'
-import { requestPermissionAndSubscribe } from '../lib/pushNotifications'
 
 async function deleteAccount(playerId) {
   await supabase.from('plays').delete().eq('player_id', playerId)
