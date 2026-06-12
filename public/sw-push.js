@@ -1,5 +1,6 @@
 self.addEventListener('push', function(event) {
-  const data = event.data ? event.data.json() : {}
+  let data = {}
+  try { data = event.data ? event.data.json() : {} } catch(e) { data = { title: event.data?.text() || 'SnapGoal' } }
   const title = data.title || 'SnapGoal'
   const options = {
     body: data.body || '',
