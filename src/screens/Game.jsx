@@ -29,6 +29,19 @@ function evaluatePlay(c) {
   return { result: 'NADA', changeTurn: true }
 }
 
+const GloveIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M6 8V6a2 2 0 0 1 2-2h1a2 2 0 0 1 2 2v1h1V5a2 2 0 0 1 2-2h1a1 1 0 0 1 1 1v4l1-1a1.5 1.5 0 0 1 2 2l-3 4v3a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3v-5L4 10a1.5 1.5 0 0 1 2-2l0 0z" fill="#ffb400" stroke="#cc8800" strokeWidth="0.5"/>
+  </svg>
+)
+
+const GloveStock = ({ stock }) => (
+  <span style={{display:'flex',alignItems:'center',gap:'2px',fontSize:'0.65rem',color:'#ffb400',fontWeight:'700'}}>
+    <GloveIcon />
+    {stock > 1 && <span>×{stock}</span>}
+  </span>
+)
+
 export default function Game() {
   const { matchId } = useParams()
   const navigate = useNavigate()
@@ -1073,9 +1086,7 @@ export default function Game() {
             {(isP1 ? cards.p1 : cards.p2).red > 0 && ' 🟥'.repeat((isP1 ? cards.p1 : cards.p2).red)}
           </span>
           <span style={styles.playerScore}>{scoreMe}</span>
-          {goldenGloveStock > 0 && (
-            <span style={{fontSize:'0.65rem',color:'rgba(255,180,0,0.7)',letterSpacing:'1px'}}>{'🧤'.repeat(goldenGloveStock)}</span>
-          )}
+          {goldenGloveStock > 0 && <GloveStock stock={goldenGloveStock} />}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
           <button style={styles.abandonBtn} onClick={() => setShowAbandon(true)}>✕</button>
@@ -1088,16 +1099,14 @@ export default function Game() {
             {(isP1 ? cards.p2 : cards.p1).red > 0 && ' 🟥'.repeat((isP1 ? cards.p2 : cards.p1).red)}
           </span>
           <span style={styles.playerScore}>{scoreOpp}</span>
-          {oppGoldenGloveStock > 0 && (
-            <span style={{fontSize:'0.65rem',color:'rgba(255,180,0,0.7)',letterSpacing:'1px'}}>{'🧤'.repeat(oppGoldenGloveStock)}</span>
-          )}
+          {oppGoldenGloveStock > 0 && <GloveStock stock={oppGoldenGloveStock} />}
         </div>
       </div>
 
       {/* Popup guante de oro — solo el defensor */}
       {showGlovePopup && (
         <div style={{position:'absolute',inset:0,background:'rgba(0,0,0,0.85)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:60,flexDirection:'column',gap:'1rem',padding:'2rem'}}>
-          <span style={{fontSize:'3rem'}}>🧤</span>
+          <svg width='48' height='48' viewBox='0 0 24 24' fill='none'><path d='M6 8V6a2 2 0 0 1 2-2h1a2 2 0 0 1 2 2v1h1V5a2 2 0 0 1 2-2h1a1 1 0 0 1 1 1v4l1-1a1.5 1.5 0 0 1 2 2l-3 4v3a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3v-5L4 10a1.5 1.5 0 0 1 2-2l0 0z' fill='#ffb400' stroke='#cc8800' strokeWidth='0.5'/></svg>
           <p style={{color:'#fff',fontWeight:'800',fontSize:'1.2rem',textAlign:'center'}}>¿Usar guante de oro?</p>
           <p style={{color:'rgba(255,255,255,0.4)',fontSize:'0.85rem',textAlign:'center'}}>Te quedan {goldenGloveStock}</p>
           <div style={{display:'flex',flexDirection:'column',gap:'0.75rem',width:'100%'}}>
