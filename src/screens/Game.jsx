@@ -53,6 +53,12 @@ export default function Game() {
   const [inactivityWarning, setInactivityWarning] = useState(false)
   const [cards, setCards] = useState({ p1: { yellow: 0, red: 0 }, p2: { yellow: 0, red: 0 } })
   const [penaltyChoice, setPenaltyChoice] = useState(null)
+  const [goldenGloveStock, setGoldenGloveStock] = useState(0)
+  const [oppGoldenGloveStock, setOppGoldenGloveStock] = useState(0)
+  const [showGlovePopup, setShowGlovePopup] = useState(false)
+  const [gloveUsed, setGloveUsed] = useState(false)
+  const [waitingForGlove, setWaitingForGlove] = useState(false)
+  const gloveTimerRef = useRef(null)
   const [showPenaltyPopup, setShowPenaltyPopup] = useState(false)
 
   const intervalRef = useRef(null)
@@ -157,6 +163,18 @@ export default function Game() {
     if (m.pending_type) setPendingType(m.pending_type)
     if (m.cards_p1 && m.cards_p2) setCards({ p1: m.cards_p1, p2: m.cards_p2 })
     if (m.penalty_choice) setPenaltyChoice(m.penalty_choice)
+
+    // Cargar stock de items de ambos jugadores
+    const { data: myItems } = await supabase.from('player_items').select('item_type,stock').eq('player_id', p.id)
+    const { data: oppItems } = await supabase.from('player_items').select('item_type,stock').eq('player_id', m.player1_id === p.id ? m.player2_id : m.player1_id)
+    if (myItems) {
+      const gg = myItems.find(i => i.item_type === 'golden_glove')
+      setGoldenGloveStock(gg?.stock || 0)
+    }
+    if (oppItems) {
+      const gg = oppItems.find(i => i.item_type === 'golden_glove')
+      setOppGoldenGloveStock(gg?.stock || 0)
+    }
     if (m.barrier_range && m.pending_type === 'FALTA' && m.current_turn === p.id) {
       setBarrierOptions(null)
     }
@@ -185,8 +203,35 @@ export default function Game() {
         const isMyTurn = updated.current_turn === playerRef.current?.id
         if (updated.cards_p1 && updated.cards_p2) setCards({ p1: updated.cards_p1, p2: updated.cards_p2 })
         if (updated.penalty_choice) setPenaltyChoice(updated.penalty_choice)
+
+        // Detectar estado del guante de oro
+        const gg = updated.golden_glove_state
+        if (gg) {
+          const isMyTurnNow = updated.current_turn === playerRef.current?.id
+          if (gg.waiting && !isMyTurnNow && !showGlovePopup) {
+            // Soy el defensor — mostrar popup del guante
+            setShowGlovePopup(true)
+            clearTimeout(gloveTimerRef.current)
+            gloveTimerRef.current = setTimeout(() => {
+              setShowGlovePopup(false)
+              activateGloveDecision(false)
+            }, 5000)
+          }
+          if (!gg.waiting) {
+            setWaitingForGlove(false)
+            setShowGlovePopup(false)
+          }
+        }
+
         else setPenaltyChoice(null)
         setMyTurn(isMyTurn)
+
+        // Actualizar stock del rival
+        supabase.from('player_items').select('stock')
+          .eq('player_id', updated.player1_id === playerRef.current?.id ? updated.player2_id : updated.player1_id)
+          .eq('item_type', 'golden_glove').single().then(({ data }) => {
+          if (data) setOppGoldenGloveStock(data.stock)
+        })
 
         // Cronómetro
         if (updated.timer_running && updated.timer_started_at) {
@@ -687,12 +732,36 @@ export default function Game() {
 
     if (pending === 'PENALTY') {
       const last1 = total % 10
+      const last2 = total % 100
       const choice = m.penalty_choice
-      gol = choice === 'par' ? last1 % 2 === 0 : last1 % 2 !== 0
-      label = gol
-        ? `⚽ Gol de penalty de ${p.username} (eligió ${choice}, centésima: ${last1})`
-        : `🥅 Penalty fallado por ${p.username} (eligió ${choice}, centésima: ${last1})`
-      emoji = gol ? '⚽' : '🥅'
+      const gg = m.golden_glove_state
+      const parImparOk = choice === 'par' ? last1 % 2 === 0 : last1 % 2 !== 0
+
+      let gloveBlocked = false
+      if (gg?.used && gg?.choice) {
+        // derecha = 50-99 bloqueado, izquierda = 00-49 bloqueado
+        if (gg.choice === 'derecha') gloveBlocked = last2 >= 50
+        else gloveBlocked = last2 < 50
+      }
+
+      gol = parImparOk && !gloveBlocked
+
+      if (gg?.used) {
+        if (gloveBlocked) {
+          label = `🧤 GUANTE DE ORO — Penalty parado por ${opp.username} (${p.username} eligió ${choice}, centésima: ${last2})`
+          emoji = '🧤'
+        } else {
+          label = gol
+            ? `⚽ Gol de penalty de ${p.username} — el guante de oro no llegó (${choice}, centésima: ${last2})`
+            : `🥅 Penalty fallado por ${p.username} (${choice}, centésima: ${last2})`
+          emoji = gol ? '⚽' : '🥅'
+        }
+      } else {
+        label = gol
+          ? `⚽ Gol de penalty de ${p.username} (eligió ${choice}, centésima: ${last1})`
+          : `🥅 Penalty fallado por ${p.username} (eligió ${choice}, centésima: ${last1})`
+        emoji = gol ? '⚽' : '🥅'
+      }
       if (gol) { if (p1) sp1 += 1; else sp2 += 1 }
     } else if (pending === 'CORNER') {
       const last2 = total % 100
@@ -725,6 +794,8 @@ export default function Game() {
 
     if (gol) triggerFlash('goal', 'GOL')
     if (ev.result === 'GOL_PROPIO') triggerFlash('owngoal', 'GOL PROPIO')
+    const ggState = m.golden_glove_state
+    if (ggState?.used && !gol && pending === 'PENALTY') triggerFlash('glove', '🧤 GUANTE DE ORO')
 
     const event = label ? { emoji, label } : null
     if (event) setLastPlay(event)
@@ -755,15 +826,49 @@ export default function Game() {
   async function selectPenaltyChoice(choice) {
     const m = matchRef.current
     const p = playerRef.current
-    const opp = opponentRef.current
     setShowPenaltyPopup(false)
     setPenaltyChoice(choice)
     const event = { emoji: '🥅', label: `🥅 ${p.username} eligió ${choice.toUpperCase()} — tira de nuevo` }
     setLastPlay(event)
+
+    // Verificar si el rival tiene guante de oro
+    const oppId = m.player1_id === p.id ? m.player2_id : m.player1_id
+    const { data: oppItem } = await supabase.from('player_items').select('stock').eq('player_id', oppId).eq('item_type', 'golden_glove').single()
+    const oppHasGlove = oppItem && oppItem.stock > 0
+
     await supabase.from('matches').update({
       penalty_choice: choice,
       last_event: JSON.stringify(event),
+      golden_glove_state: oppHasGlove ? { waiting: true, choice: null, used: false } : { waiting: false, choice: null, used: false },
     }).eq('id', matchId)
+
+    if (oppHasGlove) {
+      setWaitingForGlove(true)
+      // Timeout de seguridad: si en 6s no hay respuesta, continuar
+      gloveTimerRef.current = setTimeout(() => {
+        setWaitingForGlove(false)
+      }, 6000)
+    }
+  }
+
+  async function activateGloveDecision(use, direction = null) {
+    const m = matchRef.current
+    const p = playerRef.current
+    setShowGlovePopup(false)
+    clearTimeout(gloveTimerRef.current)
+
+    if (use && direction) {
+      // Descontar stock
+      await supabase.from('player_items').update({ stock: goldenGloveStock - 1 }).eq('player_id', p.id).eq('item_type', 'golden_glove')
+      setGoldenGloveStock(g => g - 1)
+      await supabase.from('matches').update({
+        golden_glove_state: { waiting: false, choice: direction, used: true },
+      }).eq('id', matchId)
+    } else {
+      await supabase.from('matches').update({
+        golden_glove_state: { waiting: false, choice: null, used: false },
+      }).eq('id', matchId)
+    }
   }
 
   async function commitPlay(total, resultType, sp1, sp2, changeTurn, m, p, event) {
@@ -863,7 +968,7 @@ export default function Game() {
   const secs = Math.floor(centesimas / 100)
   const cents = centesimas % 100
   const barrierRange = match?.barrier_range ? JSON.parse(match.barrier_range) : null
-  const canShoot = myTurn && !barrierOptions && (!pendingType || (pendingType === 'FALTA' && barrierRange) || pendingType === 'CORNER' || pendingType === 'PENALTY')
+  const canShoot = myTurn && !barrierOptions && !waitingForGlove && (!pendingType || (pendingType === 'FALTA' && barrierRange) || pendingType === 'CORNER' || pendingType === 'PENALTY')
 
   if (!match || !opponent || !player) return (
     <div style={styles.container}>
@@ -982,6 +1087,27 @@ export default function Game() {
           <span style={styles.playerScore}>{scoreOpp}</span>
         </div>
       </div>
+
+      {/* Popup guante de oro — solo el defensor */}
+      {showGlovePopup && (
+        <div style={{position:'absolute',inset:0,background:'rgba(0,0,0,0.85)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:60,flexDirection:'column',gap:'1rem',padding:'2rem'}}>
+          <span style={{fontSize:'3rem'}}>🧤</span>
+          <p style={{color:'#fff',fontWeight:'800',fontSize:'1.2rem',textAlign:'center'}}>¿Usar guante de oro?</p>
+          <p style={{color:'rgba(255,255,255,0.4)',fontSize:'0.85rem',textAlign:'center'}}>Te quedan {goldenGloveStock}</p>
+          <div style={{display:'flex',flexDirection:'column',gap:'0.75rem',width:'100%'}}>
+            <button style={{background:'rgba(255,180,0,0.15)',border:'1px solid rgba(255,180,0,0.4)',borderRadius:'12px',padding:'0.9rem',color:'#ffb400',fontWeight:'800',fontSize:'1rem',cursor:'pointer'}} onClick={() => activateGloveDecision(true, 'izquierda')}>← Izquierda (bloquear 00–49)</button>
+            <button style={{background:'rgba(255,180,0,0.15)',border:'1px solid rgba(255,180,0,0.4)',borderRadius:'12px',padding:'0.9rem',color:'#ffb400',fontWeight:'800',fontSize:'1rem',cursor:'pointer'}} onClick={() => activateGloveDecision(true, 'derecha')}>Derecha (bloquear 50–99) →</button>
+            <button style={{background:'transparent',border:'none',color:'rgba(255,255,255,0.3)',fontSize:'0.9rem',cursor:'pointer',padding:'0.5rem'}} onClick={() => activateGloveDecision(false)}>No usar</button>
+          </div>
+        </div>
+      )}
+
+      {/* Mensaje de espera al tirador */}
+      {waitingForGlove && myTurn && (
+        <div style={{position:'absolute',bottom:'160px',left:'50%',transform:'translateX(-50%)',background:'rgba(255,180,0,0.1)',border:'1px solid rgba(255,180,0,0.3)',borderRadius:'12px',padding:'0.6rem 1.2rem',zIndex:30}}>
+          <span style={{color:'#ffb400',fontSize:'0.85rem',fontWeight:'700'}}>🧤 El rival decide...</span>
+        </div>
+      )}
 
       {/* Popup penalty — solo el tirador */}
       {showPenaltyPopup && myTurn && (

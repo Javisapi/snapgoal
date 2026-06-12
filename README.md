@@ -137,6 +137,17 @@ Durante un partido de liga aparece un botón 💬 en la barra inferior. Los juga
 
 ## Versiones estables
 
+### v1.4-stable
+- Sistema XP Glicko-1: rating inicial 1500, RD inicial 350, mínimo 50
+- XP visible en Home, Ranking, Announce y Result (con delta +/-)
+- Ranking general ordenado por XP, con puntos de victorias visibles
+- Partidos de liga no afectan al XP — solo puntos simples +3/0
+- Reglas actualizadas: explicación XP con ejemplo real (A:1500 vs B:1800 → +270/-85)
+- Reglas de desempate en ligas documentadas
+- `finalize_match_stats` devuelve jsonb con deltas XP
+- `calculate_glicko` función SQL independiente y reutilizable
+
+
 ### v1.3-stable
 - Penaltis de desempate funcionando: turnos basados en `current_turn`, jsonb sin stringify, muerte súbita infinita
 - Eliminados los empates del juego — siempre hay un ganador
@@ -147,6 +158,17 @@ Durante un partido de liga aparece un botón 💬 en la barra inferior. Los juga
 - Confirmación de borrado de cuenta por nombre de usuario
 
 ## Versiones estables
+
+### v1.4-stable
+- Sistema XP Glicko-1: rating inicial 1500, RD inicial 350, mínimo 50
+- XP visible en Home, Ranking, Announce y Result (con delta +/-)
+- Ranking general ordenado por XP, con puntos de victorias visibles
+- Partidos de liga no afectan al XP — solo puntos simples +3/0
+- Reglas actualizadas: explicación XP con ejemplo real (A:1500 vs B:1800 → +270/-85)
+- Reglas de desempate en ligas documentadas
+- `finalize_match_stats` devuelve jsonb con deltas XP
+- `calculate_glicko` función SQL independiente y reutilizable
+
 
 | Tag | Descripción |
 |---|---|
