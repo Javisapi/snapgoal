@@ -233,6 +233,10 @@ export default function Game() {
           if (!gg.waiting) {
             setWaitingForGlove(false)
             setShowGlovePopup(false)
+            // Reiniciar timer de inactividad para el tirador desde cero
+            if (updated.current_turn === playerRef.current?.id) {
+              inactivityStartRef.current = Date.now()
+            }
           }
         }
 
@@ -857,9 +861,11 @@ export default function Game() {
 
     if (oppHasGlove) {
       setWaitingForGlove(true)
+      stopInactivityTimer()
       // Timeout de seguridad: si en 6s no hay respuesta, continuar
       gloveTimerRef.current = setTimeout(() => {
         setWaitingForGlove(false)
+        startInactivityTimer()
       }, 6000)
     }
   }
@@ -869,6 +875,11 @@ export default function Game() {
     const p = playerRef.current
     setShowGlovePopup(false)
     clearTimeout(gloveTimerRef.current)
+
+    // Resetear turn_started_at para que el timer de A empiece desde cero
+    await supabase.from('matches').update({
+      turn_started_at: new Date().toISOString(),
+    }).eq('id', matchId)
 
     if (use && direction) {
       // Descontar stock
