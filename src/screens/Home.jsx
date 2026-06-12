@@ -240,6 +240,18 @@ export default function Home() {
           </svg>
           <span style={styles.btnIconLabel}>Reglas</span>
         </button>
+        <button style={styles.btnIcon} onClick={() => navigate('/skills')}>
+          <svg viewBox="0 0 28 28" fill="none" style={{width:'22px',height:'22px',marginBottom:'5px'}}>
+            <circle cx="14" cy="14" r="10" stroke="rgba(255,180,0,0.7)" strokeWidth="1.5" fill="none"/>
+            <circle cx="14" cy="14" r="5.5" stroke="rgba(255,180,0,0.7)" strokeWidth="1" fill="none"/>
+            <circle cx="14" cy="14" r="2" fill="rgba(255,180,0,0.8)"/>
+            <line x1="14" y1="1" x2="14" y2="4.5" stroke="rgba(255,180,0,0.7)" strokeWidth="1.5" strokeLinecap="round"/>
+            <line x1="14" y1="23.5" x2="14" y2="27" stroke="rgba(255,180,0,0.7)" strokeWidth="1.5" strokeLinecap="round"/>
+            <line x1="1" y1="14" x2="4.5" y2="14" stroke="rgba(255,180,0,0.7)" strokeWidth="1.5" strokeLinecap="round"/>
+            <line x1="23.5" y1="14" x2="27" y2="14" stroke="rgba(255,180,0,0.7)" strokeWidth="1.5" strokeLinecap="round"/>
+          </svg>
+          <span style={styles.btnIconLabel}>Skills</span>
+        </button>
       </div>
       <button style={styles.btnGhost} onClick={() => setShowDeleteConfirm(true)}>Borrar cuenta</button>
     </div>

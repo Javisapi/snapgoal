@@ -252,7 +252,7 @@ export default function Game() {
         if (updated.cards_p1 && updated.cards_p2) setCards({ p1: updated.cards_p1, p2: updated.cards_p2 })
         if (updated.penalty_choice) setPenaltyChoice(updated.penalty_choice)
 
-        // Detectar estado del guante de oro
+        // Detectar estado del Iron Fist
         const gg = updated.golden_glove_state
         if (gg) {
           const isMyTurnNow = updated.current_turn === playerRef.current?.id
@@ -821,11 +821,11 @@ export default function Game() {
 
       if (gg?.used) {
         if (gloveBlocked) {
-          label = `🧤 GUANTE DE ORO — Penalty parado por ${opp.username} (${p.username} eligió ${choice}, centésima: ${last2})`
+          label = `🧤 IRON FIST — Penalty parado por ${opp.username} (${p.username} eligió ${choice}, centésima: ${last2})`
           emoji = '🧤'
         } else {
           label = gol
-            ? `⚽ Gol de penalty de ${p.username} — el guante de oro no llegó (${choice}, centésima: ${last2})`
+            ? `⚽ Gol de penalty de ${p.username} — el Iron Fist no llegó (${choice}, centésima: ${last2})`
             : `🥅 Penalty fallado por ${p.username} (${choice}, centésima: ${last2})`
           emoji = gol ? '⚽' : '🥅'
         }
@@ -870,7 +870,7 @@ export default function Game() {
     if (gol) triggerFlash('goal', 'GOL')
     if (ev.result === 'GOL_PROPIO') triggerFlash('owngoal', 'GOL PROPIO')
     const ggState = m.golden_glove_state
-    if (ggState?.used && !gol && pending === 'PENALTY') triggerFlash('glove', '🧤 GUANTE DE ORO')
+    if (ggState?.used && !gol && pending === 'PENALTY') triggerFlash('glove', '🧤 IRON FIST')
 
     const event = label ? { emoji, label } : null
     if (event) setLastPlay(event)
@@ -892,7 +892,7 @@ export default function Game() {
     setProShooterActive(true)
     // Notificar al rival
     const m = matchRef.current
-    const event = { emoji: '🎯', label: `🎯 ${p.username} usa el Lanzador Pro — ventana ampliada` }
+    const event = { emoji: '🎯', label: `🎯 ${p.username} usa el Sniper — ventana ampliada` }
     setLastPlay(event)
     await supabase.from('matches').update({
       last_event: JSON.stringify(event),
@@ -926,7 +926,7 @@ export default function Game() {
     const event = { emoji: '🥅', label: `🥅 ${p.username} eligió ${choice.toUpperCase()} — tira de nuevo` }
     setLastPlay(event)
 
-    // Verificar si el rival tiene guante de oro
+    // Verificar si el rival tiene Iron Fist
     const oppId = m.player1_id === p.id ? m.player2_id : m.player1_id
     const { data: oppItem } = await supabase.from('player_items').select('stock').eq('player_id', oppId).eq('item_type', 'golden_glove').single()
     const oppHasGlove = oppItem && oppItem.stock > 0
@@ -1194,25 +1194,25 @@ export default function Game() {
         </div>
       </div>
 
-      {/* Popup lanzador pro — solo el tirador */}
+      {/* Popup Sniper — solo el tirador */}
       {showProShooterPopup && (
         <div style={{position:'absolute',inset:0,background:'rgba(0,0,0,0.85)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:60,flexDirection:'column',gap:'1rem',padding:'2rem'}}>
           <span style={{fontSize:'3rem'}}>🎯</span>
-          <p style={{color:'#fff',fontWeight:'800',fontSize:'1.2rem',textAlign:'center'}}>¿Usar Lanzador Pro?</p>
+          <p style={{color:'#fff',fontWeight:'800',fontSize:'1.2rem',textAlign:'center'}}>¿Usar Sniper?</p>
           <p style={{color:'rgba(255,255,255,0.4)',fontSize:'0.85rem',textAlign:'center'}}>Amplía la ventana a 10 centésimas — Te quedan {proShooterStock}</p>
           <p style={{color:'rgba(255,180,0,0.7)',fontSize:'0.8rem',textAlign:'center'}}>Barrera actual: {barrierRange?.min}–{barrierRange?.max} → se ampliaría a {barrierRange?.min}–{barrierRange ? barrierRange.min+10 : ''}</p>
           <div style={{display:'flex',flexDirection:'column',gap:'0.75rem',width:'100%'}}>
-            <button style={{background:'rgba(255,180,0,0.15)',border:'1px solid rgba(255,180,0,0.4)',borderRadius:'12px',padding:'0.9rem',color:'#ffb400',fontWeight:'800',fontSize:'1rem',cursor:'pointer'}} onClick={() => activateProShooter(true)}>🎯 Usar Lanzador Pro</button>
+            <button style={{background:'rgba(255,180,0,0.15)',border:'1px solid rgba(255,180,0,0.4)',borderRadius:'12px',padding:'0.9rem',color:'#ffb400',fontWeight:'800',fontSize:'1rem',cursor:'pointer'}} onClick={() => activateProShooter(true)}>🎯 Usar Sniper</button>
             <button style={{background:'transparent',border:'none',color:'rgba(255,255,255,0.3)',fontSize:'0.9rem',cursor:'pointer',padding:'0.5rem'}} onClick={() => activateProShooter(false)}>No usar</button>
           </div>
         </div>
       )}
 
-      {/* Popup guante de oro — solo el defensor */}
+      {/* Popup Iron Fist — solo el defensor */}
       {showGlovePopup && (
         <div style={{position:'absolute',inset:0,background:'rgba(0,0,0,0.85)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:60,flexDirection:'column',gap:'1rem',padding:'2rem'}}>
           <svg width='48' height='48' viewBox='0 0 24 24' fill='none'><path d='M6 8V6a2 2 0 0 1 2-2h1a2 2 0 0 1 2 2v1h1V5a2 2 0 0 1 2-2h1a1 1 0 0 1 1 1v4l1-1a1.5 1.5 0 0 1 2 2l-3 4v3a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3v-5L4 10a1.5 1.5 0 0 1 2-2l0 0z' fill='#ffb400' stroke='#cc8800' strokeWidth='0.5'/></svg>
-          <p style={{color:'#fff',fontWeight:'800',fontSize:'1.2rem',textAlign:'center'}}>¿Usar guante de oro?</p>
+          <p style={{color:'#fff',fontWeight:'800',fontSize:'1.2rem',textAlign:'center'}}>¿Usar Iron Fist?</p>
           <p style={{color:'rgba(255,255,255,0.4)',fontSize:'0.85rem',textAlign:'center'}}>Te quedan {goldenGloveStock}</p>
           <div style={{display:'flex',flexDirection:'column',gap:'0.75rem',width:'100%'}}>
             <button style={{background:'rgba(255,180,0,0.15)',border:'1px solid rgba(255,180,0,0.4)',borderRadius:'12px',padding:'0.9rem',color:'#ffb400',fontWeight:'800',fontSize:'1rem',cursor:'pointer'}} onClick={() => activateGloveDecision(true, 'izquierda')}>← Izquierda (bloquear 00–49)</button>
