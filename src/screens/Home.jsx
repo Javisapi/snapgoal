@@ -222,6 +222,20 @@ export default function Home() {
           <span style={styles.cardSubLight}>Competir</span>
         </button>
       </div>
+      <button style={styles.academyBtn} onClick={() => navigate('/academy')}>
+        <svg viewBox="0 0 24 24" fill="none" style={{width:'20px',height:'20px',flexShrink:0}}>
+          <circle cx="12" cy="12" r="10" stroke="#ffb400" strokeWidth="1.5" fill="none"/>
+          <circle cx="12" cy="12" r="5.5" stroke="#ffb400" strokeWidth="1" fill="none"/>
+          <circle cx="12" cy="12" r="2" fill="#ffb400"/>
+          <line x1="12" y1="1" x2="12" y2="4" stroke="#ffb400" strokeWidth="1.5" strokeLinecap="round"/>
+          <line x1="12" y1="20" x2="12" y2="23" stroke="#ffb400" strokeWidth="1.5" strokeLinecap="round"/>
+          <line x1="1" y1="12" x2="4" y2="12" stroke="#ffb400" strokeWidth="1.5" strokeLinecap="round"/>
+          <line x1="20" y1="12" x2="23" y2="12" stroke="#ffb400" strokeWidth="1.5" strokeLinecap="round"/>
+        </svg>
+        <span style={styles.academyBtnLabel}>Academy — Entrena tu precisión</span>
+        <span style={styles.academyBtnArrow}>›</span>
+      </button>
+
       <div style={styles.secondaryRow}>
         <button style={styles.btnIcon} onClick={() => navigate('/ranking')}>
           <svg viewBox="0 0 28 28" fill="none" style={{width:'22px',height:'22px',marginBottom:'5px'}}>
@@ -334,6 +348,9 @@ const styles = {
   cardLeagueLabel: { fontSize:'0.95rem', fontWeight:'800', color:'rgba(255,180,0,0.9)', letterSpacing:'0.2px', margin:0 },
   cardSub: { fontSize:'0.7rem', color:'rgba(0,0,0,0.35)', marginTop:'2px', fontWeight:'500' },
   cardSubLight: { fontSize:'0.7rem', color:'rgba(255,180,0,0.4)', marginTop:'2px', fontWeight:'500' },
+  academyBtn: { display:'flex', alignItems:'center', gap:'0.75rem', width:'100%', background:'rgba(255,180,0,0.06)', border:'1px solid rgba(255,180,0,0.2)', borderRadius:'14px', padding:'0.9rem 1rem', cursor:'pointer', textAlign:'left' },
+  academyBtnLabel: { flex:1, fontSize:'0.88rem', fontWeight:'700', color:'rgba(255,180,0,0.8)', letterSpacing:'0.2px' },
+  academyBtnArrow: { fontSize:'1.2rem', color:'rgba(255,180,0,0.4)' },
   secondaryRow: { display:'flex', gap:'0.75rem', width:'100%' },
   btnIcon: { flex:1, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:'14px', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', cursor:'pointer', padding:'0.85rem 0.5rem' },
   btnIconLabel: { fontSize:'0.72rem', fontWeight:'600', color:'rgba(255,255,255,0.4)', letterSpacing:'0.5px' },
