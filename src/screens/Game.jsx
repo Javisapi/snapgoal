@@ -214,6 +214,7 @@ export default function Game() {
       setProShooterStock(ps?.stock || 0)
       proShooterStockRef.current = ps?.stock || 0
     }
+    console.log('OPP ITEMS:', oppItems)
     if (oppItems) {
       const gg = oppItems.find(i => i.item_type === 'golden_glove')
       setOppGoldenGloveStock(gg?.stock || 0)
