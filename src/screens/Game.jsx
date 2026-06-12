@@ -235,7 +235,7 @@ export default function Game() {
             setShowGlovePopup(false)
             // Reiniciar timer de inactividad para el tirador desde cero
             if (updated.current_turn === playerRef.current?.id) {
-              inactivityStartRef.current = Date.now()
+              startInactivityTimer(playerRef.current, updated)
             }
           }
         }
@@ -865,7 +865,7 @@ export default function Game() {
       // Timeout de seguridad: si en 6s no hay respuesta, continuar
       gloveTimerRef.current = setTimeout(() => {
         setWaitingForGlove(false)
-        startInactivityTimer()
+        startInactivityTimer(playerRef.current, matchRef.current)
       }, 6000)
     }
   }
