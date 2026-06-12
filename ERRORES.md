@@ -61,3 +61,32 @@
 **Solución:** Añadir `matchRef.current = { ...matchRef.current, shootout_state: newState }` y `setMatch(m => ({ ...m, shootout_state: newState }))` dentro de `selectChoice`
 **Regla:** Cuando se actualiza un campo de `matches` en Supabase, actualizar también `matchRef.current` y el estado React local para que el render sea inmediato sin esperar el evento Realtime
 
+
+## Error 8 — Replace con string multilínea falla en Python heredoc
+**Fecha:** 2026-06-12
+**Síntoma:** `SyntaxError: EOL while scanning string literal` al intentar usar `content.replace()` con strings que contienen saltos de línea literales
+**Causa:** Python no permite saltos de línea dentro de strings entre comillas simples o dobles en heredoc de terminal
+**Solución:** Usar `\n` escapado dentro del string, o usar sed para reemplazos que contengan saltos de línea, o reescribir el archivo completo cuando hay demasiados cambios acumulados
+**Regla:** Cuando un archivo tiene demasiados patches acumulados y empieza a dar errores de estructura, reescribirlo entero es más seguro que seguir aplicando patches
+
+## Error 9 — Bloque if no cerrado correctamente al insertar código en medio
+**Fecha:** 2026-06-12
+**Síntoma:** Build falla con `Unexpected token` en Skills.jsx por divs mal anidados
+**Causa:** Al insertar la sección "¿Cómo conseguir más?" con replace, el div del styles.list no se cerró correctamente — quedó fuera del contenedor
+**Solución:** Reescribir el archivo completo
+**Regla:** Cuando se insertan bloques JSX con replace, verificar siempre la estructura de divs con `sed -n` en el rango afectado antes de compilar
+
+## Error 10 — Canal Realtime de chat solo se abría en partidos de liga
+**Fecha:** 2026-06-12
+**Síntoma:** Chat no disponible en partidos generales
+**Causa:** El canal `supabase.channel('chat-' + matchId)` estaba dentro de un `if (m.league_id)` — solo se suscribía si el partido tenía league_id
+**Solución:** Mover la suscripción fuera del if, mantener el setLeagueId dentro
+**Regla:** Revisar siempre las condiciones que envuelven suscripciones Realtime — es fácil que queden dentro de guards que no deberían aplicarse
+
+## Error 11 — proShooterStock leído desde estado React en Realtime listener (valor stale)
+**Fecha:** 2026-06-12
+**Síntoma:** El popup del Sniper no aparecía aunque el jugador tuviera stock
+**Causa:** El listener Realtime captura el valor de `proShooterStock` en el momento del closure — si los items no se habían cargado aún, el valor era 0
+**Solución:** Usar `proShooterStockRef.current` (ref siempre actualizada) en el listener, y hacer query directa a player_items en el momento de mostrar el popup
+**Regla:** En listeners Realtime, nunca leer estado React directamente — usar siempre refs sincronizadas o queries directas a Supabase
+

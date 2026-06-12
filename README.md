@@ -137,6 +137,19 @@ Durante un partido de liga aparece un botón 💬 en la barra inferior. Los juga
 
 ## Versiones estables
 
+### v1.5-stable
+- **Iron Fist** (ex guante de oro): habilidad defensiva en penalties — elige derecha/izquierda para bloquear mitad del cronómetro
+- **Sniper** (ex lanzador pro): habilidad ofensiva en faltas — amplía ventana de 5 a 10 centésimas
+- Sistema genérico de items en tabla `player_items` (preparado para futuras habilidades)
+- Iconos SVG en partido: guante dorado y diana para mostrar stock de cada jugador
+- Hitos de XP: cada 100 XP por encima de 1500 otorgan +3 Iron Fists y +3 Snipers automáticamente (trigger SQL)
+- Pantalla **Skills** accesible desde Home con descripción detallada de cada habilidad
+- Chat disponible en todos los partidos (no solo ligas) con emojis + texto corto en grid 3x2
+- Flash de gol con guard para no repetirse por Realtime
+- Pantalla Announce: XP vs pts de liga según contexto, historial de enfrentamientos directos (h2h)
+- Ranking general ordenado por XP, muestra pts de victorias como secundario
+
+
 ### v1.4-stable
 - Sistema XP Glicko-1: rating inicial 1500, RD inicial 350, mínimo 50
 - XP visible en Home, Ranking, Announce y Result (con delta +/-)
@@ -158,6 +171,19 @@ Durante un partido de liga aparece un botón 💬 en la barra inferior. Los juga
 - Confirmación de borrado de cuenta por nombre de usuario
 
 ## Versiones estables
+
+### v1.5-stable
+- **Iron Fist** (ex guante de oro): habilidad defensiva en penalties — elige derecha/izquierda para bloquear mitad del cronómetro
+- **Sniper** (ex lanzador pro): habilidad ofensiva en faltas — amplía ventana de 5 a 10 centésimas
+- Sistema genérico de items en tabla `player_items` (preparado para futuras habilidades)
+- Iconos SVG en partido: guante dorado y diana para mostrar stock de cada jugador
+- Hitos de XP: cada 100 XP por encima de 1500 otorgan +3 Iron Fists y +3 Snipers automáticamente (trigger SQL)
+- Pantalla **Skills** accesible desde Home con descripción detallada de cada habilidad
+- Chat disponible en todos los partidos (no solo ligas) con emojis + texto corto en grid 3x2
+- Flash de gol con guard para no repetirse por Realtime
+- Pantalla Announce: XP vs pts de liga según contexto, historial de enfrentamientos directos (h2h)
+- Ranking general ordenado por XP, muestra pts de victorias como secundario
+
 
 ### v1.4-stable
 - Sistema XP Glicko-1: rating inicial 1500, RD inicial 350, mínimo 50
