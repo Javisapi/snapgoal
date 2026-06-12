@@ -28,6 +28,7 @@ export default function Academy() {
   const [player, setPlayer] = useState(null)
   const [stats, setStats] = useState({})
   const [loading, setLoading] = useState(true)
+  const [streaks, setStreaks] = useState({})
 
   useEffect(() => {
     const s = document.createElement('style')
@@ -50,8 +51,24 @@ export default function Academy() {
       const map = {}
       data.forEach(s => { map[`${s.type}_${s.difficulty}`] = s })
       setStats(map)
+
+      // Cargar mejor racha para cada combinación con datos
+      const streakMap = {}
+      await Promise.all(data.map(async s => {
+        const { data: streak } = await supabase.rpc('get_best_streak', {
+          p_player_id: p.id,
+          p_type: s.type,
+          p_difficulty: s.difficulty
+        })
+        streakMap[`${s.type}_${s.difficulty}`] = streak || 0
+      }))
+      setStreaks(streakMap)
     }
     setLoading(false)
+  }
+
+  function getStreak(type, diff) {
+    return streaks[`${type}_${diff}`] || 0
   }
 
   function getStats(type, diff) {
@@ -97,6 +114,7 @@ export default function Academy() {
                     <>
                       <span style={styles.diffPct}>{s.pct}%</span>
                       <span style={styles.diffTotal}>{s.goals}/{s.total_shots}</span>
+                      {getStreak('penalty', d.id) > 0 && <span style={styles.streakBadge}>🔥{getStreak('penalty', d.id)}</span>}
                     </>
                   ) : (
                     <span style={styles.diffNew}>Nuevo</span>
@@ -127,6 +145,7 @@ export default function Academy() {
                     <>
                       <span style={styles.diffPct}>{s.pct}%</span>
                       <span style={styles.diffTotal}>{s.goals}/{s.total_shots}</span>
+                      {getStreak('falta', d.id) > 0 && <span style={styles.streakBadge}>🔥{getStreak('falta', d.id)}</span>}
                     </>
                   ) : (
                     <span style={styles.diffNew}>Nuevo</span>
@@ -160,5 +179,6 @@ const styles = {
   diffPct: { fontSize:'1rem', fontWeight:'900', color:'#ffb400' },
   diffTotal: { fontSize:'0.7rem', color:'rgba(255,255,255,0.3)' },
   diffNew: { fontSize:'0.72rem', color:'rgba(255,255,255,0.2)', fontStyle:'italic' },
+  streakBadge: { fontSize:'0.78rem', fontWeight:'800', color:'#ffb400' },
   diffArrow: { fontSize:'1.2rem', color:'rgba(255,255,255,0.2)' },
 }
