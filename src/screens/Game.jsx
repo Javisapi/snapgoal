@@ -422,10 +422,9 @@ export default function Game() {
     }
 
     // Guardar league_id si el partido es de liga
-    if (m.league_id) {
-      setLeagueId(m.league_id)
-      // Escuchar mensajes de chat
-      supabase.channel('chat-' + matchId)
+    if (m.league_id) setLeagueId(m.league_id)
+    // Escuchar mensajes de chat (todos los partidos)
+    supabase.channel('chat-' + matchId)
         .on('postgres_changes', {
           event: 'INSERT', schema: 'public',
           table: 'league_messages',
@@ -437,7 +436,6 @@ export default function Game() {
           setTimeout(() => setChatMsg(null), 3000)
         })
         .subscribe()
-    }
   }
 
   function startLocalTimer(base, startedAtMs) {
@@ -485,10 +483,9 @@ export default function Game() {
   }
 
   async function sendChatMessage(message) {
-    if (!leagueId) return
     setShowChat(false)
     await supabase.from('league_messages').insert({
-      league_id: leagueId,
+      league_id: leagueId || null,
       match_id: matchId,
       player_id: playerRef.current.id,
       message,
@@ -1125,11 +1122,10 @@ export default function Game() {
       )}
 
       {/* Chat popup */}
-      {showChat && leagueId && (
+      {showChat && (
         <div style={styles.chatOverlay} onClick={() => setShowChat(false)}>
           <div style={styles.chatBox} onClick={e => e.stopPropagation()}>
-            <p style={styles.chatTitle}>💬 Mensaje rápido</p>
-            {['⚽ ¡Vaya golazo!', '💥 BOOOM', '😂 ahahahahah', '🚩 ¡Exijo VAR!', '🤨 El árbitro está comprado', '🤝 Buen partido'].map(msg => (
+            {['⚽ GOOOL', '💥 BOOOM', '😂 AHAHAH', '🚩 VAR!!!', '🤨 REF?', '🤝 GG'].map(msg => (
               <button key={msg} style={styles.chatMsgBtn} onClick={() => sendChatMessage(msg)}>
                 {msg}
               </button>
@@ -1364,7 +1360,7 @@ export default function Game() {
           <span style={styles.bottomLabel}>TIEMPO</span>
           <span style={styles.bottomVal}>{Math.max(0, 30 - secs)}s</span>
         </div>
-        {leagueId && (
+        {(
           <button style={styles.chatBtnBottom} onClick={() => setShowChat(true)}>
             💬
           </button>
@@ -1419,13 +1415,13 @@ const styles = {
   disconnectBannerText: { color: '#ffb400', fontSize: '0.85rem', fontWeight: '600' },
   chatBtn: { background: 'rgba(255,255,255,0.08)', border: 'none', borderRadius: '8px', color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem', cursor: 'pointer', padding: '4px 8px' },
   chatBtnBottom: { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '50%', width: '48px', height: '48px', fontSize: '1.4rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', WebkitTapHighlightColor: 'transparent' },
-  chatFloat: { position: 'absolute', bottom: '160px', left: '50%', transform: 'translateX(-50%)', background: 'rgba(30,30,30,0.95)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '20px', padding: '8px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', animation: 'chatMsgIn 0.3s ease forwards', zIndex: 40, whiteSpace: 'nowrap' },
+  chatFloat: { position: 'absolute', bottom: '160px', left: '50%', transform: 'translateX(-50%)', background: 'rgba(30,30,30,0.95)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '20px', padding: '12px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', animation: 'chatMsgIn 0.3s ease forwards', zIndex: 40, whiteSpace: 'nowrap' },
   chatFloatFrom: { fontSize: '0.65rem', color: '#ffb400', fontWeight: '700' },
-  chatFloatText: { fontSize: '0.9rem', color: '#fff', fontWeight: '600' },
+  chatFloatText: { fontSize: '1.8rem', lineHeight: 1.3, color: '#fff', fontWeight: '800' },
   chatOverlay: { position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: '2rem', zIndex: 60 },
-  chatBox: { background: '#1e1e1e', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', padding: '1.25rem', width: '100%', display: 'flex', flexDirection: 'column', gap: '0.5rem' },
+  chatBox: { background: '#1e1e1e', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', padding: '1.25rem', width: '100%', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' },
   chatTitle: { fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', fontWeight: '700', letterSpacing: '1px', textTransform: 'uppercase', margin: '0 0 0.25rem' },
-  chatMsgBtn: { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '10px', color: '#fff', fontSize: '0.95rem', padding: '0.75rem 1rem', cursor: 'pointer', textAlign: 'left', fontWeight: '500' },
+  chatMsgBtn: { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '14px', color: '#fff', fontSize: '1.1rem', padding: '0.75rem 0.5rem', cursor: 'pointer', textAlign: 'center', lineHeight: 1.3, fontWeight: '700' },
   bottomBar: { display: 'flex', justifyContent: 'space-around', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.06)' },
   bottomItem: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' },
   bottomLabel: { fontSize: '0.65rem', color: 'rgba(255,255,255,0.25)', letterSpacing: '1px' },
