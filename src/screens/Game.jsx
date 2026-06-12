@@ -304,7 +304,8 @@ export default function Game() {
 
         // Reiniciar timer cuando turn_sequence cambia y es mi turno
         const sequenceChanged = (updated.turn_sequence || 0) !== (prevMatch?.turn_sequence || 0)
-        if (isMyTurn && !updated.timer_running && sequenceChanged) {
+        const gloveJustResolved = prevMatch?.golden_glove_state?.waiting === true && !updated.golden_glove_state?.waiting
+        if (isMyTurn && !updated.timer_running && (sequenceChanged || gloveJustResolved)) {
           startInactivityTimer(playerRef.current, updated)
         } else if (!isMyTurn || updated.timer_running) {
           stopInactivityTimer()
