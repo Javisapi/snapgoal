@@ -203,8 +203,10 @@ export default function Game() {
     if (m.penalty_choice) setPenaltyChoice(m.penalty_choice)
 
     // Cargar stock de items de ambos jugadores
+    const oppPlayerId = m.player1_id === p.id ? m.player2_id : m.player1_id
+    console.log('ITEMS DEBUG:', { myId: p.id, oppId: oppPlayerId, p1: m.player1_id, p2: m.player2_id })
     const { data: myItems } = await supabase.from('player_items').select('item_type,stock').eq('player_id', p.id)
-    const { data: oppItems } = await supabase.from('player_items').select('item_type,stock').eq('player_id', m.player1_id === p.id ? m.player2_id : m.player1_id)
+    const { data: oppItems } = await supabase.from('player_items').select('item_type,stock').eq('player_id', oppPlayerId)
     if (myItems) {
       const gg = myItems.find(i => i.item_type === 'golden_glove')
       setGoldenGloveStock(gg?.stock || 0)
@@ -277,10 +279,14 @@ export default function Game() {
         setMyTurn(isMyTurn)
 
         // Actualizar stock del rival
-        supabase.from('player_items').select('stock')
-          .eq('player_id', updated.player1_id === playerRef.current?.id ? updated.player2_id : updated.player1_id)
-          .eq('item_type', 'golden_glove').single().then(({ data }) => {
-          if (data) setOppGoldenGloveStock(data.stock)
+        const oppId = updated.player1_id === playerRef.current?.id ? updated.player2_id : updated.player1_id
+        supabase.from('player_items').select('item_type,stock').eq('player_id', oppId).then(({ data }) => {
+          if (data) {
+            const gg = data.find(i => i.item_type === 'golden_glove')
+            const ps = data.find(i => i.item_type === 'pro_shooter')
+            if (gg) setOppGoldenGloveStock(gg.stock)
+            if (ps) setOppProShooterStock(ps.stock)
+          }
         })
 
         // Cronómetro
