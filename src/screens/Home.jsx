@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
 import { useSearchParams } from 'react-router-dom'
+import { requestPermissionAndSubscribe } from '../lib/pushNotifications'
 
 async function deleteAccount(playerId) {
   await supabase.from('plays').delete().eq('player_id', playerId)
@@ -41,6 +42,12 @@ export default function Home() {
     s.textContent = HOME_CSS
     document.head.appendChild(s)
   }, [])
+
+  useEffect(() => {
+    if (player) {
+      requestPermissionAndSubscribe(supabase, player.id)
+    }
+  }, [player])
 
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
   const isAndroid = /Android/.test(navigator.userAgent)

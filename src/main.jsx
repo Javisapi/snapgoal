@@ -1,6 +1,7 @@
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
+import { registerPushSW } from './lib/pushNotifications'
 
 const CACHE_VERSION = '3'
 if (sessionStorage.getItem('cache_version') !== CACHE_VERSION) {
@@ -9,5 +10,7 @@ if (sessionStorage.getItem('cache_version') !== CACHE_VERSION) {
   })
   sessionStorage.setItem('cache_version', CACHE_VERSION)
 }
+
+registerPushSW()
 
 createRoot(document.getElementById('root')).render(<App />)

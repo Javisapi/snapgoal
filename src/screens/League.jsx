@@ -92,6 +92,18 @@ export default function League() {
     navigate('/leagues')
   }
 
+
+  async function handleNotifyPlayers() {
+    await fetch('/api/notify-league', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        league_id: leagueId,
+        sender_name: player.username,
+        message: '¡Hay un reto esperándote en la liga!'
+      })
+    })
+  }
   async function handleLeave() {
     const member = members.find(m => m.players.id === player.id)
     if (!member) return
@@ -245,6 +257,7 @@ export default function League() {
 
             {/* Botón salir de liga */}
             {!isAdmin() && !expired && (
+              <button style={{...styles.leaveBtn, background:"rgba(255,180,0,0.1)", color:"#ffb400", border:"1px solid rgba(255,180,0,0.2)"}} onClick={handleNotifyPlayers}>🔔 Alertar a jugadores</button>
               <button style={styles.leaveBtn} onClick={handleLeave}>Salir de la liga</button>
             )}
             {isAdmin() && (
