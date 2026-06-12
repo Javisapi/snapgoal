@@ -513,6 +513,7 @@ export default function Game() {
   }
 
   function startInactivityTimer(p, m) {
+    console.log('TIMER START', new Date().toISOString(), new Error().stack.split('\n')[2])
     clearInterval(inactivityIntervalRef.current)
     setInactivityProgress(0)
     setInactivityWarning(false)
