@@ -205,7 +205,6 @@ export default function Game() {
 
     // Cargar stock de items de ambos jugadores
     const oppPlayerId = m.player1_id === p.id ? m.player2_id : m.player1_id
-    console.log('ITEMS DEBUG:', { myId: p.id, oppId: oppPlayerId, p1: m.player1_id, p2: m.player2_id })
     const { data: myItems } = await supabase.from('player_items').select('item_type,stock').eq('player_id', p.id)
     const { data: oppItems } = await supabase.from('player_items').select('item_type,stock').eq('player_id', oppPlayerId)
     if (myItems) {
@@ -215,7 +214,6 @@ export default function Game() {
       setProShooterStock(ps?.stock || 0)
       proShooterStockRef.current = ps?.stock || 0
     }
-    console.log('OPP ITEMS:', oppItems)
     if (oppItems) {
       const gg = oppItems.find(i => i.item_type === 'golden_glove')
       setOppGoldenGloveStock(gg?.stock || 0)
