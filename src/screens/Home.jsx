@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { registerPushSW, requestPermissionAndSubscribe } from '../lib/pushNotifications'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
 import { useSearchParams } from 'react-router-dom'
@@ -25,6 +26,7 @@ export default function Home() {
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [pushAsked, setPushAsked] = useState(false)
   const [deleteConfirmName, setDeleteConfirmName] = useState('')
   const [deleting, setDeleting] = useState(false)
   const [showInstall, setShowInstall] = useState(false)
