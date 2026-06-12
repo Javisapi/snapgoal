@@ -36,13 +36,15 @@ export async function subscribeToPush(supabase, playerId) {
 }
 
 async function saveSub(supabase, playerId, sub) {
+  console.log('SAVING SUB for player:', playerId)
   const json = sub.toJSON()
-  await supabase.from('push_subscriptions').upsert({
+  const result = await supabase.from('push_subscriptions').upsert({
     player_id: playerId,
     endpoint: json.endpoint,
     p256dh: json.keys.p256dh,
     auth: json.keys.auth,
   }, { onConflict: 'endpoint' })
+  console.log('SAVE RESULT:', result)
 }
 
 export async function requestPermissionAndSubscribe(supabase, playerId) {
