@@ -301,18 +301,22 @@ export default function Home() {
         </button>
       </div>
       {showProtect && !player?.email_verified && (
-        <ProtectAccount
-          player={player}
-          onDone={() => setShowProtect(false)}
-          onDismiss={() => setShowProtect(false)}
-        />
+        <div style={styles.overlay}>
+          <div style={styles.protectModal}>
+            <ProtectAccount
+              player={player}
+              onDone={() => setShowProtect(false)}
+              onDismiss={() => setShowProtect(false)}
+            />
+          </div>
+        </div>
       )}
       {player?.email_verified && <ProtectedBadge />}
       <button style={styles.btnInvite} onClick={() => {
         const text = '⚽ Únete a SnapGoal. Partidos rápidos, Ligas y mucho más. https://snapgoal.vercel.app'
         window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank')
       }}>🎁 Invita a un amigo</button>
-      <button style={styles.btnGhost} onClick={() => setShowProtect(true)}>🔒 Proteger mi cuenta</button>
+      <button style={styles.btnProtect} onClick={() => setShowProtect(true)}>🔒 Proteger mi cuenta</button>
       <button style={styles.btnGhost} onClick={() => setShowDeleteConfirm(true)}>Borrar cuenta</button>
     </div>
   )
@@ -403,7 +407,9 @@ const styles = {
   btnPrimary: { background:'#ffb400', color:'#141414', border:'none', borderRadius:'12px', padding:'1.1rem', fontSize:'1rem', fontWeight:'800', cursor:'pointer', width:'100%', letterSpacing:'0.5px' },
   btnSecondary: { background:'transparent', color:'rgba(255,255,255,0.4)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:'12px', padding:'0.9rem', fontSize:'0.9rem', cursor:'pointer', width:'100%' },
   btnInvite: { background:'rgba(255,180,0,0.12)', border:'1px solid rgba(255,210,80,0.6)', borderRadius:'12px', color:'#ffd040', fontSize:'0.9rem', fontWeight:'700', cursor:'pointer', padding:'0.9rem', width:'100%', boxShadow:'0 0 24px rgba(255,210,80,0.5), 0 0 48px rgba(255,180,0,0.25)', animation:'invitePulse 2s ease-in-out infinite' },
+  btnProtect: { background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.15)', borderRadius:'12px', color:'rgba(255,255,255,0.5)', fontSize:'0.9rem', fontWeight:'700', cursor:'pointer', padding:'0.9rem', width:'100%', boxShadow:'0 0 8px rgba(255,255,255,0.05)' },
   btnGhost: { background:'transparent', color:'rgba(255,80,80,0.4)', border:'none', padding:'0.5rem', fontSize:'0.8rem', cursor:'pointer', width:'100%' },
+  protectModal: { background:'#1c1c1c', border:'1px solid rgba(255,180,0,0.2)', borderRadius:'20px', padding:'2rem 1.75rem', width:'90%', maxWidth:'420px' },
   topRow: { display:'flex', justifyContent:'space-between', alignItems:'flex-start' },
   topBtns: { display:'flex', flexDirection:'column', alignItems:'flex-end', gap:'0.4rem', paddingTop:'0.25rem' },
   topBtn: { background:'rgba(255,180,0,0.1)', border:'1px solid rgba(255,180,0,0.2)', borderRadius:'8px', color:'#ffb400', fontSize:'0.72rem', fontWeight:'700', cursor:'pointer', padding:'5px 10px', letterSpacing:'0.3px' },
