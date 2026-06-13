@@ -18,6 +18,7 @@ const HOME_CSS = `
   @keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
   @keyframes lineDraw { from{width:0} to{width:48px} }
   @keyframes onlinePulse { 0%,100%{opacity:1;box-shadow:0 0 6px rgba(0,220,100,0.6)} 50%{opacity:0.7;box-shadow:0 0 12px rgba(0,220,100,0.3)} }
+  @keyframes invitePulse { 0%,100%{box-shadow:0 0 24px rgba(255,210,80,0.5), 0 0 48px rgba(255,180,0,0.25)} 50%{box-shadow:0 0 36px rgba(255,220,80,0.8), 0 0 64px rgba(255,180,0,0.45)} }
 `
 
 export default function Home() {
@@ -223,9 +224,17 @@ export default function Home() {
       <div style={styles.mainCards}>
         <button style={styles.cardPlay} onClick={handlePlay}>
           <svg viewBox="0 0 40 40" fill="none" style={{width:'36px',height:'36px',marginBottom:'10px'}}>
-            <circle cx="20" cy="20" r="16" fill="rgba(0,0,0,0.15)" stroke="#141414" strokeWidth="1.5"/>
-            <polygon points="20,11 23,17 29,17 24.5,21 26.5,27 20,23 13.5,27 15.5,21 11,17 17,17" fill="#141414" opacity="0.7"/>
-            <circle cx="20" cy="20" r="16" fill="none" stroke="#141414" strokeWidth="1.5"/>
+            <rect x="6" y="8" width="3" height="22" rx="1.5" fill="#141414"/>
+            <rect x="31" y="8" width="3" height="22" rx="1.5" fill="#141414"/>
+            <rect x="6" y="8" width="28" height="3" rx="1.5" fill="#141414"/>
+            <line x1="9" y1="11" x2="9" y2="30" stroke="#14141466" strokeWidth="0.8"/>
+            <line x1="15" y1="11" x2="15" y2="30" stroke="#14141466" strokeWidth="0.8"/>
+            <line x1="21" y1="11" x2="21" y2="30" stroke="#14141466" strokeWidth="0.8"/>
+            <line x1="27" y1="11" x2="27" y2="30" stroke="#14141466" strokeWidth="0.8"/>
+            <line x1="9" y1="16" x2="31" y2="16" stroke="#14141466" strokeWidth="0.8"/>
+            <line x1="9" y1="22" x2="31" y2="22" stroke="#14141466" strokeWidth="0.8"/>
+            <line x1="9" y1="28" x2="31" y2="28" stroke="#14141466" strokeWidth="0.8"/>
+            <line x1="6" y1="30" x2="34" y2="30" stroke="#14141488" strokeWidth="1.5"/>
           </svg>
           <span style={styles.cardPlayLabel}>Buscar Partido</span>
           <span style={styles.cardSub}>Jugar ahora</span>
@@ -381,7 +390,7 @@ const styles = {
   btnIconLabel: { fontSize:'0.72rem', fontWeight:'600', color:'rgba(255,255,255,0.4)', letterSpacing:'0.5px' },
   btnPrimary: { background:'#ffb400', color:'#141414', border:'none', borderRadius:'12px', padding:'1.1rem', fontSize:'1rem', fontWeight:'800', cursor:'pointer', width:'100%', letterSpacing:'0.5px' },
   btnSecondary: { background:'transparent', color:'rgba(255,255,255,0.4)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:'12px', padding:'0.9rem', fontSize:'0.9rem', cursor:'pointer', width:'100%' },
-  btnInvite: { background:'rgba(255,180,0,0.1)', border:'1px solid rgba(255,180,0,0.4)', borderRadius:'12px', color:'#ffb400', fontSize:'0.9rem', fontWeight:'700', cursor:'pointer', padding:'0.9rem', width:'100%', boxShadow:'0 0 16px rgba(255,180,0,0.35)' },
+  btnInvite: { background:'rgba(255,180,0,0.12)', border:'1px solid rgba(255,210,80,0.6)', borderRadius:'12px', color:'#ffd040', fontSize:'0.9rem', fontWeight:'700', cursor:'pointer', padding:'0.9rem', width:'100%', boxShadow:'0 0 24px rgba(255,210,80,0.5), 0 0 48px rgba(255,180,0,0.25)', animation:'invitePulse 2s ease-in-out infinite' },
   btnGhost: { background:'transparent', color:'rgba(255,80,80,0.4)', border:'none', padding:'0.5rem', fontSize:'0.8rem', cursor:'pointer', width:'100%' },
   topRow: { display:'flex', justifyContent:'space-between', alignItems:'flex-start' },
   topBtns: { display:'flex', flexDirection:'column', alignItems:'flex-end', gap:'0.4rem', paddingTop:'0.25rem' },
