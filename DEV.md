@@ -291,3 +291,13 @@ Ver historial completo en README.md.
 - **`vercel.json` con rewrite `/*` → `/`** — necesario para que React Router funcione en producción.
 - **Service workers separados** — `sw.js` gestiona caché PWA y `sw-push.js` gestiona push. Están separados para evitar conflictos.
 - **Sesiones anónimas** — no hay sistema de recuperación de cuenta. Si el usuario borra los datos del navegador, pierde su cuenta. Es una decisión de diseño deliberada para simplicidad.
+
+---
+
+## Roadmap de producto
+
+### App Stores
+- **Google Play Store** — publicar como PWA via PWABuilder (pwabulder.com). Coste: 25$ único. Proceso: generar APK/AAB desde PWABuilder + cuenta Google Play Developer.
+- **Apple App Store** — publicar como PWA wrapper via PWABuilder. Coste: 99€/año (cuenta Apple Developer obligatoria). Riesgo: Apple puede rechazar apps que sean "solo una web". Recomendado hacerlo después de Google Play.
+
+**Orden sugerido:** Google Play primero (más barato, más sencillo, Android es la plataforma natural para PWAs), Apple después cuando el juego tenga más tracción.
