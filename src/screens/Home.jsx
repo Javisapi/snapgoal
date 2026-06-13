@@ -23,7 +23,7 @@ const HOME_CSS = `
 `
 
 export default function Home() {
-  const { player, loading, registerPlayer } = useAuth()
+  const { player, loading, registerPlayer, refreshPlayer } = useAuth()
   const [username, setUsername] = useState('')
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
@@ -97,6 +97,12 @@ export default function Home() {
       navigate('/leagues?join=' + joinCode)
     }
   }, [joinCode, player])
+
+  useEffect(() => {
+    const onVerified = () => { if (refreshPlayer) refreshPlayer() }
+    window.addEventListener('player_verified', onVerified)
+    return () => window.removeEventListener('player_verified', onVerified)
+  }, [])
 
   useEffect(() => {
     if (!player) return

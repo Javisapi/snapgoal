@@ -35,6 +35,7 @@ function EmailVerificationHandler() {
         const key = 'player_' + session.user.id
         const cached = JSON.parse(sessionStorage.getItem(key) || '{}')
         sessionStorage.setItem(key, JSON.stringify({ ...cached, email_verified: true, email: session.user.email }))
+        window.dispatchEvent(new Event('player_verified'))
       }
     }
 
@@ -68,6 +69,7 @@ function EmailVerificationHandler() {
           const key = 'player_' + session.user.id
           const cached = JSON.parse(sessionStorage.getItem(key) || '{}')
           sessionStorage.setItem(key, JSON.stringify({ ...cached, email_verified: true, email: session.user.email }))
+          window.dispatchEvent(new Event('player_verified'))
         }
       }
     })
