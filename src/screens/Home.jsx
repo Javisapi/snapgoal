@@ -223,8 +223,9 @@ export default function Home() {
       <div style={styles.mainCards}>
         <button style={styles.cardPlay} onClick={handlePlay}>
           <svg viewBox="0 0 40 40" fill="none" style={{width:'36px',height:'36px',marginBottom:'10px'}}>
-            <circle cx="20" cy="20" r="18" fill="rgba(0,0,0,0.15)"/>
-            <polygon points="15,12 30,20 15,28" fill="#141414"/>
+            <circle cx="20" cy="20" r="16" fill="rgba(0,0,0,0.15)" stroke="#141414" strokeWidth="1.5"/>
+            <polygon points="20,11 23,17 29,17 24.5,21 26.5,27 20,23 13.5,27 15.5,21 11,17 17,17" fill="#141414" opacity="0.7"/>
+            <circle cx="20" cy="20" r="16" fill="none" stroke="#141414" strokeWidth="1.5"/>
           </svg>
           <span style={styles.cardPlayLabel}>Buscar Partido</span>
           <span style={styles.cardSub}>Jugar ahora</span>
@@ -290,7 +291,7 @@ export default function Home() {
       <button style={styles.btnInvite} onClick={() => {
         const text = '⚽ Únete a SnapGoal. Partidos rápidos, Ligas y mucho más. https://snapgoal.vercel.app'
         window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank')
-      }}>🟢 Invita a un amigo</button>
+      }}>🎁 Invita a un amigo</button>
       <button style={styles.btnGhost} onClick={() => setShowDeleteConfirm(true)}>Borrar cuenta</button>
     </div>
   )
