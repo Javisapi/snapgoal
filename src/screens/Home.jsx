@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
 import { useSearchParams } from 'react-router-dom'
+import ProtectAccount, { useShouldShowProtect, ProtectedBadge } from '../components/ProtectAccount'
 
 async function deleteAccount(playerId) {
   await supabase.from('plays').delete().eq('player_id', playerId)
@@ -33,6 +34,7 @@ export default function Home() {
   const [showInstall, setShowInstall] = useState(false)
   const [showRegisterInfo, setShowRegisterInfo] = useState(false)
   const [onlineCount, setOnlineCount] = useState(0)
+  const [showProtect, setShowProtect] = useState(false)
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const joinCode = searchParams.get('join')
@@ -46,6 +48,7 @@ export default function Home() {
   useEffect(() => {
     if (player) {
       requestPermissionAndSubscribe(supabase, player.id)
+      if (useShouldShowProtect(player)) setShowProtect(true)
     }
   }, [player])
 
@@ -297,10 +300,19 @@ export default function Home() {
           <span style={styles.btnIconLabel}>Skills</span>
         </button>
       </div>
+      {showProtect && !player?.email_verified && (
+        <ProtectAccount
+          player={player}
+          onDone={() => setShowProtect(false)}
+          onDismiss={() => setShowProtect(false)}
+        />
+      )}
+      {player?.email_verified && <ProtectedBadge />}
       <button style={styles.btnInvite} onClick={() => {
         const text = '⚽ Únete a SnapGoal. Partidos rápidos, Ligas y mucho más. https://snapgoal.vercel.app'
         window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank')
       }}>🎁 Invita a un amigo</button>
+      <button style={styles.btnGhost} onClick={() => setShowProtect(true)}>🔒 Proteger mi cuenta</button>
       <button style={styles.btnGhost} onClick={() => setShowDeleteConfirm(true)}>Borrar cuenta</button>
     </div>
   )
