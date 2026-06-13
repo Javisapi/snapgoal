@@ -7,11 +7,26 @@ function EmailVerificationHandler() {
     async function checkVerification() {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session?.user?.email_confirmed_at) return
-      const { data: player } = await supabase
+      let { data: player } = await supabase
         .from('players')
         .select('id, email_verified, email')
         .eq('auth_id', session.user.id)
         .single()
+
+      // Si no encontramos por auth_id, buscar por email (sesión anónima -> email)
+      if (!player && session.user.email) {
+        const { data: playerByEmail } = await supabase
+          .from('players')
+          .select('id, email_verified, email')
+          .eq('email', session.user.email)
+          .single()
+        if (playerByEmail) {
+          player = playerByEmail
+          // Actualizar auth_id al nuevo
+          await supabase.from('players').update({ auth_id: session.user.id }).eq('id', playerByEmail.id)
+        }
+      }
+
       if (player && !player.email_verified && session.user.email) {
         await supabase
           .from('players')
@@ -27,11 +42,24 @@ function EmailVerificationHandler() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if ((event === 'SIGNED_IN' || event === 'USER_UPDATED') && session?.user?.email_confirmed_at) {
-        const { data: player } = await supabase
+        let { data: player } = await supabase
           .from('players')
           .select('id, email_verified')
           .eq('auth_id', session.user.id)
           .single()
+
+        if (!player && session.user.email) {
+          const { data: playerByEmail } = await supabase
+            .from('players')
+            .select('id, email_verified')
+            .eq('email', session.user.email)
+            .single()
+          if (playerByEmail) {
+            player = playerByEmail
+            await supabase.from('players').update({ auth_id: session.user.id }).eq('id', playerByEmail.id)
+          }
+        }
+
         if (player && !player.email_verified) {
           await supabase
             .from('players')
