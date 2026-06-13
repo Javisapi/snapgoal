@@ -334,40 +334,6 @@ export default function Home() {
           <span style={styles.btnIconLabel}>Skills</span>
         </button>
       </div>
-      {showRecover && (
-        <div style={styles.overlay}>
-          <div style={styles.modal}>
-            {recoverSent ? (
-              <>
-                <p style={styles.modalTitle}>📧 Revisa tu email</p>
-                <p style={styles.modalText}>Te hemos enviado un magic link a <strong style={{color:'#fff'}}>{recoverEmail}</strong>. Haz click en él para acceder a tu cuenta.</p>
-                <button style={styles.btnCancelDelete} onClick={() => { setShowRecover(false); setRecoverSent(false); setRecoverEmail('') }}>Cerrar</button>
-              </>
-            ) : (
-              <>
-                <p style={styles.modalTitle}>🔑 Recuperar cuenta</p>
-                <p style={styles.modalText}>Introduce el email con el que protegiste tu cuenta. Te enviaremos un link para acceder.</p>
-                <input
-                  style={{...styles.input, marginBottom:'0.5rem'}}
-                  type="email"
-                  placeholder="tu@email.com"
-                  value={recoverEmail}
-                  onChange={e => setRecoverEmail(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleRecover()}
-                  autoCapitalize="none"
-                  autoCorrect="off"
-                />
-                {recoverError && <p style={{fontSize:'0.82rem',color:'#ff4444',margin:0}}>{recoverError}</p>}
-                <button style={styles.btnPrimary} onClick={handleRecover} disabled={recoverLoading}>
-                  {recoverLoading ? 'Enviando...' : 'Enviar magic link'}
-                </button>
-                <button style={styles.btnCancelDelete} onClick={() => { setShowRecover(false); setRecoverError(''); setRecoverEmail('') }}>Cancelar</button>
-              </>
-            )}
-          </div>
-        </div>
-      )}
-
       {showProtect && !player?.email_verified && (
         <div style={styles.overlay}>
           <div style={styles.protectModal}>
@@ -438,6 +404,40 @@ export default function Home() {
         <button style={styles.btnGhost} onClick={() => setShowRegisterInfo(true)}>¿Cómo crear mi perfil?</button>
         <button style={{...styles.btnGhost, color:'rgba(255,180,0,0.5)'}} onClick={() => setShowRecover(true)}>🔑 Ya tengo cuenta — recuperar acceso</button>
       </div>
+
+      {showRecover && (
+        <div style={styles.overlay}>
+          <div style={styles.modal}>
+            {recoverSent ? (
+              <>
+                <p style={styles.modalTitle}>📧 Revisa tu email</p>
+                <p style={styles.modalText}>Te hemos enviado un magic link a <strong style={{color:'#fff'}}>{recoverEmail}</strong>. Haz clic en él para acceder a tu cuenta.</p>
+                <button style={styles.btnCancelDelete} onClick={() => { setShowRecover(false); setRecoverSent(false); setRecoverEmail('') }}>Cerrar</button>
+              </>
+            ) : (
+              <>
+                <p style={styles.modalTitle}>🔑 Recuperar cuenta</p>
+                <p style={styles.modalText}>Introduce el email con el que protegiste tu cuenta. Te enviaremos un link para acceder.</p>
+                <input
+                  style={{...styles.input, marginBottom:'0.75rem'}}
+                  type="email"
+                  placeholder="tu@email.com"
+                  value={recoverEmail}
+                  onChange={e => setRecoverEmail(e.target.value.toLowerCase())}
+                  onKeyDown={e => e.key === 'Enter' && handleRecover()}
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                />
+                {recoverError && <p style={{fontSize:'0.8rem', color:'#ff4444', margin:0}}>{recoverError}</p>}
+                <button style={styles.btnPrimary} onClick={handleRecover} disabled={recoverLoading}>
+                  {recoverLoading ? 'Enviando...' : 'Enviar magic link'}
+                </button>
+                <button style={styles.btnCancelDelete} onClick={() => { setShowRecover(false); setRecoverEmail(''); setRecoverError('') }}>Cancelar</button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
