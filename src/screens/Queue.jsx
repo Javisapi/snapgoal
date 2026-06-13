@@ -170,7 +170,6 @@ export default function Queue() {
   }
 
   if (noMatch) return (
-  if (noMatch) return (
     <div style={styles.container}>
       <div style={styles.content}>
         <div style={styles.noMatchIcon}>✕</div>
