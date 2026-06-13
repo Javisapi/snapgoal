@@ -35,6 +35,11 @@ export default function Home() {
   const [showRegisterInfo, setShowRegisterInfo] = useState(false)
   const [onlineCount, setOnlineCount] = useState(0)
   const [showProtect, setShowProtect] = useState(false)
+  const [showRecover, setShowRecover] = useState(false)
+  const [recoverEmail, setRecoverEmail] = useState('')
+  const [recoverSent, setRecoverSent] = useState(false)
+  const [recoverLoading, setRecoverLoading] = useState(false)
+  const [recoverError, setRecoverError] = useState('')
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const joinCode = searchParams.get('join')
@@ -111,6 +116,23 @@ export default function Home() {
       sessionStorage.setItem('player_' + session.user.id, JSON.stringify(player))
       navigate('/queue')
     }
+  }
+
+  async function handleRecover() {
+    const trimmed = recoverEmail.trim().toLowerCase()
+    if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      setRecoverError('Introduce un email válido')
+      return
+    }
+    setRecoverLoading(true)
+    setRecoverError('')
+    const { error } = await supabase.auth.signInWithOtp({
+      email: trimmed,
+      options: { emailRedirectTo: 'https://snapgoal.vercel.app/verify', shouldCreateUser: false }
+    })
+    setRecoverLoading(false)
+    if (error) { setRecoverError('No encontramos una cuenta con ese email. ¿Lo has protegido antes?'); return }
+    setRecoverSent(true)
   }
 
   async function handleDeleteAccount() {
@@ -371,7 +393,42 @@ export default function Home() {
         <button style={styles.btnSecondary} onClick={() => navigate('/leagues')}>🏆 Mis Ligas</button>
         <button style={styles.btnSecondary} onClick={() => navigate('/rules')}>Reglas</button>
         <button style={styles.btnGhost} onClick={() => setShowRegisterInfo(true)}>¿Cómo crear mi perfil?</button>
+        <button style={styles.btnGhost} onClick={() => setShowRecover(true)}>🔑 ¿Ya tienes cuenta? Recupérala</button>
       </div>
+
+      {showRecover && (
+        <div style={styles.overlay}>
+          <div style={styles.modal}>
+            {recoverSent ? (
+              <>
+                <p style={styles.modalTitle}>📧 Revisa tu email</p>
+                <p style={styles.modalText}>Te hemos enviado un magic link a <strong style={{color:'#fff'}}>{recoverEmail}</strong>. Haz clic en él para acceder a tu cuenta.</p>
+                <button style={styles.btnCancelDelete} onClick={() => { setShowRecover(false); setRecoverSent(false); setRecoverEmail('') }}>Cerrar</button>
+              </>
+            ) : (
+              <>
+                <p style={styles.modalTitle}>🔑 Recuperar cuenta</p>
+                <p style={styles.modalText}>Introduce el email con el que protegiste tu cuenta. Te enviaremos un link para acceder.</p>
+                <input
+                  style={{...styles.input, marginBottom:'0.75rem'}}
+                  type="email"
+                  placeholder="tu@email.com"
+                  value={recoverEmail}
+                  onChange={e => setRecoverEmail(e.target.value.toLowerCase())}
+                  onKeyDown={e => e.key === 'Enter' && handleRecover()}
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                />
+                {recoverError && <p style={{fontSize:'0.8rem', color:'#ff4444', margin:0}}>{recoverError}</p>}
+                <button style={styles.btnPrimary} onClick={handleRecover} disabled={recoverLoading}>
+                  {recoverLoading ? 'Enviando...' : 'Enviar magic link'}
+                </button>
+                <button style={styles.btnCancelDelete} onClick={() => { setShowRecover(false); setRecoverEmail(''); setRecoverError('') }}>Cancelar</button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -60,6 +60,7 @@ import Announce from './screens/Announce'
 import Leagues from './screens/Leagues'
 import League from './screens/League'
 import Shootout from './screens/Shootout'
+import Verify from './screens/Verify'
 
 function App() {
   return (
@@ -79,6 +80,7 @@ function App() {
         <Route path="/league/:leagueId" element={<League />} />
         <Route path="/shootout/:matchId" element={<Shootout />} />
         <Route path="/rules" element={<Rules />} />
+        <Route path="/verify" element={<Verify />} />
       </Routes>
     </BrowserRouter>
   )
