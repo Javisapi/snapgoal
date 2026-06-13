@@ -1,4 +1,31 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { useEffect } from 'react'
+import { supabase } from './lib/supabase'
+
+function EmailVerificationHandler() {
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'USER_UPDATED' && session?.user?.email) {
+        const { data: player } = await supabase
+          .from('players')
+          .select('id, email_verified')
+          .eq('auth_id', session.user.id)
+          .single()
+        if (player && !player.email_verified) {
+          await supabase
+            .from('players')
+            .update({ email_verified: true, email: session.user.email })
+            .eq('id', player.id)
+          const key = 'player_' + session.user.id
+          const cached = JSON.parse(sessionStorage.getItem(key) || '{}')
+          sessionStorage.setItem(key, JSON.stringify({ ...cached, email_verified: true, email: session.user.email }))
+        }
+      }
+    })
+    return () => subscription.unsubscribe()
+  }, [])
+  return null
+}
 import Home from './screens/Home'
 import Queue from './screens/Queue'
 import Game from './screens/Game'
@@ -16,6 +43,7 @@ import Shootout from './screens/Shootout'
 function App() {
   return (
     <BrowserRouter>
+      <EmailVerificationHandler />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/queue" element={<Queue />} />
