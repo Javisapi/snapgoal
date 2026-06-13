@@ -31,6 +31,7 @@ export default function ProtectAccount({ player, onDone, onDismiss, inline = fal
     setLoading(true)
     setError('')
 
+    console.log("EMAIL BEING SENT:", JSON.stringify(trimmed))
     const { error: updateError } = await supabase.auth.signInWithOtp({ email: trimmed, options: { shouldCreateUser: true } })
     if (updateError) {
       setError('Error al vincular el email. Inténtalo de nuevo.')
