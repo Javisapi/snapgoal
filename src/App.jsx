@@ -4,8 +4,29 @@ import { supabase } from './lib/supabase'
 
 function EmailVerificationHandler() {
   useEffect(() => {
+    async function checkVerification() {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.user?.email_confirmed_at) return
+      const { data: player } = await supabase
+        .from('players')
+        .select('id, email_verified, email')
+        .eq('auth_id', session.user.id)
+        .single()
+      if (player && !player.email_verified && session.user.email) {
+        await supabase
+          .from('players')
+          .update({ email_verified: true, email: session.user.email })
+          .eq('id', player.id)
+        const key = 'player_' + session.user.id
+        const cached = JSON.parse(sessionStorage.getItem(key) || '{}')
+        sessionStorage.setItem(key, JSON.stringify({ ...cached, email_verified: true, email: session.user.email }))
+      }
+    }
+
+    checkVerification()
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'USER_UPDATED' && session?.user?.email) {
+      if ((event === 'SIGNED_IN' || event === 'USER_UPDATED') && session?.user?.email_confirmed_at) {
         const { data: player } = await supabase
           .from('players')
           .select('id, email_verified')

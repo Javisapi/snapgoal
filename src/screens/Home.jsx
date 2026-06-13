@@ -212,7 +212,10 @@ export default function Home() {
 
       <div style={styles.playerSection}>
         <p style={styles.playerGreeting}>Bienvenido</p>
-        <p style={styles.playerName}>{player.username}</p>
+        <div style={{display:'flex', alignItems:'center', gap:'0.6rem'}}>
+          <p style={styles.playerName}>{player.username}</p>
+          {player?.email_verified && <ProtectedBadge />}
+        </div>
         <div style={styles.playerMeta}>
           <span style={styles.playerMetaItem}>{player.total_points} pts</span>
           <span style={styles.playerMetaDot} />
@@ -312,12 +315,11 @@ export default function Home() {
           </div>
         </div>
       )}
-      {player?.email_verified && <ProtectedBadge />}
       <button style={styles.btnInvite} onClick={() => {
         const text = '⚽ Únete a SnapGoal. Partidos rápidos, Ligas y mucho más. https://snapgoal.vercel.app'
         window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank')
       }}>🎁 Invita a un amigo</button>
-      <button style={styles.btnProtect} onClick={() => setShowProtect(true)}>🔒 Proteger mi cuenta</button>
+      {!player?.email_verified && <button style={styles.btnProtect} onClick={() => setShowProtect(true)}>🔒 Proteger mi cuenta</button>}
       <button style={styles.btnGhost} onClick={() => setShowDeleteConfirm(true)}>Borrar cuenta</button>
     </div>
   )
