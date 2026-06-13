@@ -287,6 +287,10 @@ export default function Home() {
           <span style={styles.btnIconLabel}>Skills</span>
         </button>
       </div>
+      <button style={styles.btnInvite} onClick={() => {
+        const text = '¡Echa un partido de fútbol conmigo en SnapGoal! Es una app gratuita, sin registro, solo elige un nombre y a jugar 👉 https://snapgoal.vercel.app'
+        window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank')
+      }}>🟢 Invita a un amigo</button>
       <button style={styles.btnGhost} onClick={() => setShowDeleteConfirm(true)}>Borrar cuenta</button>
     </div>
   )
@@ -376,6 +380,7 @@ const styles = {
   btnIconLabel: { fontSize:'0.72rem', fontWeight:'600', color:'rgba(255,255,255,0.4)', letterSpacing:'0.5px' },
   btnPrimary: { background:'#ffb400', color:'#141414', border:'none', borderRadius:'12px', padding:'1.1rem', fontSize:'1rem', fontWeight:'800', cursor:'pointer', width:'100%', letterSpacing:'0.5px' },
   btnSecondary: { background:'transparent', color:'rgba(255,255,255,0.4)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:'12px', padding:'0.9rem', fontSize:'0.9rem', cursor:'pointer', width:'100%' },
+  btnInvite: { background:'rgba(0,220,100,0.08)', border:'1px solid rgba(0,220,100,0.3)', borderRadius:'12px', color:'#00dc64', fontSize:'0.9rem', fontWeight:'700', cursor:'pointer', padding:'0.9rem', width:'100%', boxShadow:'0 0 12px rgba(0,220,100,0.2)' },
   btnGhost: { background:'transparent', color:'rgba(255,80,80,0.4)', border:'none', padding:'0.5rem', fontSize:'0.8rem', cursor:'pointer', width:'100%' },
   topRow: { display:'flex', justifyContent:'space-between', alignItems:'flex-start' },
   topBtns: { display:'flex', flexDirection:'column', alignItems:'flex-end', gap:'0.4rem', paddingTop:'0.25rem' },
