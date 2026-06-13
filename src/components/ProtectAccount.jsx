@@ -93,11 +93,10 @@ export default function ProtectAccount({ player, onDone, onDismiss, inline = fal
   )
 }
 
-export function ProtectedBadge() {
+export function ProtectedBadge({ size = 18 }) {
   return (
-    <div style={styles.badge}>
-      <span style={styles.badgeDot}>✓</span>
-      <span style={styles.badgeText}>Cuenta protegida</span>
+    <div style={{ width: size, height: size, borderRadius: '50%', background: 'rgba(0,200,80,0.15)', border: '1.5px solid #00c850', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      <span style={{ fontSize: size * 0.6 + 'px', color: '#00c850', fontWeight: '900', lineHeight: 1 }}>✓</span>
     </div>
   )
 }

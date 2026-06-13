@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { ProtectedBadge } from '../components/ProtectAccount'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
@@ -91,6 +92,7 @@ export default function Ranking() {
                 <div style={styles.playerInfo}>
                   <div style={styles.playerTopRow}>
                     <span style={styles.playerUsername}>{p.username}</span>
+                    {p.email_verified && <ProtectedBadge size={14} />}
                     {isMe && <span style={styles.youBadge}>tú</span>}
                   </div>
                   <div style={styles.playerWDL}>
