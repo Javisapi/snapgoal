@@ -316,3 +316,42 @@ Implementar un **matchmaker centralizado** via **Supabase Edge Function**:
 - El jugador elige su nombre de usuario único
 - La sesión persiste en el dispositivo indefinidamente
 
+
+---
+
+## PWA Push Notifications
+
+### Stack de notificaciones
+- **Frontend:** `src/lib/pushNotifications.js` — gestión de permisos y suscripciones
+- **Service Worker:** `public/sw-push.js` — recepción y display de notificaciones
+- **Backend:** `api/notify-league.js` — Vercel Serverless Function con `web-push`
+- **Base de datos:** tabla `push_subscriptions` en Supabase
+
+### Flujo
+1. Al cargar Home, se pide permiso al usuario para recibir notificaciones
+2. Si acepta, su suscripción push se guarda en `push_subscriptions` (endpoint, p256dh, auth)
+3. Desde la pantalla de una liga, cualquier miembro puede pulsar **"Notificación: Convoca a tus rivales"**
+4. La Serverless Function obtiene las suscripciones de todos los miembros (excepto el remitente) y manda la notificación via VAPID
+5. El mensaje recibido: `[usuario] está buscando rival en la Liga [nombre] de SnapGoal. ¿Te unes?`
+
+### Variables de entorno necesarias (Vercel)
+| Variable | Descripción |
+|---|---|
+| `VITE_VAPID_PUBLIC_KEY` | Clave pública VAPID (frontend) |
+| `VAPID_PRIVATE_KEY` | Clave privada VAPID (serverless) |
+| `VAPID_MAILTO` | Email de contacto VAPID |
+| `SUPABASE_URL` | URL base de Supabase (sin `/rest/v1`) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Service role key de Supabase |
+
+### Generar VAPID keys
+```bash
+npx web-push generate-vapid-keys
+```
+
+---
+
+## Mejoras de UI (v1.8)
+
+- **Botón "Notificación: Convoca a tus rivales"** en la pantalla de liga, visible para todos los miembros, con cooldown de 10 segundos tras enviar
+- **Botón "🎁 Invita a un amigo"** en Home, con glow ámbar pulsante, genera link de invitación para compartir por WhatsApp
+- **Icono de portería SVG** en el botón "Buscar Partido" de Home
