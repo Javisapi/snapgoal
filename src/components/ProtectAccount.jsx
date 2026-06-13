@@ -31,8 +31,7 @@ export default function ProtectAccount({ player, onDone, onDismiss, inline = fal
     setLoading(true)
     setError('')
 
-    console.log("EMAIL BEING SENT:", JSON.stringify(trimmed))
-    const { error: updateError } = await supabase.auth.signInWithOtp({ email: trimmed, options: { shouldCreateUser: true } })
+    const { error: updateError } = await supabase.auth.updateUser({ email: trimmed, options: { emailRedirectTo: 'https://snapgoal.vercel.app/verify' } })
     if (updateError) {
       setError('Error al vincular el email. Inténtalo de nuevo.')
       setLoading(false)

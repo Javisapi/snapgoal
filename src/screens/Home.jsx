@@ -126,7 +126,7 @@ export default function Home() {
     setRecoverError('')
     const { error } = await supabase.auth.signInWithOtp({
       email: trimmed,
-      options: { shouldCreateUser: false }
+      options: { emailRedirectTo: 'https://snapgoal.vercel.app/verify', shouldCreateUser: false }
     })
     setRecoverLoading(false)
     if (error) {
