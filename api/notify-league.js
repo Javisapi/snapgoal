@@ -15,7 +15,15 @@ webpush.setVapidDetails(
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end()
 
-  const { league_id, sender_name, message } = req.body
+  const { league_id, sender_name } = req.body
+
+  const { data: league } = await supabase
+    .from('leagues')
+    .select('name')
+    .eq('id', league_id)
+    .single()
+
+  const leagueName = league?.name || 'la liga'
 
   const { data: members } = await supabase
     .from('league_members')
@@ -34,8 +42,8 @@ export default async function handler(req, res) {
   if (!subs?.length) return res.status(200).json({ sent: 0 })
 
   const payload = JSON.stringify({
-    title: `⚽ ${sender_name} alerta a la liga`,
-    body: message || '¡Atención jugadores!',
+    title: `⚽ ${sender_name} está buscando rival`,
+    body: `🥅 ${sender_name} está buscando rival en la Liga ${leagueName} de SnapGoal. ¿Te unes?`,
     url: `/league/${league_id}`
   })
 
