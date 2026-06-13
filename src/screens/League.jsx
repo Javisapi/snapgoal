@@ -101,7 +101,7 @@ export default function League() {
       body: JSON.stringify({
         league_id: leagueId,
         sender_name: player.username,
-        message: '¡Hay un reto esperándote en la liga!'
+        sender_id: player.id
       })
     })
   }

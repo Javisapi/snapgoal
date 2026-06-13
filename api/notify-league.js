@@ -15,7 +15,7 @@ webpush.setVapidDetails(
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end()
 
-  const { league_id, sender_name } = req.body
+  const { league_id, sender_name, sender_id } = req.body
 
   const { data: league } = await supabase
     .from('leagues')
@@ -29,6 +29,7 @@ export default async function handler(req, res) {
     .from('league_members')
     .select('player_id')
     .eq('league_id', league_id)
+    .neq('player_id', sender_id)
 
   if (!members?.length) return res.status(200).json({ sent: 0 })
 
