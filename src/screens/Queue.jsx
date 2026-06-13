@@ -170,13 +170,22 @@ export default function Queue() {
   }
 
   if (noMatch) return (
+  if (noMatch) return (
     <div style={styles.container}>
       <div style={styles.content}>
         <div style={styles.noMatchIcon}>✕</div>
         <h2 style={styles.noMatchTitle}>Sin oponente</h2>
-        <p style={styles.noMatchText}>No hemos encontrado rival en 10 segundos. ¡Vuelve a intentarlo!</p>
+        <p style={styles.noMatchText}>No hemos encontrado rival en 10 segundos.</p>
       </div>
-      <button style={styles.btnPrimary} onClick={() => navigate('/')}>Volver al inicio</button>
+      <div style={styles.noMatchBtns}>
+        {leagueId && (
+          <button style={styles.btnPrimary} onClick={() => { window.location.href = "/queue?league=" + leagueId }}>Volver a buscar en la Liga</button>
+        )}
+        {leagueId && (
+          <button style={styles.btnSecondary} onClick={() => navigate("/league/" + leagueId)}>Volver a la Liga</button>
+        )}
+        <button style={leagueId ? styles.btnGhost : styles.btnPrimary} onClick={() => navigate("/")}>Volver al inicio</button>
+      </div>
     </div>
   )
 
@@ -212,4 +221,7 @@ const styles = {
   noMatchIcon: { fontSize: '3rem', color: 'rgba(255,255,255,0.2)', fontWeight: '900', lineHeight: 1, marginBottom: '1rem' },
   noMatchTitle: { fontSize: '1.5rem', fontWeight: '800', color: '#fff', textAlign: 'center', marginBottom: '0.5rem' },
   noMatchText: { fontSize: '0.95rem', color: 'rgba(255,255,255,0.4)', textAlign: 'center', lineHeight: 1.5 },
+  noMatchBtns: { display: 'flex', flexDirection: 'column', gap: '0.75rem', width: '100%' },
+  btnSecondary: { background: 'transparent', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '1rem', fontSize: '0.95rem', cursor: 'pointer', width: '100%' },
+  btnGhost: { background: 'transparent', color: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '12px', padding: '0.75rem', fontSize: '0.85rem', cursor: 'pointer', width: '100%' },
 }
