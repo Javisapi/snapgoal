@@ -39,6 +39,7 @@ export default function League() {
   const [showKick, setShowKick] = useState(null)
   const [showDeleteLeague, setShowDeleteLeague] = useState(false)
   const channelRef = useRef(null)
+  const [notifySent, setNotifySent] = useState(false)
 
   useEffect(() => {
     const s = document.createElement('style')
@@ -94,7 +95,8 @@ export default function League() {
 
 
   async function handleNotifyPlayers() {
-    console.log('handleNotifyPlayers fired', leagueId, player)
+    if (notifySent) return
+    setNotifySent(true)
     await fetch('/api/notify-league', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -104,6 +106,7 @@ export default function League() {
         sender_id: player.id
       })
     })
+    setTimeout(() => setNotifySent(false), 10000)
   }
   async function handleLeave() {
     const member = members.find(m => m.players.id === player.id)
@@ -282,7 +285,7 @@ export default function League() {
             style={styles.btnAlert}
             onClick={handleNotifyPlayers}
           >
-            🔔 Alertar a jugadores
+            {notifySent ? "✅ Notificación enviada" : "🔔 Notificación: Convoca a tus rivales"}
           </button>
         </div>
       )}
