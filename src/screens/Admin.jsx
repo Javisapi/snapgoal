@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import AdminGuard from '../components/AdminGuard'
+import { BarChart as ReBarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid, Area, AreaChart } from 'recharts'
 
 const CSS = `
   @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
@@ -21,21 +22,46 @@ function KPI({ label, value, sub, color = '#ffb400', big = false }) {
   )
 }
 
-function BarChart({ data, valueKey, labelKey, color = '#ffb400', height = 160 }) {
-  if (!data?.length) return <p style={styles.empty}>Sin datos</p>
-  const max = Math.max(...data.map(d => d[valueKey] || 0), 1)
+function CustomTooltip({ active, payload, label, color }) {
+  if (!active || !payload?.length) return null
   return (
-    <div style={{ ...styles.chartWrap, height: height + 32 }}>
-      {data.slice(0, 30).reverse().map((d, i) => (
-        <div key={i} style={styles.barCol}>
-          <div style={styles.barValWrap}>
-            <p style={styles.barVal}>{d[valueKey] > 0 ? d[valueKey] : ''}</p>
-          </div>
-          <div style={{ ...styles.bar, height: `${((d[valueKey] || 0) / max) * height}px`, background: color }} />
-          <p style={styles.barLabel}>{d[labelKey]}</p>
-        </div>
-      ))}
+    <div style={{ background:'#1c1c1c', border:'1px solid rgba(255,255,255,0.1)', borderRadius:'8px', padding:'8px 12px' }}>
+      <p style={{ margin:0, fontSize:'0.75rem', color:'rgba(255,255,255,0.4)', marginBottom:'4px' }}>{label}</p>
+      <p style={{ margin:0, fontSize:'1rem', fontWeight:'800', color }}>{payload[0].value}</p>
     </div>
+  )
+}
+
+function BarChart({ data, valueKey, labelKey, color = '#ffb400', height = 200, type = 'bar' }) {
+  if (!data?.length) return <p style={styles.empty}>Sin datos</p>
+  const chartData = data.slice(0, 30).reverse().map(d => ({ ...d, label: d[labelKey], value: d[valueKey] || 0 }))
+  if (type === 'area') return (
+    <ResponsiveContainer width="100%" height={height}>
+      <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+        <defs>
+          <linearGradient id={`grad-${color.replace('#','')}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor={color} stopOpacity={0.3}/>
+            <stop offset="95%" stopColor={color} stopOpacity={0}/>
+          </linearGradient>
+        </defs>
+        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+        <XAxis dataKey="label" tick={{ fill:'rgba(255,255,255,0.25)', fontSize:11 }} axisLine={false} tickLine={false} />
+        <YAxis tick={{ fill:'rgba(255,255,255,0.25)', fontSize:11 }} axisLine={false} tickLine={false} />
+        <Tooltip content={<CustomTooltip color={color} />} />
+        <Area type="monotone" dataKey="value" stroke={color} strokeWidth={2} fill={`url(#grad-${color.replace('#','')})`} dot={false} activeDot={{ r:5, fill:color }} />
+      </AreaChart>
+    </ResponsiveContainer>
+  )
+  return (
+    <ResponsiveContainer width="100%" height={height}>
+      <ReBarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+        <XAxis dataKey="label" tick={{ fill:'rgba(255,255,255,0.25)', fontSize:11 }} axisLine={false} tickLine={false} />
+        <YAxis tick={{ fill:'rgba(255,255,255,0.25)', fontSize:11 }} axisLine={false} tickLine={false} />
+        <Tooltip content={<CustomTooltip color={color} />} cursor={{ fill:'rgba(255,255,255,0.04)' }} />
+        <Bar dataKey="value" fill={color} radius={[4,4,0,0]} maxBarSize={40} />
+      </ReBarChart>
+    </ResponsiveContainer>
   )
 }
 
@@ -166,7 +192,7 @@ function AdminDashboard() {
           <p style={styles.chartTitle}>Nuevos jugadores por {view === 'day' ? 'día' : 'semana'}</p>
           <p style={styles.chartNote}>últimos {view === 'day' ? '30 días' : '12 semanas'}</p>
         </div>
-        <BarChart data={pData} valueKey="new_players" labelKey="label" color="#ffb400" height={180} />
+        <BarChart data={pData} valueKey="new_players" labelKey="label" color="#ffb400" height={220} />
       </div>
 
       {/* GRÁFICO JUGADORES ACUMULADO */}
@@ -175,7 +201,7 @@ function AdminDashboard() {
           <p style={styles.chartTitle}>Total jugadores acumulado por {view === 'day' ? 'día' : 'semana'}</p>
           <p style={styles.chartNote}>crecimiento histórico</p>
         </div>
-        <BarChart data={pData} valueKey="total_players_cumulative" labelKey="label" color="#34d399" height={180} />
+        <BarChart data={pData} valueKey="total_players_cumulative" labelKey="label" color="#34d399" height={220} type="area" />
       </div>
 
       {/* SECCIÓN: PARTIDOS */}
@@ -198,7 +224,7 @@ function AdminDashboard() {
           <p style={styles.chartTitle}>Partidos jugados por {view === 'day' ? 'día' : 'semana'}</p>
           <p style={styles.chartNote}>últimos {view === 'day' ? '30 días' : '12 semanas'}</p>
         </div>
-        <BarChart data={mData} valueKey="matches_played" labelKey="label" color="#60a5fa" height={180} />
+        <BarChart data={mData} valueKey="matches_played" labelKey="label" color="#60a5fa" height={220} />
       </div>
 
       {/* GRÁFICO GOLES */}
@@ -207,7 +233,7 @@ function AdminDashboard() {
           <p style={styles.chartTitle}>Goles jugados por {view === 'day' ? 'día' : 'semana'}</p>
           <p style={styles.chartNote}>últimos {view === 'day' ? '30 días' : '12 semanas'}</p>
         </div>
-        <BarChart data={mData} valueKey="goals_played" labelKey="label" color="#fb923c" height={180} />
+        <BarChart data={mData} valueKey="goals_played" labelKey="label" color="#fb923c" height={220} />
       </div>
 
       {/* GRÁFICO ABANDONADOS */}
@@ -216,7 +242,7 @@ function AdminDashboard() {
           <p style={styles.chartTitle}>Partidos abandonados por {view === 'day' ? 'día' : 'semana'}</p>
           <p style={styles.chartNote}>indica problemas de conexión o UX</p>
         </div>
-        <BarChart data={mData} valueKey="matches_abandoned" labelKey="label" color="#f87171" height={120} />
+        <BarChart data={mData} valueKey="matches_abandoned" labelKey="label" color="#f87171" height={180} />
       </div>
 
       {/* TOP JUGADORES */}
