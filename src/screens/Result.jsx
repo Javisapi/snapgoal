@@ -23,6 +23,7 @@ const CSS = `
   @keyframes replayCentFlash { 0%,100%{opacity:1} 50%{opacity:0.4} }
   @keyframes replayGoalPop { 0%{opacity:0;transform:scale(0.5)} 60%{transform:scale(1.15)} 100%{opacity:1;transform:scale(1)} }
   @keyframes replayRing { 0%{transform:scale(0.8);opacity:0.8} 100%{transform:scale(2.5);opacity:0} }
+  @keyframes recBlink { 0%,100%{opacity:1} 50%{opacity:0} }
   @keyframes particleFloat { 0%{transform:translateY(0) rotate(0deg);opacity:1} 100%{transform:translateY(-120px) rotate(180deg);opacity:0} }
 `
 
@@ -61,6 +62,7 @@ export default function Result() {
   const channelRef = useRef(null)
   const [showReplay, setShowReplay] = useState(true)
   const [replayCents, setReplayCents] = useState(null)
+  const [replayResult, setReplayResult] = useState(null)
   const replayIntervalRef = useRef(null)
 
   useEffect(() => {
@@ -107,19 +109,35 @@ export default function Result() {
 
     setMatch(m)
 
-    // Replay del último gol
+    // Replay del último gol — obtener centésima de inicio de la última tirada del ganador
+    const { data: lastPlays } = await supabase
+      .from('plays')
+      .select('centesimas, result')
+      .eq('match_id', matchId)
+      .eq('player_id', m.winner_id)
+      .order('created_at', { ascending: false })
+      .limit(2)
+
     const finalCents = m.elapsed_centesimas || 0
-    const startCents = Math.max(0, finalCents - 30)
+    // La tirada anterior del ganador nos da el inicio de la última tirada
+    const prevPlay = lastPlays?.[1]
+    const startCents = prevPlay ? prevPlay.centesimas : Math.max(0, finalCents - 30)
+    const lastPlay = lastPlays?.[0]
+    const lastPlayResult = lastPlay?.result || 'NORMAL'
+
+    setReplayResult(lastPlayResult)
     setReplayCents(startCents)
     let current = startCents
+    const totalFrames = Math.max(finalCents - startCents, 1)
+    const frameDuration = Math.min(Math.max(Math.floor(2400 / totalFrames), 20), 120)
     replayIntervalRef.current = setInterval(() => {
       current += 1
       setReplayCents(current)
       if (current >= finalCents) {
         clearInterval(replayIntervalRef.current)
-        setTimeout(() => setShowReplay(false), 800)
+        setTimeout(() => setShowReplay(false), 1000)
       }
-    }, 80) // 30 centésimas × 80ms = 2.4s a cámara lenta
+    }, frameDuration)
 
     const oppId = m.player1_id === p.id ? m.player2_id : m.player1_id
     const { data: opp } = await supabase.from('players').select('*').eq('id', oppId).single()
@@ -266,45 +284,66 @@ export default function Result() {
   const replayCentsDisplay = replayCents !== null ? replayCents % 100 : 0
   const isLastFrame = replayCents !== null && replayCents >= (match.elapsed_centesimas || 0)
 
-  if (showReplay && replayCents !== null) return (
-    <div style={{ height:'100%', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', background:'#141414', position:'relative', animation:'replayIn 0.3s ease forwards', gap:'2rem', padding:'2rem' }}>
-      <p style={{ fontSize:'0.7rem', color:'rgba(255,255,255,0.3)', letterSpacing:'3px', textTransform:'uppercase', margin:0 }}>REPETICIÓN</p>
+  const goalTypeLabel = {
+    'GOL_DIRECTO': 'Gol directo',
+    'FALTA': 'Gol de falta',
+    'PENALTY': 'Gol de penalty',
+    'CORNER': 'Gol de córner',
+    'GOL_PROPIO': 'Gol en propia',
+    'NORMAL': 'Gol',
+  }[replayResult] || 'Gol'
 
-      {/* Marcador */}
-      <div style={{ display:'flex', alignItems:'center', gap:'1.5rem' }}>
-        <div style={{ textAlign:'center' }}>
-          <p style={{ fontSize:'0.75rem', color:'rgba(255,255,255,0.4)', margin:'0 0 4px', fontWeight:'700' }}>{isP1 ? player.username.toUpperCase() : opponent?.username.toUpperCase()}</p>
-          <span style={{ fontSize:'3rem', fontWeight:'900', color: match.winner_id === match.player1_id ? '#ffb400' : '#fff' }}>{match.score_p1}</span>
-        </div>
-        <span style={{ fontSize:'1rem', color:'rgba(255,255,255,0.2)', fontWeight:'700' }}>VS</span>
-        <div style={{ textAlign:'center' }}>
-          <p style={{ fontSize:'0.75rem', color:'rgba(255,255,255,0.4)', margin:'0 0 4px', fontWeight:'700' }}>{isP1 ? opponent?.username.toUpperCase() : player.username.toUpperCase()}</p>
-          <span style={{ fontSize:'3rem', fontWeight:'900', color: match.winner_id === match.player2_id ? '#ffb400' : '#fff' }}>{match.score_p2}</span>
+  if (showReplay && replayCents !== null) return (
+    <div style={{ height:'100%', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'space-between', background:'#141414', position:'relative', animation:'replayIn 0.3s ease forwards', padding:'3rem 2rem 2.5rem' }}>
+
+      {/* Header */}
+      <div style={{ display:'flex', alignItems:'center', gap:'8px' }}>
+        <div style={{ width:'10px', height:'10px', borderRadius:'50%', background:'#ff4444', animation:'recBlink 1s ease-in-out infinite' }}/>
+        <p style={{ fontSize:'0.7rem', color:'rgba(255,255,255,0.5)', letterSpacing:'3px', textTransform:'uppercase', margin:0, fontWeight:'700' }}>REPLAY</p>
+      </div>
+
+      {/* Nombre del ganador en grande */}
+      <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'0.5rem' }}>
+        <p style={{ fontSize:'0.75rem', color:'rgba(255,255,255,0.3)', letterSpacing:'2px', textTransform:'uppercase', margin:0, fontWeight:'600' }}>GANADOR</p>
+        <h1 style={{ fontSize:'2.8rem', fontWeight:'900', color:'#ffb400', margin:0, letterSpacing:'-1px', textAlign:'center', textShadow:'0 0 30px rgba(255,180,0,0.4)', lineHeight:1 }}>
+          {winnerName?.toUpperCase()}
+        </h1>
+        <div style={{ background:'rgba(255,180,0,0.15)', border:'1px solid rgba(255,180,0,0.3)', borderRadius:'20px', padding:'4px 14px' }}>
+          <span style={{ fontSize:'0.8rem', fontWeight:'700', color:'#ffb400' }}>{goalTypeLabel}</span>
         </div>
       </div>
 
       {/* Cronómetro a cámara lenta */}
       <div style={{ position:'relative', display:'flex', flexDirection:'column', alignItems:'center' }}>
         {isLastFrame && (
-          <div style={{ position:'absolute', width:'160px', height:'160px', borderRadius:'50%', border:'3px solid #ffb400', animation:'replayRing 0.8s ease-out forwards', top:'50%', left:'50%', transform:'translate(-50%,-50%)' }}/>
+          <div style={{ position:'absolute', width:'180px', height:'180px', borderRadius:'50%', border:'3px solid #ffb400', animation:'replayRing 0.8s ease-out forwards', top:'50%', left:'50%', transform:'translate(-50%,-50%)' }}/>
         )}
-        <div style={{ fontSize:'6rem', fontWeight:'900', color: isLastFrame ? '#ffb400' : 'rgba(255,255,255,0.85)', letterSpacing:'-3px', fontVariantNumeric:'tabular-nums', lineHeight:1, transition:'color 0.2s ease', textShadow: isLastFrame ? '0 0 40px rgba(255,180,0,0.6)' : 'none' }}>
+        <div style={{ fontSize:'6rem', fontWeight:'900', color: isLastFrame ? '#ffb400' : 'rgba(255,255,255,0.85)', letterSpacing:'-3px', fontVariantNumeric:'tabular-nums', lineHeight:1, transition:'color 0.15s ease', textShadow: isLastFrame ? '0 0 50px rgba(255,180,0,0.7)' : 'none' }}>
           {String(replaySecs).padStart(2,'0')}
           <span style={{ fontSize:'4.5rem', opacity:0.5, margin:'0 3px' }}>:</span>
           {String(replayCentsDisplay).padStart(2,'0')}
         </div>
-        <p style={{ fontSize:'0.7rem', color:'rgba(255,255,255,0.2)', letterSpacing:'2px', marginTop:'6px' }}>SEG : CEN</p>
+        <p style={{ fontSize:'0.65rem', color:'rgba(255,255,255,0.2)', letterSpacing:'2px', marginTop:'8px' }}>SEG : CEN</p>
       </div>
 
-      {/* Flash de gol */}
+      {/* Marcador final */}
+      <div style={{ display:'flex', alignItems:'center', gap:'1.5rem', background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:'16px', padding:'1rem 2rem' }}>
+        <div style={{ textAlign:'center' }}>
+          <p style={{ fontSize:'0.65rem', color:'rgba(255,255,255,0.3)', margin:'0 0 4px', fontWeight:'700' }}>{isP1 ? player.username.toUpperCase() : opponent?.username.toUpperCase()}</p>
+          <span style={{ fontSize:'2.5rem', fontWeight:'900', color: match.winner_id === match.player1_id ? '#ffb400' : 'rgba(255,255,255,0.5)' }}>{match.score_p1}</span>
+        </div>
+        <span style={{ fontSize:'0.9rem', color:'rgba(255,255,255,0.2)', fontWeight:'700' }}>—</span>
+        <div style={{ textAlign:'center' }}>
+          <p style={{ fontSize:'0.65rem', color:'rgba(255,255,255,0.3)', margin:'0 0 4px', fontWeight:'700' }}>{isP1 ? opponent?.username.toUpperCase() : player.username.toUpperCase()}</p>
+          <span style={{ fontSize:'2.5rem', fontWeight:'900', color: match.winner_id === match.player2_id ? '#ffb400' : 'rgba(255,255,255,0.5)' }}>{match.score_p2}</span>
+        </div>
+      </div>
+
       {isLastFrame && (
-        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'0.5rem', animation:'replayGoalPop 0.4s ease forwards' }}>
-          <span style={{ fontSize:'3.5rem', lineHeight:1 }}>{goalEmoji}</span>
-          <p style={{ fontSize:'1rem', fontWeight:'800', color:'#ffb400', textAlign:'center', margin:0 }}>{winnerName} anota</p>
+        <div style={{ position:'absolute', inset:0, pointerEvents:'none', display:'flex', alignItems:'center', justifyContent:'center' }}>
+          <div style={{ fontSize:'8rem', lineHeight:1, animation:'replayGoalPop 0.4s ease forwards', opacity:0 }}>{goalEmoji}</div>
         </div>
       )}
-
-      <p style={{ fontSize:'0.75rem', color:'rgba(255,255,255,0.2)', textAlign:'center', margin:0, position:'absolute', bottom:'2rem' }}>Cámara lenta</p>
     </div>
   )
   const won = myScore > oppScore
