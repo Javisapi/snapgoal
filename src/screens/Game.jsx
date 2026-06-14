@@ -1021,7 +1021,7 @@ export default function Game() {
         last_event: JSON.stringify({ emoji: '🥅', label: 'Penaltis a muerte súbita' }),
         current_turn: m.player1_id,
       }).eq('id', matchId)
-      if (mountedRef.current) navigate('/shootout/' + matchId)
+      if (mountedRef.current) setTimeout(() => navigate('/shootout/' + matchId), 2000)
       return
     }
 
@@ -1065,7 +1065,7 @@ export default function Game() {
     if (finished) {
       // Solo el jugador que hizo la última jugada actualiza stats
       await updateStats(sp1, sp2, m, p)
-      if (mountedRef.current) navigate('/result/' + matchId)
+      if (mountedRef.current) setTimeout(() => navigate('/result/' + matchId), 2000)
     }
   }
 
