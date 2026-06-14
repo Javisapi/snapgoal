@@ -453,11 +453,12 @@ export default function Result() {
         {!rematchStatus && !match?.is_bot_match && (
           <button style={styles.btnRematch} onClick={sendRematch}>⚔️ Revancha</button>
         )}
-        {iWon && (() => {
-          const goalType = { 'GOL_DIRECTO':'Gol directo', 'FALTA':'Gol de falta', 'PENALTY':'Gol de penalty', 'CORNER':'Gol de córner', 'GOL_PROPIO':'Gol en propia' }[replayResult] || 'Gol'
-          const secs = replayGoalCents ? Math.floor(replayGoalCents / 100) : 0
-          const cents = replayGoalCents ? replayGoalCents % 100 : 0
-          const text = `⚽ ${player?.username} ganó en SnapGoal — ${goalType} en ${String(secs).padStart(2,'0')}:${String(cents).padStart(2,'0')} (${myScore}-${oppScore}). ¡Echa una partida! ${window.location.origin}`
+        {iWon && replayGoalCents && replayResult && replayResult !== 'NORMAL' && (() => {
+          const goalTypeMap = { 'GOL_DIRECTO':'Gol directo', 'FALTA':'Gol de falta', 'PENALTY':'Gol de penalty', 'CORNER':'Gol de córner', 'GOL_PROPIO':'Gol en propia' }
+          const goalType = goalTypeMap[replayResult] || 'Gol'
+          const secs = Math.floor(replayGoalCents / 100)
+          const cents = replayGoalCents % 100
+          const text = `⚽ ${player?.username} ganó en SnapGoal — ${goalType} en ${String(secs).padStart(2,'0')}:${String(cents).padStart(2,'0')} (${myScore}-${oppScore}). ¡Juega conmigo! ${window.location.origin}/result/${matchId}`
           const url = `https://wa.me/?text=${encodeURIComponent(text)}`
           return (
             <a href={url} target="_blank" rel="noopener noreferrer" style={styles.btnShare}>
