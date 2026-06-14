@@ -27,7 +27,6 @@ export default function Home() {
   const { player, loading, registerPlayer, refreshPlayer } = useAuth()
   const [username, setUsername] = useState('')
   const [streak, setStreak] = useState(0)
-  const [streak, setStreak] = useState(0)
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
