@@ -106,6 +106,8 @@ export default function Result() {
 
     const { data: updP } = await supabase.from('players').select('*').eq('id', p.id).single()
     setUpdatedPlayer(updP)
+    // Actualizar caché para que Announce muestre stats correctas
+    if (updP) sessionStorage.setItem('player_' + p.auth_id, JSON.stringify(updP))
 
     const isP1 = m.player1_id === p.id
     const myScore = isP1 ? m.score_p1 : m.score_p2
