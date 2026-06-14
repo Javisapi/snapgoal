@@ -287,6 +287,28 @@ async function botProcessPlay(total, matchId, match, processingRef) {
       p_cards_p1: fresh.cards_p1 || { yellow: 0, red: 0 },
       p_cards_p2: fresh.cards_p2 || { yellow: 0, red: 0 },
     })
+
+    // Racha y misiones del jugador humano (player1 siempre es el humano en partidas bot)
+    const humanId = fresh.player1_id
+    const humanWon = fresh.winner_id === humanId
+    const humanScore = fresh.score_p1
+    const oppScore = fresh.score_p2
+    const cleanSheet = humanWon && oppScore === 0
+
+    const { data: humanPlays } = await supabase
+      .from('plays').select('result').eq('match_id', matchId).eq('player_id', humanId)
+    const goalsScored = humanPlays?.filter(pl => ['GOL_DIRECTO','FALTA','PENALTY','CORNER'].includes(pl.result)).length || 0
+    const goalsFalta = humanPlays?.filter(pl => pl.result === 'FALTA').length || 0
+
+    await supabase.rpc('update_daily_streak', { p_player_id: humanId })
+    await supabase.rpc('update_daily_missions', {
+      p_player_id: humanId,
+      p_match_id: matchId,
+      p_won: humanWon,
+      p_goals_scored: goalsScored,
+      p_goals_falta: goalsFalta,
+      p_clean_sheet: cleanSheet,
+    })
   }
 
   processingRef.current = false
