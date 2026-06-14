@@ -81,6 +81,8 @@ export default function Game() {
   const [myTurn, setMyTurn] = useState(false)
   const [showAbandon, setShowAbandon] = useState(false)
   const [opponentGone, setOpponentGone] = useState(false)
+  const [disconnectCountdown, setDisconnectCountdown] = useState(15)
+  const disconnectCountdownRef = useRef(null)
   const [flashEvent, setFlashEvent] = useState(null)
   const [chatMsg, setChatMsg] = useState(null)
   const [showChat, setShowChat] = useState(false)
@@ -390,6 +392,8 @@ export default function Game() {
     heartbeatRef.current = setInterval(async () => {
       const field = isP1 ? 'player1_last_seen' : 'player2_last_seen'
       await supabase.from('matches').update({ [field]: new Date().toISOString() }).eq('id', matchId)
+      // Limpiar partidos zombie globalmente
+      supabase.rpc('close_zombie_matches').then(() => {})
 
       // Ambos jugadores verifican inactividad del jugador con el turno
       const { data: current } = await supabase
@@ -471,7 +475,15 @@ export default function Game() {
     clearTimeout(disconnectRef.current)
     warnRef.current = setTimeout(() => {
       setOpponentGone('warning')
-    }, 10000)
+      setDisconnectCountdown(9)
+      clearInterval(disconnectCountdownRef.current)
+      disconnectCountdownRef.current = setInterval(() => {
+        setDisconnectCountdown(n => {
+          if (n <= 1) { clearInterval(disconnectCountdownRef.current); return 0 }
+          return n - 1
+        })
+      }, 1000)
+    }, 6000)
     disconnectRef.current = setTimeout(async () => {
       setOpponentGone('gone')
       const isP1 = m.player1_id === p.id
@@ -486,7 +498,7 @@ export default function Game() {
       }).eq('id', matchId)
       await updateStats(sp1, sp2, matchRef.current, p)
       if (mountedRef.current) navigate('/result/' + matchId)
-    }, 30000)
+    }, 15000)
   }
 
   async function sendChatMessage(message) {
@@ -699,8 +711,12 @@ export default function Game() {
 
     try {
       await processPlay(total, forced)
+    } catch(e) {
+      console.error('processPlay error:', e)
     } finally {
       processingRef.current = false
+      runningRef.current = false
+      iAmTheShooterRef.current = false
     }
   }
 
@@ -1168,7 +1184,7 @@ export default function Game() {
       {/* Banner desconexión */}
       {opponentGone === 'warning' && (
         <div style={styles.disconnectBanner}>
-          <span style={styles.disconnectBannerText}>⚽ Esperando respuesta de tu oponente...</span>
+          <span style={styles.disconnectBannerText}>⚽ Rival desaparecido — victoria en {disconnectCountdown}s</span>
         </div>
       )}
 
