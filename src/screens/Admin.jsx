@@ -152,19 +152,30 @@ function AdminDashboard() {
         <KPI label="No verificados" value={Number(totals.total_players) - Number(totals.total_verified)} sub="sin protección" color="rgba(255,255,255,0.4)" big />
         <KPI label="Activos (7 días)" value={activePlayers} sub={`${pctActive}% retención`} color="#f472b6" big />
       </div>
-      <div style={styles.grid3}>
+      <div style={styles.grid5}>
         <KPI label="Media partidos/jugador" value={totals.avg_matches_per_player} color="#a78bfa" />
         <KPI label="Récord individual" value={totals.max_matches_single_player + ' partidos'} color="#a78bfa" />
-        <KPI label="Total ligas creadas" value={totals.total_leagues} color="#a78bfa" />
+        <KPI label="Ligas creadas (total)" value={totals.total_leagues} color="#a78bfa" />
+        <KPI label="Ligas activas hoy" value={totals.active_leagues} sub="no expiradas" color="#34d399" />
+        <KPI label="Miembros en ligas" value={totals.total_league_members} color="#a78bfa" />
       </div>
 
-      {/* GRÁFICO JUGADORES */}
+      {/* GRÁFICO JUGADORES NUEVOS */}
       <div style={styles.chartCard}>
         <div style={styles.chartHeader}>
           <p style={styles.chartTitle}>Nuevos jugadores por {view === 'day' ? 'día' : 'semana'}</p>
           <p style={styles.chartNote}>últimos {view === 'day' ? '30 días' : '12 semanas'}</p>
         </div>
         <BarChart data={pData} valueKey="new_players" labelKey="label" color="#ffb400" height={180} />
+      </div>
+
+      {/* GRÁFICO JUGADORES ACUMULADO */}
+      <div style={styles.chartCard}>
+        <div style={styles.chartHeader}>
+          <p style={styles.chartTitle}>Total jugadores acumulado por {view === 'day' ? 'día' : 'semana'}</p>
+          <p style={styles.chartNote}>crecimiento histórico</p>
+        </div>
+        <BarChart data={pData} valueKey="total_players_cumulative" labelKey="label" color="#34d399" height={180} />
       </div>
 
       {/* SECCIÓN: PARTIDOS */}
@@ -258,6 +269,7 @@ const styles = {
   sectionTitle: { margin:'0.5rem 0 0', fontSize:'0.8rem', fontWeight:'700', color:'rgba(255,255,255,0.5)', letterSpacing:'1px', textTransform:'uppercase' },
   grid4: { display:'grid', gridTemplateColumns:'repeat(4, 1fr)', gap:'0.75rem' },
   grid3: { display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:'0.75rem' },
+  grid5: { display:'grid', gridTemplateColumns:'repeat(5, 1fr)', gap:'0.75rem' },
   kpi: { background:'#1c1c1c', borderRadius:'14px', padding:'1.25rem 1rem', display:'flex', flexDirection:'column', gap:'0.2rem' },
   kpiValue: { margin:0, fontWeight:'900', letterSpacing:'-1px', lineHeight:1 },
   kpiLabel: { margin:0, fontSize:'0.72rem', color:'rgba(255,255,255,0.35)', letterSpacing:'0.3px', marginTop:'4px' },
