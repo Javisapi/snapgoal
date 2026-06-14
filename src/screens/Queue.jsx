@@ -80,7 +80,7 @@ export default function Queue() {
     const expiresAt = new Date(Date.now() + QUEUE_TIMEOUT_MS).toISOString()
     const { data: entry, error } = await supabase
       .from('matchmaking_queue')
-      .insert({ player_id: p.id, status: 'waiting', expires_at: expiresAt })
+      .insert({ player_id: p.id, status: 'waiting', expires_at: expiresAt, league_id: leagueId || null })
       .select().single()
 
     if (error || stateRef.current.cancelled) return
