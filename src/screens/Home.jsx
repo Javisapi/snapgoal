@@ -5,7 +5,7 @@ import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
 import { useSearchParams } from 'react-router-dom'
 import ProtectAccount, { useShouldShowProtect, ProtectedBadge } from '../components/ProtectAccount'
-import { useTrackPresence } from '../hooks/usePresence'
+import { useTrackPresence, usePresenceMap } from '../hooks/usePresence'
 
 async function deleteAccount(playerId) {
   await supabase.from('plays').delete().eq('player_id', playerId)
@@ -41,6 +41,7 @@ export default function Home() {
   const [recoverSent, setRecoverSent] = useState(false)
   const [recoverError, setRecoverError] = useState('')
   const [recoverLoading, setRecoverLoading] = useState(false)
+  usePresenceMap((map) => setOnlineCount(Object.keys(map).length))
   useTrackPresence(player?.id, 'idle')
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
