@@ -301,3 +301,52 @@ Ver historial completo en README.md.
 - **Apple App Store** — publicar como PWA wrapper via PWABuilder. Coste: 99€/año (cuenta Apple Developer obligatoria). Riesgo: Apple puede rechazar apps que sean "solo una web". Recomendado hacerlo después de Google Play.
 
 **Orden sugerido:** Google Play primero (más barato, más sencillo, Android es la plataforma natural para PWAs), Apple después cuando el juego tenga más tracción.
+
+---
+
+## Sistema de presencia en tiempo real
+
+### Canal único
+Todos los componentes usan el canal `snapgoal-presence`. No crear canales adicionales de presencia.
+
+### Hooks
+- `useTrackPresence(playerId, status)` — trackea al jugador. Llamar en Home (idle) y Game (playing)
+- `usePresenceMap(onChange)` — suscribe a cambios del mapa `{ player_id: status }`
+
+### Estados
+- `idle` → dot verde → jugador en la app pero sin partido
+- `playing` → dot ámbar → jugador en partida activa
+- `offline` → dot rojo → jugador no detectado en el canal
+
+### Componente
+`src/components/StatusDot.jsx` — acepta `status` y `size` props.
+
+---
+
+## Dashboard de administración
+
+### Acceso
+`https://snapgoal.vercel.app/admin/login`
+Emails autorizados: `snapgoal00@gmail.com`, `javi.fernandez.castanon@gmail.com`
+
+### Rutas
+| Ruta | Descripción |
+|---|---|
+| `/admin/login` | Login con magic link |
+| `/verify-admin` | Procesa el token del magic link |
+| `/admin` | Dashboard principal (protegido por AdminGuard) |
+
+### Vistas SQL en Supabase
+| Vista | Descripción |
+|---|---|
+| `admin_player_stats` | Nuevos jugadores y acumulado por día |
+| `admin_match_stats` | Partidos, goles y abandonados por día |
+| `admin_active_players` | Jugadores activos en los últimos 7 días |
+| `admin_top_players` | Top 10 jugadores por partidos jugados |
+| `admin_totals` | Totales históricos de todas las métricas |
+
+### Archivos
+- `src/screens/Admin.jsx` — dashboard principal
+- `src/screens/AdminLogin.jsx` — pantalla de login
+- `src/screens/VerifyAdmin.jsx` — procesador del magic link
+- `src/components/AdminGuard.jsx` — protección de ruta + lista de emails autorizados

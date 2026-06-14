@@ -355,3 +355,20 @@ npx web-push generate-vapid-keys
 - **Botón "Notificación: Convoca a tus rivales"** en la pantalla de liga, visible para todos los miembros, con cooldown de 10 segundos tras enviar
 - **Botón "🎁 Invita a un amigo"** en Home, con glow ámbar pulsante, genera link de invitación para compartir por WhatsApp
 - **Icono de portería SVG** en el botón "Buscar Partido" de Home
+
+## v1.9 — Presencia en tiempo real y Dashboard de administración
+
+### Presencia en tiempo real
+- Sistema unificado de presencia via Supabase Realtime (`snapgoal-presence`)
+- Badge "X online" en Home sincronizado con los dots de presencia
+- Dot verde (idle), ámbar (jugando), rojo (offline) junto al username en Ranking y Ligas
+- `useTrackPresence` en Home (idle) y Game (playing)
+- `usePresenceMap` como suscriptor reactivo en Ranking, League y Home
+
+### Dashboard de administración
+- Acceso en `/admin/login` con magic link (snapgoal00@gmail.com / javi.fernandez.castanon@gmail.com)
+- KPIs: jugadores totales, verificados, activos, partidos, goles, abandonados, ligas
+- Gráficos de barras y área con recharts: nuevos jugadores, acumulado, partidos, goles, abandonados
+- Top 10 jugadores con stats completas
+- Toggle día/semana para todos los gráficos
+- Vistas SQL en Supabase: `admin_player_stats`, `admin_match_stats`, `admin_active_players`, `admin_top_players`, `admin_totals`
