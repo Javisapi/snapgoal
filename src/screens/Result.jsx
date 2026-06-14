@@ -109,21 +109,31 @@ export default function Result() {
 
     setMatch(m)
 
-    // Replay del último gol — obtener centésima de inicio de la última tirada del ganador
-    const { data: lastPlays } = await supabase
+    // Replay del último gol — obtener todas las jugadas ordenadas globalmente
+    const { data: allPlays } = await supabase
       .from('plays')
-      .select('centesimas, result')
+      .select('centesimas, result, player_id')
       .eq('match_id', matchId)
-      .eq('player_id', m.winner_id)
-      .order('created_at', { ascending: false })
-      .limit(2)
+      .order('created_at', { ascending: true })
 
     const finalCents = m.elapsed_centesimas || 0
-    // La tirada anterior del ganador nos da el inicio de la última tirada
-    const prevPlay = lastPlays?.[1]
-    const startCents = prevPlay ? prevPlay.centesimas : Math.max(0, finalCents - 30)
-    const lastPlay = lastPlays?.[0]
-    const lastPlayResult = lastPlay?.result || 'NORMAL'
+    const GOL_RESULTS = ['GOL_DIRECTO', 'FALTA', 'PENALTY', 'CORNER', 'GOL_PROPIO']
+
+    // Encontrar el índice global de la última jugada GOL del ganador
+    let lastGoalIdx = -1
+    if (allPlays) {
+      for (let i = allPlays.length - 1; i >= 0; i--) {
+        if (allPlays[i].player_id === m.winner_id && GOL_RESULTS.includes(allPlays[i].result)) {
+          lastGoalIdx = i
+          break
+        }
+      }
+    }
+    const lastPlay = lastGoalIdx >= 0 ? allPlays[lastGoalIdx] : null
+    // La jugada anterior en el orden global (puede ser del rival)
+    const prevPlay = lastGoalIdx > 0 ? allPlays[lastGoalIdx - 1] : null
+    const startCents = prevPlay ? prevPlay.centesimas : Math.max(0, finalCents - 25)
+    const lastPlayResult = lastPlay?.result || 'GOL_DIRECTO'
 
     setReplayResult(lastPlayResult)
     setReplayCents(startCents)
