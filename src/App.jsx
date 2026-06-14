@@ -91,6 +91,9 @@ import Leagues from './screens/Leagues'
 import League from './screens/League'
 import Shootout from './screens/Shootout'
 import Verify from './screens/Verify'
+import Admin from './screens/Admin'
+import AdminLogin from './screens/AdminLogin'
+import VerifyAdmin from './screens/VerifyAdmin'
 
 function App() {
   return (
@@ -111,6 +114,9 @@ function App() {
         <Route path="/shootout/:matchId" element={<Shootout />} />
         <Route path="/rules" element={<Rules />} />
         <Route path="/verify" element={<Verify />} />
+        <Route path="/admin" element={<Admin />} />
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/verify-admin" element={<VerifyAdmin />} />
       </Routes>
     </BrowserRouter>
   )
