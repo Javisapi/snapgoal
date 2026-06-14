@@ -453,6 +453,18 @@ export default function Result() {
         {!rematchStatus && !match?.is_bot_match && (
           <button style={styles.btnRematch} onClick={sendRematch}>⚔️ Revancha</button>
         )}
+        {iWon && (() => {
+          const goalType = { 'GOL_DIRECTO':'Gol directo', 'FALTA':'Gol de falta', 'PENALTY':'Gol de penalty', 'CORNER':'Gol de córner', 'GOL_PROPIO':'Gol en propia' }[replayResult] || 'Gol'
+          const secs = replayGoalCents ? Math.floor(replayGoalCents / 100) : 0
+          const cents = replayGoalCents ? replayGoalCents % 100 : 0
+          const text = `⚽ ${player?.username} ganó en SnapGoal — ${goalType} en ${String(secs).padStart(2,'0')}:${String(cents).padStart(2,'0')} (${myScore}-${oppScore}). ¡Echa una partida! ${window.location.origin}`
+          const url = `https://wa.me/?text=${encodeURIComponent(text)}`
+          return (
+            <a href={url} target="_blank" rel="noopener noreferrer" style={styles.btnShare}>
+              📲 Compartir en WhatsApp
+            </a>
+          )
+        })()}
         <button style={styles.btnPrimary} onClick={() => {
           if (match?.league_id) navigate('/queue?league=' + match.league_id)
           else navigate('/queue')
@@ -486,6 +498,7 @@ const styles = {
   btnPrimary: { background:'#ffb400', color:'#141414', border:'none', borderRadius:'12px', padding:'1.1rem', fontSize:'1rem', fontWeight:'800', cursor:'pointer', width:'100%', letterSpacing:'0.5px' },
   btnSecondary: { background:'transparent', color:'rgba(255,255,255,0.25)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:'12px', padding:'0.9rem', fontSize:'0.9rem', cursor:'pointer', width:'100%' },
   btnRematch: { background:'rgba(255,180,0,0.1)', border:'1px solid rgba(255,180,0,0.3)', borderRadius:'12px', padding:'1rem', fontSize:'1rem', fontWeight:'800', color:'#ffb400', cursor:'pointer', width:'100%' },
+  btnShare: { display:'block', textAlign:'center', background:'rgba(37,211,102,0.1)', border:'1px solid rgba(37,211,102,0.3)', borderRadius:'12px', padding:'1rem', fontSize:'1rem', fontWeight:'800', color:'#25d366', cursor:'pointer', width:'100%', textDecoration:'none', boxSizing:'border-box' },
   rematchBox: { background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:'14px', padding:'1rem', display:'flex', flexDirection:'column', gap:'0.75rem' },
   rematchTitle: { fontSize:'0.9rem', fontWeight:'700', color:'rgba(255,255,255,0.7)', textAlign:'center', margin:0 },
   rematchBtns: { display:'flex', gap:'0.75rem' },
