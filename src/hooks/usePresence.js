@@ -2,25 +2,38 @@ import { useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 
 const CHANNEL_NAME = 'snapgoal-presence'
+let channel = null
+let listeners = new Set()
+let presenceMap = {}
 
-let globalChannel = null
-let globalSubscribers = 0
+function getOrCreateChannel() {
+  if (channel) return channel
 
-function getChannel() {
-  if (!globalChannel) {
-    globalChannel = supabase.channel(CHANNEL_NAME, {
-      config: { presence: { key: 'presence' } }
+  channel = supabase.channel(CHANNEL_NAME)
+
+  const syncMap = () => {
+    const state = channel.presenceState()
+    const map = {}
+    Object.values(state).flat().forEach(p => {
+      if (p.player_id) map[p.player_id] = p.status
     })
-    globalChannel.subscribe()
+    presenceMap = map
+    listeners.forEach(fn => fn(map))
   }
-  return globalChannel
+
+  channel
+    .on('presence', { event: 'sync' }, syncMap)
+    .on('presence', { event: 'join' }, syncMap)
+    .on('presence', { event: 'leave' }, syncMap)
+    .subscribe()
+
+  return channel
 }
 
 export function useTrackPresence(playerId, status = 'idle') {
   useEffect(() => {
     if (!playerId) return
-    const ch = getChannel()
-    globalSubscribers++
+    const ch = getOrCreateChannel()
 
     const track = async () => {
       await ch.track({ player_id: playerId, status, ts: Date.now() })
@@ -29,40 +42,22 @@ export function useTrackPresence(playerId, status = 'idle') {
     if (ch.state === 'joined') {
       track()
     } else {
-      ch.subscribe(async (s) => { if (s === 'SUBSCRIBED') await track() })
-    }
-
-    return () => {
-      globalSubscribers--
-      if (globalSubscribers <= 0) {
-        ch.untrack()
-      }
+      const timer = setInterval(() => {
+        if (ch.state === 'joined') {
+          clearInterval(timer)
+          track()
+        }
+      }, 200)
+      return () => clearInterval(timer)
     }
   }, [playerId, status])
 }
 
 export function usePresenceMap(onChange) {
   useEffect(() => {
-    const ch = getChannel()
-
-    const handler = () => {
-      const state = ch.presenceState()
-      const map = {}
-      Object.values(state).flat().forEach(p => {
-        if (p.player_id) map[p.player_id] = p.status
-      })
-      onChange(map)
-    }
-
-    ch.on('presence', { event: 'sync' }, handler)
-    ch.on('presence', { event: 'join' }, handler)
-    ch.on('presence', { event: 'leave' }, handler)
-
-    // Estado inicial
-    handler()
-
-    return () => {
-      ch.off('presence', handler)
-    }
+    getOrCreateChannel()
+    listeners.add(onChange)
+    onChange(presenceMap)
+    return () => listeners.delete(onChange)
   }, [])
 }
