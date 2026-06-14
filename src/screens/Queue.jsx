@@ -23,6 +23,7 @@ export default function Queue() {
   const leagueId = searchParams.get('league')
   const [dots, setDots] = useState('')
   const [noMatch, setNoMatch] = useState(false)
+  const [countdown, setCountdown] = useState(10)
   const stateRef = useRef({
     cancelled: false,
     queueId: null,
@@ -34,6 +35,8 @@ export default function Queue() {
 
   useEffect(() => {
     const dotsInterval = setInterval(() => setDots(d => d.length >= 3 ? '' : d + '.'), 500)
+    const countdownInterval = setInterval(() => setCountdown(n => n > 0 ? n - 1 : 0), 1000)
+    stateRef.current.intervals.push(countdownInterval)
     stateRef.current.intervals.push(dotsInterval)
     init()
     return () => { cleanup() }
@@ -216,7 +219,13 @@ export default function Queue() {
           <span style={styles.radarEmoji}>⚽</span>
         </div>
         <h2 style={styles.title}>Buscando rival{dots}</h2>
-        <p style={styles.subtitle}>{leagueId ? 'Buscando rival en tu liga' : 'Tienes 10 segundos para encontrar partido'}</p>
+        {leagueId
+          ? <p style={styles.subtitle}>Buscando rival en tu liga</p>
+          : <div style={styles.countdownBox}>
+              <span style={styles.countdownNumber}>{countdown}</span>
+              <span style={styles.countdownLabel}>segundos para encontrar rival</span>
+            </div>
+        }
       </div>
       <button style={styles.btnCancel} onClick={() => { cleanup(); navigate('/') }}>Cancelar</button>
     </div>
@@ -233,6 +242,9 @@ const styles = {
   radarEmoji: { fontSize: '2rem', position: 'relative', zIndex: 1 },
   title: { fontSize: '1.5rem', fontWeight: '700', color: '#fff', textAlign: 'center', minWidth: '240px' },
   subtitle: { color: 'rgba(255,255,255,0.3)', fontSize: '0.85rem', textAlign: 'center' },
+  countdownBox: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' },
+  countdownNumber: { fontSize: '3.5rem', fontWeight: '900', color: '#ffb400', lineHeight: 1, fontVariantNumeric: 'tabular-nums' },
+  countdownLabel: { fontSize: '0.85rem', color: 'rgba(255,255,255,0.3)', textAlign: 'center' },
   btnCancel: { background: 'transparent', color: 'rgba(255,255,255,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '1rem 2rem', fontSize: '1rem', cursor: 'pointer', width: '100%' },
   btnPrimary: { background: '#ffb400', color: '#141414', border: 'none', borderRadius: '12px', padding: '1.1rem', fontSize: '1rem', fontWeight: '800', cursor: 'pointer', width: '100%' },
   noMatchIcon: { fontSize: '3rem', color: 'rgba(255,255,255,0.2)', fontWeight: '900', lineHeight: 1, marginBottom: '1rem' },

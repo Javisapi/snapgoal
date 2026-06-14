@@ -62,6 +62,8 @@ export default function Announce() {
       .from('players').select('*').eq('id', oppId).single()
     setOpponent(opp)
 
+    if (m.is_bot_match) setOpponentReady(true)
+
     // Historial enfrentamientos directos
     const { data: h2h } = await supabase.from('matches')
       .select('winner_id,player1_id,player2_id')
