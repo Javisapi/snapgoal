@@ -1087,6 +1087,33 @@ export default function Game() {
     if (xpRes.data) {
       await supabase.from('matches').update({ xp_result: xpRes.data }).eq('id', matchId)
     }
+
+    // Racha diaria y misiones — solo partidos completados normalmente
+    const lastEv = match.last_event ? JSON.parse(match.last_event) : null
+    const isAbandon = lastEv?.label?.includes('abandonó') || lastEv?.label?.includes('inactividad') || lastEv?.label?.includes('desconectado')
+    if (!isAbandon) {
+      const isP1 = match.player1_id === p.id
+      const myScore = isP1 ? match.score_p1 : match.score_p2
+      const oppScore = isP1 ? match.score_p2 : match.score_p1
+      const won = match.winner_id === p.id
+
+      // Contar goles de falta del jugador en este partido
+      const { data: myPlays } = await supabase
+        .from('plays').select('result').eq('match_id', matchId).eq('player_id', p.id)
+      const goalsScored = myPlays?.filter(pl => ['GOL_DIRECTO','FALTA','PENALTY','CORNER'].includes(pl.result)).length || 0
+      const goalsFalta = myPlays?.filter(pl => pl.result === 'FALTA').length || 0
+      const cleanSheet = won && oppScore === 0
+
+      await supabase.rpc('update_daily_streak', { p_player_id: p.id })
+      await supabase.rpc('update_daily_missions', {
+        p_player_id: p.id,
+        p_match_id: matchId,
+        p_won: won,
+        p_goals_scored: goalsScored,
+        p_goals_falta: goalsFalta,
+        p_clean_sheet: cleanSheet,
+      })
+    }
   }
 
   const isP1 = match ? match.player1_id === player?.id : false

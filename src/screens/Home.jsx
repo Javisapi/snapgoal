@@ -26,6 +26,8 @@ const HOME_CSS = `
 export default function Home() {
   const { player, loading, registerPlayer, refreshPlayer } = useAuth()
   const [username, setUsername] = useState('')
+  const [streak, setStreak] = useState(0)
+  const [streak, setStreak] = useState(0)
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -43,6 +45,12 @@ export default function Home() {
   const [recoverLoading, setRecoverLoading] = useState(false)
   usePresenceMap((map) => setOnlineCount(Object.keys(map).length))
   useTrackPresence(player?.id, 'idle')
+
+  useEffect(() => {
+    if (!player?.id) return
+    supabase.from('daily_streaks').select('current_streak').eq('player_id', player.id).single()
+      .then(({ data }) => { if (data) setStreak(data.current_streak) })
+  }, [player?.id])
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const joinCode = searchParams.get('join')
@@ -249,6 +257,7 @@ export default function Home() {
         <div style={{display:'flex', alignItems:'center', gap:'0.6rem'}}>
           <p style={styles.playerName}>{player.username}</p>
           {player?.email_verified && <ProtectedBadge />}
+          {streak > 0 && <span style={{fontSize:'0.8rem',fontWeight:'700',color:'#ffb400',background:'rgba(255,180,0,0.12)',border:'1px solid rgba(255,180,0,0.25)',borderRadius:'20px',padding:'2px 10px',whiteSpace:'nowrap'}}>🔥 {streak}</span>}
         </div>
         <div style={styles.playerMeta}>
           <span style={styles.playerMetaItem}>{player.total_points} pts</span>
@@ -292,19 +301,25 @@ export default function Home() {
           <span style={styles.cardSubLight}>Competir</span>
         </button>
       </div>
-      <button style={styles.academyBtn} onClick={() => navigate('/academy')}>
-        <svg viewBox="0 0 24 24" fill="none" style={{width:'20px',height:'20px',flexShrink:0}}>
-          <circle cx="12" cy="12" r="10" stroke="#ffb400" strokeWidth="1.5" fill="none"/>
-          <circle cx="12" cy="12" r="5.5" stroke="#ffb400" strokeWidth="1" fill="none"/>
-          <circle cx="12" cy="12" r="2" fill="#ffb400"/>
-          <line x1="12" y1="1" x2="12" y2="4" stroke="#ffb400" strokeWidth="1.5" strokeLinecap="round"/>
-          <line x1="12" y1="20" x2="12" y2="23" stroke="#ffb400" strokeWidth="1.5" strokeLinecap="round"/>
-          <line x1="1" y1="12" x2="4" y2="12" stroke="#ffb400" strokeWidth="1.5" strokeLinecap="round"/>
-          <line x1="20" y1="12" x2="23" y2="12" stroke="#ffb400" strokeWidth="1.5" strokeLinecap="round"/>
-        </svg>
-        <span style={styles.academyBtnLabel}>Academy — Entrena tu precisión</span>
-        <span style={styles.academyBtnArrow}>›</span>
-      </button>
+      <div style={{display:'flex',gap:'0.5rem',width:'100%'}}>
+        <button style={styles.academyBtn} onClick={() => navigate('/academy')}>
+          <svg viewBox="0 0 24 24" fill="none" style={{width:'18px',height:'18px',flexShrink:0}}>
+            <circle cx="12" cy="12" r="10" stroke="#ffb400" strokeWidth="1.5" fill="none"/>
+            <circle cx="12" cy="12" r="5.5" stroke="#ffb400" strokeWidth="1" fill="none"/>
+            <circle cx="12" cy="12" r="2" fill="#ffb400"/>
+            <line x1="12" y1="1" x2="12" y2="4" stroke="#ffb400" strokeWidth="1.5" strokeLinecap="round"/>
+            <line x1="12" y1="20" x2="12" y2="23" stroke="#ffb400" strokeWidth="1.5" strokeLinecap="round"/>
+            <line x1="1" y1="12" x2="4" y2="12" stroke="#ffb400" strokeWidth="1.5" strokeLinecap="round"/>
+            <line x1="20" y1="12" x2="23" y2="12" stroke="#ffb400" strokeWidth="1.5" strokeLinecap="round"/>
+          </svg>
+          <span style={styles.academyBtnLabel}>Academy</span>
+        </button>
+        <button style={styles.missionsBtn} onClick={() => navigate('/missions')}>
+          <span style={{fontSize:'1.1rem'}}>⚡</span>
+          <span style={styles.missionsBtnLabel}>Desafíos</span>
+          {streak > 0 && <span style={{fontSize:'0.7rem',color:'#ffb400',fontWeight:'800'}}>🔥{streak}</span>}
+        </button>
+      </div>
 
       <div style={styles.secondaryRow}>
         <button style={styles.btnIcon} onClick={() => navigate('/ranking')}>
@@ -470,9 +485,11 @@ const styles = {
   cardLeagueLabel: { fontSize:'0.95rem', fontWeight:'800', color:'rgba(255,180,0,0.9)', letterSpacing:'0.2px', margin:0 },
   cardSub: { fontSize:'0.7rem', color:'rgba(0,0,0,0.35)', marginTop:'2px', fontWeight:'500' },
   cardSubLight: { fontSize:'0.7rem', color:'rgba(255,180,0,0.4)', marginTop:'2px', fontWeight:'500' },
-  academyBtn: { display:'flex', alignItems:'center', gap:'0.75rem', width:'100%', background:'rgba(255,180,0,0.06)', border:'1px solid rgba(255,180,0,0.2)', borderRadius:'14px', padding:'0.9rem 1rem', cursor:'pointer', textAlign:'left' },
+  academyBtn: { display:'flex', alignItems:'center', gap:'0.75rem', flex:1, background:'rgba(255,180,0,0.06)', border:'1px solid rgba(255,180,0,0.2)', borderRadius:'14px', padding:'0.9rem 1rem', cursor:'pointer', textAlign:'left' },
   academyBtnLabel: { flex:1, fontSize:'0.88rem', fontWeight:'700', color:'rgba(255,180,0,0.8)', letterSpacing:'0.2px' },
   academyBtnArrow: { fontSize:'1.2rem', color:'rgba(255,180,0,0.4)' },
+  missionsBtn: { display:'flex', alignItems:'center', justifyContent:'center', gap:'0.4rem', flex:1, background:'rgba(255,180,0,0.06)', border:'1px solid rgba(255,180,0,0.2)', borderRadius:'14px', padding:'0.9rem 1rem', cursor:'pointer' },
+  missionsBtnLabel: { fontSize:'0.88rem', fontWeight:'700', color:'rgba(255,180,0,0.8)' },
   secondaryRow: { display:'flex', gap:'0.75rem', width:'100%' },
   btnIcon: { flex:1, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:'14px', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', cursor:'pointer', padding:'0.85rem 0.5rem' },
   btnIconLabel: { fontSize:'0.72rem', fontWeight:'600', color:'rgba(255,255,255,0.4)', letterSpacing:'0.5px' },

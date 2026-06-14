@@ -85,6 +85,7 @@ import Ranking from './screens/Ranking'
 import Rules from './screens/Rules'
 import Skills from './screens/Skills'
 import Academy from './screens/Academy'
+import Missions from './screens/Missions'
 import TrainingGame from './screens/TrainingGame'
 import Announce from './screens/Announce'
 import Leagues from './screens/Leagues'
@@ -107,6 +108,7 @@ function App() {
         <Route path="/ranking" element={<Ranking />} />
         <Route path="/skills" element={<Skills />} />
         <Route path="/academy" element={<Academy />} />
+        <Route path="/missions" element={<Missions />} />
         <Route path="/academy/train/:type/:difficulty" element={<TrainingGame />} />
         <Route path="/announce/:matchId" element={<Announce />} />
         <Route path="/leagues" element={<Leagues />} />
