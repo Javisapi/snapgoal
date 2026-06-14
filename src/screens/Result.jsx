@@ -459,6 +459,7 @@ export default function Result() {
           const secs = Math.floor(replayGoalCents / 100)
           const cents = replayGoalCents % 100
           const text = `⚽ ${player?.username} ganó en SnapGoal — ${goalType} en ${String(secs).padStart(2,'0')}:${String(cents).padStart(2,'0')} (${myScore}-${oppScore}). ¡Juega conmigo! ${window.location.origin}/result/${matchId}`
+          console.log('SHARE URL:', `${window.location.origin}/result/${matchId}`, 'matchId:', matchId)
           const url = `https://wa.me/?text=${encodeURIComponent(text)}`
           return (
             <a href={url} target="_blank" rel="noopener noreferrer" style={styles.btnShare}>
