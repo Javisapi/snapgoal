@@ -45,11 +45,16 @@ export function useBotPlayer({ match, matchId, isBotMatch, myTurn }) {
     processingRef.current = false
     if (processingRef.current) return
 
-    // Si hay una falta pendiente y el humano ya tiró (el bot pone la barrera)
-    if (match.pending_type === 'FALTA' && !match.barrier_range) {
+    // Si hay una falta pendiente, el bot pone la barrera SOLO si fue el humano quien tiró
+    // Si fue Cerverai quien cayó en 98, el current_turn sigue en Cerverai — no poner barrera
+    const botIsCurrentTurn = match.current_turn === CERVERAI_ID
+    if (match.pending_type === 'FALTA' && !match.barrier_range && !botIsCurrentTurn) {
       processingRef.current = true
       const [min, max] = BARRIERS[Math.floor(Math.random() * BARRIERS.length)]
       setTimeout(async () => {
+        // Verificar que la barrera sigue sin estar puesta (el humano no la puso ya)
+        const { data: check } = await supabase.from('matches').select('barrier_range').eq('id', matchId).single()
+        if (check?.barrier_range) { processingRef.current = false; return }
         const event = { emoji: '🧤', label: `🧤 Barrera: el tirador debe parar entre ${min} y ${max}` }
         await supabase.from('matches').update({
           barrier_range: JSON.stringify({ min, max }),
