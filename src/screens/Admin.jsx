@@ -57,7 +57,17 @@ function AdminDashboard() {
     const s = document.createElement('style')
     s.textContent = CSS
     document.head.appendChild(s)
+    // Habilitar scroll solo en admin
+    document.body.style.overflow = 'auto'
+    document.documentElement.style.overflow = 'auto'
+    const root = document.getElementById('root')
+    if (root) root.style.overflow = 'auto'
     loadData()
+    return () => {
+      document.body.style.overflow = 'hidden'
+      document.documentElement.style.overflow = 'hidden'
+      if (root) root.style.overflow = 'hidden'
+    }
   }, [])
 
   async function loadData() {
