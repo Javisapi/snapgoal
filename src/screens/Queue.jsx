@@ -49,7 +49,7 @@ export default function Queue() {
     }
   }
 
-  async function createBotMatch(player) {
+  async function createBotMatch(player, leagueId = null) {
     const { data: match, error } = await supabase
       .from('matches')
       .insert({
@@ -60,6 +60,7 @@ export default function Queue() {
         is_bot_match: true,
         bot_name: 'Cerverai',
         player2_ready: true,
+        ...(leagueId ? { league_id: leagueId } : {}),
       })
       .select()
       .single()
@@ -94,13 +95,10 @@ export default function Queue() {
       if (stateRef.current.channel) supabase.removeChannel(stateRef.current.channel)
       stateRef.current.intervals.forEach(i => clearInterval(i))
 
-      // Solo en partidas normales (no liga)
-      if (!leagueId) {
-        const matchId = await createBotMatch(p)
-        if (matchId) {
-          navigate('/announce/' + matchId)
-          return
-        }
+      const matchId = await createBotMatch(p, leagueId || null)
+      if (matchId) {
+        navigate('/announce/' + matchId)
+        return
       }
       setNoMatch(true)
     }, QUEUE_TIMEOUT_MS)
