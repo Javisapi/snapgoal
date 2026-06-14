@@ -40,6 +40,7 @@ export default function Home() {
   const [recoverSent, setRecoverSent] = useState(false)
   const [recoverError, setRecoverError] = useState('')
   const [recoverLoading, setRecoverLoading] = useState(false)
+  useTrackPresence(player?.id, 'idle')
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const joinCode = searchParams.get('join')

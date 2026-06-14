@@ -1,4 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
+import { usePresenceMap } from '../hooks/usePresence'
+import StatusDot from '../components/StatusDot'
 import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
@@ -36,6 +38,8 @@ export default function League() {
   const [members, setMembers] = useState([])
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState('ranking')
+  const [presenceMap, setPresenceMap] = useState({})
+  usePresenceMap(setPresenceMap)
   const [showKick, setShowKick] = useState(null)
   const [showDeleteLeague, setShowDeleteLeague] = useState(false)
   const channelRef = useRef(null)
@@ -220,6 +224,7 @@ export default function League() {
                   </div>
                   <div style={styles.memberInfo}>
                     <div style={styles.memberNameRow}>
+                      <StatusDot status={presenceMap[m.players.id] || 'offline'} size={8} />
                       <span style={styles.memberName}>{m.players.username}</span>
                       {isAdminMember && <span style={styles.adminBadge}>Admin</span>}
                       {isMe && <span style={styles.meBadge}>tú</span>}
@@ -246,6 +251,7 @@ export default function League() {
                 <div key={m.id} style={{ ...styles.memberCard, animation: `fadeIn 0.3s ease ${i * 0.04}s both` }}>
                   <div style={styles.memberInfo}>
                     <div style={styles.memberNameRow}>
+                      <StatusDot status={presenceMap[m.players.id] || 'offline'} size={8} />
                       <span style={styles.memberName}>{m.players.username}</span>
                       {isAdminMember && <span style={styles.adminBadge}>Admin</span>}
                       {isMe && <span style={styles.meBadge}>tú</span>}

@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import LatencyIndicator from '../components/LatencyIndicator'
+import { useTrackPresence } from '../hooks/usePresence'
 
 const GAME_CSS = `
   @keyframes eventFlash { 0%{opacity:0;transform:scale(0.8)} 30%{opacity:1;transform:scale(1.05)} 60%{opacity:1;transform:scale(1)} 100%{opacity:0;transform:scale(0.95)} }
@@ -67,6 +68,7 @@ export default function Game() {
   const navigate = useNavigate()
 
   const [player, setPlayer] = useState(null)
+  useTrackPresence(player?.id, 'playing')
   const [match, setMatch] = useState(null)
   const [opponent, setOpponent] = useState(null)
   const [centesimas, setCentesimas] = useState(0)

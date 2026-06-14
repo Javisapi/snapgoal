@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { usePresenceMap } from '../hooks/usePresence'
+import StatusDot from '../components/StatusDot'
 import { ProtectedBadge } from '../components/ProtectAccount'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
@@ -30,6 +32,8 @@ function avg(val, matches) {
 export default function Ranking() {
   const navigate = useNavigate()
   const [players, setPlayers] = useState([])
+  const [presenceMap, setPresenceMap] = useState({})
+  usePresenceMap(setPresenceMap)
   const [me, setMe] = useState(null)
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState(null)
@@ -91,6 +95,7 @@ export default function Ranking() {
                 </div>
                 <div style={styles.playerInfo}>
                   <div style={styles.playerTopRow}>
+                    <StatusDot status={presenceMap[p.id] || 'offline'} size={8} />
                     <span style={styles.playerUsername}>{p.username}</span>
                     {p.email_verified && <ProtectedBadge size={14} />}
                     {isMe && <span style={styles.youBadge}>tú</span>}
