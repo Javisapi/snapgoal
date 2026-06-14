@@ -219,13 +219,10 @@ export default function Queue() {
           <span style={styles.radarEmoji}>⚽</span>
         </div>
         <h2 style={styles.title}>Buscando rival{dots}</h2>
-        {leagueId
-          ? <p style={styles.subtitle}>Buscando rival en tu liga</p>
-          : <div style={styles.countdownBox}>
-              <span style={styles.countdownNumber}>{countdown}</span>
-              <span style={styles.countdownLabel}>segundos para encontrar rival</span>
-            </div>
-        }
+        <div style={styles.countdownBox}>
+          <span style={styles.countdownNumber}>{countdown}</span>
+          <span style={styles.countdownLabel}>{leagueId ? 'segundos para encontrar rival en tu liga' : 'segundos para encontrar rival'}</span>
+        </div>
       </div>
       <button style={styles.btnCancel} onClick={() => { cleanup(); navigate('/') }}>Cancelar</button>
     </div>
