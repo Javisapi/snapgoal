@@ -63,6 +63,7 @@ export default function Result() {
   const [showReplay, setShowReplay] = useState(true)
   const [replayCents, setReplayCents] = useState(null)
   const [replayResult, setReplayResult] = useState(null)
+  const [replayGoalCents, setReplayGoalCents] = useState(null)
   const replayIntervalRef = useRef(null)
 
   useEffect(() => {
@@ -133,17 +134,19 @@ export default function Result() {
     // La jugada anterior en el orden global (puede ser del rival)
     const prevPlay = lastGoalIdx > 0 ? allPlays[lastGoalIdx - 1] : null
     const startCents = prevPlay ? prevPlay.centesimas : Math.max(0, finalCents - 25)
+    const goalCents = lastPlay ? lastPlay.centesimas : finalCents
     const lastPlayResult = lastPlay?.result || 'GOL_DIRECTO'
 
     setReplayResult(lastPlayResult)
+    setReplayGoalCents(goalCents)
     setReplayCents(startCents)
     let current = startCents
-    const totalFrames = Math.max(finalCents - startCents, 1)
+    const totalFrames = Math.max(goalCents - startCents, 1)
     const frameDuration = Math.min(Math.max(Math.floor(2400 / totalFrames), 20), 120)
     replayIntervalRef.current = setInterval(() => {
       current += 1
       setReplayCents(current)
-      if (current >= finalCents) {
+      if (current >= goalCents) {
         clearInterval(replayIntervalRef.current)
         setTimeout(() => setShowReplay(false), 1000)
       }
@@ -292,7 +295,7 @@ export default function Result() {
 
   const replaySecs = replayCents !== null ? Math.floor(replayCents / 100) : 0
   const replayCentsDisplay = replayCents !== null ? replayCents % 100 : 0
-  const isLastFrame = replayCents !== null && replayCents >= (match.elapsed_centesimas || 0)
+  const isLastFrame = replayCents !== null && replayGoalCents !== null && replayCents >= replayGoalCents
 
   const goalTypeLabel = {
     'GOL_DIRECTO': 'Gol directo',
