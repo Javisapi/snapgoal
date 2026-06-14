@@ -190,6 +190,13 @@ async function botProcessPlay(total, matchId, match, processingRef) {
     else if (last2 === 97) {
       // Corner
       event = { emoji: '🚩', label: '🚩 CÓRNER de Cerverai — para en múltiplo de 10 para GOL' }
+      await supabase.from('plays').insert({
+        match_id: matchId,
+        player_id: CERVERAI_ID,
+        centesimas: total,
+        result: 'CORNER',
+        points_scored: 0,
+      })
       await supabase.from('matches').update({
         elapsed_centesimas: total,
         timer_running: false,
@@ -239,11 +246,16 @@ async function botProcessPlay(total, matchId, match, processingRef) {
     return
   }
 
+  const resultType = pending || (
+    last2 === 0 ? 'GOL_DIRECTO' :
+    last2 === 13 ? 'GOL_PROPIO' :
+    'NORMAL'
+  )
   await supabase.from('plays').insert({
     match_id: matchId,
     player_id: CERVERAI_ID,
     centesimas: total,
-    result: pending || 'NORMAL',
+    result: resultType,
     points_scored: 0,
   })
 
