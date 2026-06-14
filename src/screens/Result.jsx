@@ -302,7 +302,7 @@ export default function Result() {
       </div>
 
       <div style={{ ...styles.btnGroup, animation: 'slideUp 0.4s ease 0.6s both' }}>
-        {rematchStatus === 'received' && rematchRequest && (
+        {rematchStatus === 'received' && rematchRequest && !match?.is_bot_match && (
           <div style={styles.rematchBox}>
             <p style={styles.rematchTitle}>⚔️ {opponent.username} quiere la revancha</p>
             <div style={styles.rematchBtns}>
@@ -311,17 +311,17 @@ export default function Result() {
             </div>
           </div>
         )}
-        {rematchStatus === 'sent' && (
+        {rematchStatus === 'sent' && !match?.is_bot_match && (
           <div style={styles.rematchBox}>
             <p style={styles.rematchTitle}>⏳ Esperando respuesta...</p>
           </div>
         )}
-        {rematchStatus === 'rejected' && (
+        {rematchStatus === 'rejected' && !match?.is_bot_match && (
           <div style={styles.rematchBox}>
             <p style={styles.rematchTitle}>❌ Revancha rechazada</p>
           </div>
         )}
-        {!rematchStatus && (
+        {!rematchStatus && !match?.is_bot_match && (
           <button style={styles.btnRematch} onClick={sendRematch}>⚔️ Revancha</button>
         )}
         <button style={styles.btnPrimary} onClick={() => {

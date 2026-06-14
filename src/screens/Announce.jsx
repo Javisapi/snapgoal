@@ -139,14 +139,23 @@ export default function Announce() {
     const isP1 = match.player1_id === player.id
     const update = isP1 ? { player1_ready: true } : { player2_ready: true }
 
-    // Verificar si el rival ya está listo
+    if (match.is_bot_match) {
+      clearInterval(countdownRef.current)
+      await supabase.from('matches').update({
+        ...update,
+        status: 'playing',
+        turn_started_at: new Date().toISOString(),
+      }).eq('id', matchId)
+      navigate('/game/' + matchId)
+      return
+    }
+
+    // Lógica original para partidas humano vs humano
     const { data: current } = await supabase
       .from('matches').select('*').eq('id', matchId).single()
-
     const bothReady = isP1
       ? (current.player2_ready === true)
       : (current.player1_ready === true)
-
     if (bothReady) {
       clearInterval(countdownRef.current)
       await supabase.from('matches').update({

@@ -4,6 +4,8 @@ import { supabase } from '../lib/supabase'
 import LatencyIndicator from '../components/LatencyIndicator'
 
 
+const CERVERAI_ID = 'ec21fbbe-c14f-4677-aa19-052fd54ff364'
+
 const parseJ = (val, fallback) => {
   if (!val) return fallback
   if (typeof val === 'object') return val
@@ -56,6 +58,118 @@ export default function Shootout() {
   const playerRef = useRef(null)
   const channelRef = useRef(null)
   const lastTapRef = useRef(0)
+
+  // Bot: Cerverai en shootout
+  useEffect(() => {
+    if (!match || !player) return
+    if (!match.is_bot_match) return
+    const state = parseJ(match.shootout_state, {})
+    const isP1 = match.player1_id === player.id
+    // Es turno del bot si: a ya tiró (a_scored !== null) y b aún no (b_scored === null) y b no eligió
+    const botTurn = state.a_scored !== null && state.b_scored === null && !state.b_choice
+    if (!botTurn) return
+    if (processingRef.current) return
+
+    processingRef.current = true
+    // Cerverai elige impar y tira automáticamente
+    setTimeout(async () => {
+      const choice = 'impar'
+      const newState = { ...state, b_choice: choice }
+      await supabase.from('matches').update({
+        shootout_state: newState,
+        last_event: JSON.stringify({ label: 'Cerverai eligió IMPAR' }),
+      }).eq('id', matchId)
+
+      // Pequeña pausa antes de tirar
+      await new Promise(r => setTimeout(r, 800 + Math.random() * 800))
+
+      // Tirar: centésima aleatoria
+      const fresh = matchRef.current
+      if (!fresh || fresh.status === 'finished') { processingRef.current = false; return }
+      const base = fresh.elapsed_centesimas || 0
+      const cents = Math.floor(Math.random() * 100)
+      const total = base + cents
+      const last1 = total % 10
+      const gol = last1 % 2 !== 0 // impar
+
+      // Leer estado más fresco
+      const { data: freshMatch } = await supabase.from('matches').select('*').eq('id', matchId).single()
+      if (!freshMatch || freshMatch.status === 'finished') { processingRef.current = false; return }
+      const freshState = parseJ(freshMatch.shootout_state, {})
+      const freshScore = parseJ(freshMatch.shootout_score, { a: 0, b: 0 })
+
+      const newState2 = { ...freshState, b_scored: gol, b_choice: choice }
+      const newScore = { ...freshScore, b: freshScore.b + (gol ? 1 : 0) }
+      const label = gol
+        ? `⚽ Gol de Cerverai (${choice}, ${last1})`
+        : `🥅 Penalty fallado por Cerverai (${choice}, ${last1})`
+
+      const aScored = freshState.a_scored
+      const round = freshState.round || 1
+
+      // Dejar que la misma lógica de resolveShootoutPenalty decida el fin
+      let updates = {
+        shootout_state: newState2,
+        shootout_score: newScore,
+        elapsed_centesimas: total,
+        timer_running: false,
+        last_event: JSON.stringify({ label }),
+        current_turn: freshMatch.player1_id,
+      }
+
+      if (aScored !== null) {
+        // Ambos han tirado esta ronda
+        if (aScored && !gol) {
+          // A metió, B falló — gana A
+          const sp1 = freshMatch.score_p1 + 1
+          await supabase.from('matches').update({
+            ...updates,
+            score_p1: sp1, score_p2: freshMatch.score_p2,
+            status: 'finished',
+            winner_id: freshMatch.player1_id,
+            ended_at: new Date().toISOString(),
+          }).eq('id', matchId)
+          await supabase.rpc('finalize_match_stats', {
+            p_match_id: matchId,
+            p_player1_id: freshMatch.player1_id,
+            p_player2_id: freshMatch.player2_id,
+            p_score1: sp1, p_score2: freshMatch.score_p2,
+            p_cards_p1: freshMatch.cards_p1 || { yellow: 0, red: 0 },
+            p_cards_p2: freshMatch.cards_p2 || { yellow: 0, red: 0 },
+          })
+        } else if (!aScored && gol) {
+          // A falló, B metió — gana B
+          const sp2 = freshMatch.score_p2 + 1
+          await supabase.from('matches').update({
+            ...updates,
+            score_p1: freshMatch.score_p1, score_p2: sp2,
+            status: 'finished',
+            winner_id: freshMatch.player2_id,
+            ended_at: new Date().toISOString(),
+          }).eq('id', matchId)
+          await supabase.rpc('finalize_match_stats', {
+            p_match_id: matchId,
+            p_player1_id: freshMatch.player1_id,
+            p_player2_id: freshMatch.player2_id,
+            p_score1: freshMatch.score_p1, p_score2: sp2,
+            p_cards_p1: freshMatch.cards_p1 || { yellow: 0, red: 0 },
+            p_cards_p2: freshMatch.cards_p2 || { yellow: 0, red: 0 },
+          })
+        } else {
+          // Empate en la ronda — siguiente ronda
+          await supabase.from('matches').update({
+            ...updates,
+            shootout_state: { round: round + 1, a_scored: null, b_scored: null, a_choice: null, b_choice: null },
+            current_turn: freshMatch.player1_id,
+          }).eq('id', matchId)
+        }
+      } else {
+        await supabase.from('matches').update(updates).eq('id', matchId)
+      }
+
+      processingRef.current = false
+    }, 1000 + Math.random() * 1000)
+  }, [match?.shootout_state, match?.is_bot_match])
 
   useEffect(() => {
     const s = document.createElement('style')

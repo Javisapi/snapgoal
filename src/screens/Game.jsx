@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import LatencyIndicator from '../components/LatencyIndicator'
 import { useTrackPresence } from '../hooks/usePresence'
+import { useBotPlayer } from '../hooks/useBotPlayer'
 
 const GAME_CSS = `
   @keyframes eventFlash { 0%{opacity:0;transform:scale(0.8)} 30%{opacity:1;transform:scale(1.05)} 60%{opacity:1;transform:scale(1)} 100%{opacity:0;transform:scale(0.95)} }
@@ -84,6 +85,9 @@ export default function Game() {
   const [chatMsg, setChatMsg] = useState(null)
   const [showChat, setShowChat] = useState(false)
   const [leagueId, setLeagueId] = useState(null)
+  const isBotMatch = match?.is_bot_match || false
+
+  useBotPlayer({ match, matchId, isBotMatch, myTurn })
   const [inactivityProgress, setInactivityProgress] = useState(0)
   const [inactivityWarning, setInactivityWarning] = useState(false)
   const [cards, setCards] = useState({ p1: { yellow: 0, red: 0 }, p2: { yellow: 0, red: 0 } })
@@ -462,6 +466,7 @@ export default function Game() {
     }, 10)
   }
   function startDisconnectWatcher(m, p) {
+    if (m.is_bot_match) return
     clearTimeout(warnRef.current)
     clearTimeout(disconnectRef.current)
     warnRef.current = setTimeout(() => {
@@ -748,14 +753,19 @@ export default function Game() {
 
     if (ev.result === 'FALTA') {
       // Guardar pending y esperar que el rival elija la barrera
-      const event = { emoji: '🧤', label: `🧤 FALTA de ${p.username} — el rival elige la barrera` }
+      const isBotGame = matchRef.current?.is_bot_match || false
+      const autoBarrier = isBotGame ? JSON.stringify({ min: 30, max: 35 }) : null
+      const event = isBotGame
+        ? { emoji: '🧤', label: `🧤 FALTA de ${p.username} — barrera en 30-35` }
+        : { emoji: '🧤', label: `🧤 FALTA de ${p.username} — el rival elige la barrera` }
       setLastPlay(event)
       setPendingType('FALTA')
+      if (isBotGame) setBarrierOptions(null)
       await supabase.from('matches').update({
         elapsed_centesimas: total,
         timer_running: false,
         pending_type: 'FALTA',
-        barrier_range: null,
+        barrier_range: autoBarrier,
         last_event: JSON.stringify(event),
         turn_started_at: new Date().toISOString(),
         turn_sequence: (matchRef.current?.turn_sequence || 0) + 1,
