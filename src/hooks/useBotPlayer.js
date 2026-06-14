@@ -4,8 +4,30 @@ import { supabase } from '../lib/supabase'
 const CERVERAI_ID = 'ec21fbbe-c14f-4677-aa19-052fd54ff364'
 const BARRIERS = [[20,25],[30,35],[40,45]]
 
-function randomCentesima() {
-  return Math.floor(Math.random() * 100)
+function randomCentesima(base, pending, barrierRange) {
+  const pos = base % 100
+
+  // Falta: apuntar a la ventana elegida por el humano
+  if (pending === 'FALTA' && barrierRange) {
+    const { min, max } = barrierRange
+    const r = Math.random()
+    if (r < 0.60) return min + Math.floor(Math.random() * (max - min + 1))
+    if (r < 0.80) return Math.max(0, min - 1 - Math.floor(Math.random() * 7))
+    return Math.min(99, max + 1 + Math.floor(Math.random() * 7))
+  }
+
+  // Si estamos entre 83-93, tirar corto (7-15 centésimas) para intentar llegar a 00
+  if (pos >= 83 && pos <= 93) {
+    return 7 + Math.floor(Math.random() * 9)
+  }
+  // Distribución sesgada hacia valores altos (cercanos a 99/00)
+  const r = Math.random()
+  if (r < 0.50) {
+    const v = 85 + Math.floor(Math.random() * 22)
+    return v > 99 ? v - 100 : v
+  }
+  if (r < 0.80) return 70 + Math.floor(Math.random() * 15)
+  return Math.floor(Math.random() * 70)
 }
 
 function randomDelay() {
@@ -20,6 +42,7 @@ export function useBotPlayer({ match, matchId, isBotMatch, myTurn }) {
     if (!match) return
     if (myTurn) return           // es el turno del humano
     if (match.status !== 'playing') return
+    processingRef.current = false
     if (processingRef.current) return
 
     // Si hay una falta pendiente y el humano ya tiró (el bot pone la barrera)
@@ -69,7 +92,6 @@ export function useBotPlayer({ match, matchId, isBotMatch, myTurn }) {
     processingRef.current = true
 
     setTimeout(async () => {
-      const cents = randomCentesima()
       const now = new Date().toISOString()
 
       // Arrancar timer
@@ -79,11 +101,11 @@ export function useBotPlayer({ match, matchId, isBotMatch, myTurn }) {
         turn_started_at: now,
       }).eq('id', matchId)
 
-      // Parar después de un tiempo que genere esa centésima
-      // Usamos elapsed_centesimas actual + cents como total
       const { data: current } = await supabase
         .from('matches').select('elapsed_centesimas').eq('id', matchId).single()
       const base = current?.elapsed_centesimas || 0
+      const barrierRange = match.barrier_range ? JSON.parse(match.barrier_range) : null
+      const cents = randomCentesima(base, match.pending_type, barrierRange)
       const total = base + cents
 
       // Pequeña pausa para que el timer sea visible
