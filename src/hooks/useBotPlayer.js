@@ -301,7 +301,7 @@ async function botProcessPlay(total, matchId, match, processingRef) {
     const goalsFalta = humanPlays?.filter(pl => pl.result === 'FALTA').length || 0
 
     await supabase.rpc('update_daily_streak', { p_player_id: humanId })
-    await supabase.rpc('update_daily_missions', {
+    const missionsRes = await supabase.rpc('update_daily_missions', {
       p_player_id: humanId,
       p_match_id: matchId,
       p_won: humanWon,
@@ -309,6 +309,9 @@ async function botProcessPlay(total, matchId, match, processingRef) {
       p_goals_falta: goalsFalta,
       p_clean_sheet: cleanSheet,
     })
+    if (missionsRes.data?.completed_missions?.length > 0) {
+      await supabase.from('matches').update({ missions_result: missionsRes.data }).eq('id', matchId)
+    }
   }
 
   processingRef.current = false

@@ -256,7 +256,6 @@ export default function Home() {
         <div style={{display:'flex', alignItems:'center', gap:'0.6rem'}}>
           <p style={styles.playerName}>{player.username}</p>
           {player?.email_verified && <ProtectedBadge />}
-          {streak > 0 && <span style={{fontSize:'0.8rem',fontWeight:'700',color:'#ffb400',background:'rgba(255,180,0,0.12)',border:'1px solid rgba(255,180,0,0.25)',borderRadius:'20px',padding:'2px 10px',whiteSpace:'nowrap'}}>🔥 {streak}</span>}
         </div>
         <div style={styles.playerMeta}>
           <span style={styles.playerMetaItem}>{player.total_points} pts</span>
@@ -314,8 +313,8 @@ export default function Home() {
           <span style={styles.academyBtnLabel}>Academy</span>
         </button>
         <button style={styles.missionsBtn} onClick={() => navigate('/missions')}>
-          <span style={{fontSize:'1.1rem'}}>⚡</span>
-          <span style={styles.missionsBtnLabel}>Desafíos</span>
+          <span style={{fontSize:'1.1rem'}}>🏟️</span>
+          <span style={styles.missionsBtnLabel}>Vestuario</span>
           {streak > 0 && <span style={{fontSize:'0.7rem',color:'#ffb400',fontWeight:'800'}}>🔥{streak}</span>}
         </button>
       </div>

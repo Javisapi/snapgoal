@@ -24,6 +24,8 @@ const CSS = `
   @keyframes replayGoalPop { 0%{opacity:0;transform:scale(0.5)} 60%{transform:scale(1.15)} 100%{opacity:1;transform:scale(1)} }
   @keyframes replayRing { 0%{transform:scale(0.8);opacity:0.8} 100%{transform:scale(2.5);opacity:0} }
   @keyframes recBlink { 0%,100%{opacity:1} 50%{opacity:0} }
+  @keyframes missionBannerIn { 0%{opacity:0;transform:translateY(30px) scale(0.95)} 100%{opacity:1;transform:translateY(0) scale(1)} }
+  @keyframes missionBannerOut { 0%{opacity:1;transform:scale(1)} 100%{opacity:0;transform:scale(0.95)} }
   @keyframes particleFloat { 0%{transform:translateY(0) rotate(0deg);opacity:1} 100%{transform:translateY(-120px) rotate(180deg);opacity:0} }
 `
 
@@ -60,6 +62,9 @@ export default function Result() {
   const [xpDelta, setXpDelta] = useState(null)
   const [rematchRequest, setRematchRequest] = useState(null)
   const channelRef = useRef(null)
+  const [completedMissions, setCompletedMissions] = useState([])
+  const [showMissionBanner, setShowMissionBanner] = useState(false)
+  const [currentMissionIdx, setCurrentMissionIdx] = useState(0)
   const [showReplay, setShowReplay] = useState(true)
   const [replayCents, setReplayCents] = useState(null)
   const [replayResult, setReplayResult] = useState(null)
@@ -109,6 +114,12 @@ export default function Result() {
     }
 
     setMatch(m)
+
+    // Misiones completadas en este partido
+    if (m.missions_result?.completed_missions?.length > 0) {
+      setCompletedMissions(m.missions_result.completed_missions)
+      setShowMissionBanner(true)
+    }
 
     // Replay del último gol — obtener todas las jugadas ordenadas globalmente
     const { data: allPlays } = await supabase
@@ -305,6 +316,61 @@ export default function Result() {
     'GOL_PROPIO': 'Gol en propia',
     'NORMAL': 'Gol',
   }[replayResult] || 'Gol'
+
+  // Banner de misión completada — pantalla intermedia entre replay y resultado
+  if (showMissionBanner && completedMissions.length > 0) {
+    const mission = completedMissions[currentMissionIdx]
+    const missionNames = {
+      win_streak_3: 'Hat-Trick de Victorias',
+      goals_20: 'Beast Mode',
+      clean_sheet_win: 'Muralla Infranqueable',
+      falta_goals_10: 'Sniper de Élite',
+      play_10: 'Maratoniano',
+      secret: '¡Accidente Histórico!',
+    }
+    const missionIcons = {
+      win_streak_3: '🏆', goals_20: '💥', clean_sheet_win: '🛡️',
+      falta_goals_10: '⚡', play_10: '🎮', secret: '💥',
+    }
+    setTimeout(() => {
+      if (currentMissionIdx + 1 < completedMissions.length) {
+        setCurrentMissionIdx(i => i + 1)
+      } else {
+        setShowMissionBanner(false)
+      }
+    }, 2500)
+    return (
+      <div style={{ height:'100%', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', background:'#141414', padding:'3rem 2rem', gap:'2.5rem', animation:'missionBannerIn 0.4s ease forwards' }}>
+        <p style={{ fontSize:'0.65rem', color:'rgba(255,255,255,0.25)', letterSpacing:'3px', textTransform:'uppercase', margin:0 }}>MISIÓN COMPLETADA</p>
+        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'1rem' }}>
+          <span style={{ fontSize:'5rem', lineHeight:1 }}>{missionIcons[mission.mission] || '⚡'}</span>
+          <h2 style={{ fontSize:'2rem', fontWeight:'900', color:'#ffb400', margin:0, textAlign:'center', letterSpacing:'-0.5px', textShadow:'0 0 30px rgba(255,180,0,0.4)' }}>
+            {missionNames[mission.mission] || mission.mission}
+          </h2>
+        </div>
+        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'0.75rem' }}>
+          <p style={{ fontSize:'0.8rem', color:'rgba(255,255,255,0.3)', margin:0, letterSpacing:'1px' }}>RECOMPENSA</p>
+          <div style={{ display:'flex', gap:'1rem' }}>
+            <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'4px', background:'rgba(255,180,0,0.1)', border:'1px solid rgba(255,180,0,0.25)', borderRadius:'14px', padding:'1rem 1.5rem' }}>
+              <span style={{ fontSize:'1.8rem' }}>🎯</span>
+              <span style={{ fontSize:'1.2rem', fontWeight:'900', color:'#ffb400' }}>+{mission.snipers}</span>
+              <span style={{ fontSize:'0.65rem', color:'rgba(255,255,255,0.3)' }}>Sniper</span>
+            </div>
+            <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'4px', background:'rgba(255,180,0,0.1)', border:'1px solid rgba(255,180,0,0.25)', borderRadius:'14px', padding:'1rem 1.5rem' }}>
+              <span style={{ fontSize:'1.8rem' }}>🧤</span>
+              <span style={{ fontSize:'1.2rem', fontWeight:'900', color:'#ffb400' }}>+{mission.gloves}</span>
+              <span style={{ fontSize:'0.65rem', color:'rgba(255,255,255,0.3)' }}>Iron Fist</span>
+            </div>
+          </div>
+        </div>
+        {completedMissions.length > 1 && (
+          <p style={{ fontSize:'0.7rem', color:'rgba(255,255,255,0.2)', margin:0 }}>
+            {currentMissionIdx + 1} de {completedMissions.length}
+          </p>
+        )}
+      </div>
+    )
+  }
 
   if (showReplay && replayCents !== null) return (
     <div style={{ height:'100%', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'space-between', background:'#141414', position:'relative', animation:'replayIn 0.3s ease forwards', padding:'3rem 2rem 2.5rem' }}>

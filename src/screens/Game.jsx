@@ -1113,7 +1113,7 @@ export default function Game() {
       const cleanSheet = won && oppScore === 0
 
       await supabase.rpc('update_daily_streak', { p_player_id: p.id })
-      await supabase.rpc('update_daily_missions', {
+      const missionsRes = await supabase.rpc('update_daily_missions', {
         p_player_id: p.id,
         p_match_id: matchId,
         p_won: won,
@@ -1121,6 +1121,9 @@ export default function Game() {
         p_goals_falta: goalsFalta,
         p_clean_sheet: cleanSheet,
       })
+      if (missionsRes.data?.completed_missions?.length > 0) {
+        await supabase.from('matches').update({ missions_result: missionsRes.data }).eq('id', matchId)
+      }
     }
   }
 
