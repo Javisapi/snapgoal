@@ -174,7 +174,7 @@ export default function Rules() {
 const styles = {
   container: { height: '100%', display: 'flex', flexDirection: 'column', background: '#141414', overflow: 'hidden' },
   header: { padding: '2.5rem 1.75rem 1rem', flexShrink: 0 },
-  tutorialBtn: { position: 'fixed', bottom: '1.5rem', left: '1.5rem', right: '1.5rem', width: 'calc(100% - 3rem)', background: 'rgba(20,20,20,0.97)', border: '1px solid rgba(255,220,120,0.5)', borderRadius: '14px', color: '#ffe085', fontSize: '0.95rem', fontWeight: '800', cursor: 'pointer', padding: '1rem', zIndex: 100, animation: 'tutorialGlow 2s ease-in-out infinite' },
+  tutorialBtn: { position: 'fixed', bottom: '1.5rem', left: '1.5rem', right: '1.5rem', width: 'calc(100% - 3rem)', background: 'rgba(96,165,250,0.12)', border: '1px solid rgba(147,197,253,0.4)', borderRadius: '14px', color: '#93c5fd', fontSize: '0.95rem', fontWeight: '800', cursor: 'pointer', padding: '1rem', zIndex: 100, animation: 'tutorialBtnGlow 2s ease-in-out infinite' },
   backBtn: { background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.25)', fontSize: '0.8rem', cursor: 'pointer', padding: 0, marginBottom: '1rem', letterSpacing: '0.5px' },
   headerTitle: { display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '0.5rem' },
   title: { fontSize: '2.5rem', fontWeight: '900', color: '#fff', letterSpacing: '-2px', margin: 0, lineHeight: 1 },
