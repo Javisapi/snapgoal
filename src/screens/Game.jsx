@@ -371,8 +371,11 @@ export default function Game() {
           stopInactivityTimer()
         }
 
-        if (updated.pending_type === 'SHOOTOUT' && updated.status !== 'finished') {
-          if (mountedRef.current) navigate('/shootout/' + matchId)
+        if (updated.status === 'shootout') {
+          if (mountedRef.current && !navigatedToShootoutRef.current) {
+            navigatedToShootoutRef.current = true
+            setTimeout(() => navigate('/shootout/' + matchId), 2000)
+          }
           return
         }
         if (updated.status === 'finished') {
@@ -583,6 +586,7 @@ export default function Game() {
   }
 
   const lastFlashedEventRef = useRef(null)
+  const navigatedToShootoutRef = useRef(false)
   const touchFiredRef = useRef(false)
 
   function handleTouch(e) {
@@ -1038,7 +1042,10 @@ export default function Game() {
         last_event: JSON.stringify({ emoji: '🥅', label: 'Penaltis a muerte súbita' }),
         current_turn: m.player1_id,
       }).eq('id', matchId)
-      if (mountedRef.current) setTimeout(() => navigate('/shootout/' + matchId), 2000)
+      if (mountedRef.current && !navigatedToShootoutRef.current) {
+        navigatedToShootoutRef.current = true
+        setTimeout(() => navigate('/shootout/' + matchId), 2000)
+      }
       return
     }
 
