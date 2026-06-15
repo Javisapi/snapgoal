@@ -193,8 +193,9 @@ export default function Missions() {
       {/* Misiones del día */}
       <div style={styles.sectionHeader}>
         <p style={styles.sectionTitle}>MISIONES DE HOY</p>
-        <p style={styles.sectionSub}>{completedToday}/5 completadas · Se reinician a medianoche</p>
+        <p style={styles.sectionCompleted}>{completedToday}/5 completadas</p>
       </div>
+      <p style={styles.sectionReset}>Todas las misiones se reinician a medianoche CE(S)T</p>
       <p style={styles.missionsNote}>Solo cuentan partidos completados — los abandonos no suman.</p>
 
       <div style={styles.missionsList}>
@@ -317,9 +318,10 @@ const styles = {
   streakCircles: { display: 'flex', gap: '0.5rem', justifyContent: 'center' },
   streakCircle: { width: '44px', height: '44px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s ease' },
   streakHint: { fontSize: '0.72rem', color: 'rgba(255,255,255,0.25)', margin: 0, textAlign: 'center' },
-  sectionHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' },
-  sectionTitle: { fontSize: '0.65rem', color: 'rgba(255,255,255,0.3)', letterSpacing: '2px', margin: 0 },
-  sectionSub: { fontSize: '0.65rem', color: 'rgba(255,255,255,0.2)', margin: 0 },
+  sectionHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+  sectionTitle: { fontSize: '1.1rem', fontWeight: '800', color: '#ffb400', margin: 0, letterSpacing: '-0.3px' },
+  sectionCompleted: { fontSize: '0.85rem', fontWeight: '700', color: 'rgba(255,255,255,0.5)', margin: 0 },
+  sectionReset: { fontSize: '0.7rem', color: 'rgba(255,255,255,0.2)', margin: '-0.5rem 0 0' },
   missionsList: { display: 'flex', flexDirection: 'column', gap: '0.75rem' },
   missionsNote: { fontSize: '0.72rem', color: 'rgba(255,80,80,0.7)', margin: '-0.25rem 0 0' },
   missionCard: { border: '1px solid', borderRadius: '14px', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.6rem', transition: 'all 0.3s ease' },
