@@ -4,10 +4,19 @@ import { supabase } from '../lib/supabase'
 const CERVERAI_ID = 'ec21fbbe-c14f-4677-aa19-052fd54ff364'
 const BARRIERS = [[20,25],[30,35],[40,45]]
 
-function humanError() {
-  // Error de reflejos: ±4 centésimas del objetivo, sesgado hacia 0
-  const errors = [-8,-6,-4,-3,-2,-1,-1,0,0,0,1,1,2,3,4,6,8]
-  return errors[Math.floor(Math.random() * errors.length)]
+function humanError(dist) {
+  // Error proporcional a la distancia (A) con zonas definidas (B)
+  // Cuanto más lejos del objetivo, mayor margen de error
+  let maxErr
+  if (dist <= 20)      maxErr = Math.max(2, Math.round(dist / 7))   // zona caliente: ±2-3
+  else if (dist <= 45) maxErr = Math.max(4, Math.round(dist / 7))   // zona media: ±3-6
+  else                 maxErr = Math.max(7, Math.round(dist / 7))   // zona fría: ±7-14
+
+  // Error aleatorio entre -maxErr y +maxErr, sesgado hacia 0
+  const range = maxErr * 2 + 1
+  const raw = Math.floor(Math.random() * range) - maxErr
+  // Sesgo hacia 0: promediar con otro random
+  return Math.round((raw + (Math.floor(Math.random() * range) - maxErr)) / 2)
 }
 
 function randomCentesima(base, pending, barrierRange) {
@@ -20,7 +29,8 @@ function randomCentesima(base, pending, barrierRange) {
     if (Math.random() < 0.80) {
       // 80%: apuntar al centro de la barrera con error ±8
       const target = center - pos
-      const raw = (target <= 0 ? target + 100 : target) + humanError()
+      const distToCenter = target <= 0 ? target + 100 : target
+      const raw = distToCenter + humanError(distToCenter)
       return Math.max(7, raw)
     }
     // 10%: error mayor — puede fallar
@@ -34,13 +44,13 @@ function randomCentesima(base, pending, barrierRange) {
   if (pending === 'CORNER') {
     const nextMultiple = pos === 0 ? 10 : Math.ceil((pos + 1) / 10) * 10
     const dist = nextMultiple - pos
-    return Math.max(7, dist + humanError())
+    return Math.max(7, dist + humanError(dist))
   }
 
   // Tirada normal: 80% apunta a :00 ±8 centésimas, 20% distribución aleatoria
   if (Math.random() < 0.80) {
     const distToNext00 = pos === 0 ? 100 : 100 - pos
-    return Math.max(7, distToNext00 + humanError())
+    return Math.max(7, distToNext00 + humanError(distToNext00))
   }
 
   // 10% — distribución imprecisa (error humano mayor)
