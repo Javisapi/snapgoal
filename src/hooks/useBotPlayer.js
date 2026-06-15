@@ -4,23 +4,49 @@ import { supabase } from '../lib/supabase'
 const CERVERAI_ID = 'ec21fbbe-c14f-4677-aa19-052fd54ff364'
 const BARRIERS = [[20,25],[30,35],[40,45]]
 
+function humanError() {
+  // Error de reflejos: ±4 centésimas del objetivo, sesgado hacia 0
+  const errors = [-4,-3,-2,-1,-1,0,0,0,1,1,2,3,4]
+  return errors[Math.floor(Math.random() * errors.length)]
+}
+
 function randomCentesima(base, pending, barrierRange) {
   const pos = base % 100
 
-  // Falta: apuntar a la ventana elegida por el humano
+  // Falta: apuntar al centro de la barrera ±4 centésimas
   if (pending === 'FALTA' && barrierRange) {
     const { min, max } = barrierRange
+    const center = Math.round((min + max) / 2)
+    if (Math.random() < 0.90) {
+      // 90%: apuntar al centro de la barrera con error ±4
+      const target = center - pos
+      const raw = (target <= 0 ? target + 100 : target) + humanError()
+      return Math.max(6, raw)
+    }
+    // 10%: error mayor — puede fallar
     const r = Math.random()
     if (r < 0.60) return min + Math.floor(Math.random() * (max - min + 1))
     if (r < 0.80) return Math.max(0, min - 1 - Math.floor(Math.random() * 7))
     return Math.min(99, max + 1 + Math.floor(Math.random() * 7))
   }
 
-  // Si estamos entre 83-93, tirar corto (7-15 centésimas) para intentar llegar a 00
+  // Corner: apuntar al próximo múltiplo de 10 ±4 centésimas
+  if (pending === 'CORNER') {
+    const nextMultiple = pos === 0 ? 10 : Math.ceil((pos + 1) / 10) * 10
+    const dist = nextMultiple - pos
+    return Math.max(6, dist + humanError())
+  }
+
+  // Tirada normal: 90% apunta a :00 ±4 centésimas, 10% distribución aleatoria
+  if (Math.random() < 0.90) {
+    const distToNext00 = pos === 0 ? 100 : 100 - pos
+    return Math.max(6, distToNext00 + humanError())
+  }
+
+  // 10% — distribución imprecisa (error humano mayor)
   if (pos >= 83 && pos <= 93) {
     return 7 + Math.floor(Math.random() * 9)
   }
-  // Distribución sesgada hacia valores altos (cercanos a 99/00)
   const r = Math.random()
   if (r < 0.50) {
     const v = 85 + Math.floor(Math.random() * 22)
