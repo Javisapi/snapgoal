@@ -2,6 +2,8 @@ import { useEffect, useState, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import LatencyIndicator from '../components/LatencyIndicator'
+import { useTrackPresence } from '../hooks/usePresence'
+import { useBotPlayer } from '../hooks/useBotPlayer'
 
 const GAME_CSS = `
   @keyframes eventFlash { 0%{opacity:0;transform:scale(0.8)} 30%{opacity:1;transform:scale(1.05)} 60%{opacity:1;transform:scale(1)} 100%{opacity:0;transform:scale(0.95)} }
@@ -67,6 +69,7 @@ export default function Game() {
   const navigate = useNavigate()
 
   const [player, setPlayer] = useState(null)
+  useTrackPresence(player?.id, 'playing')
   const [match, setMatch] = useState(null)
   const [opponent, setOpponent] = useState(null)
   const [centesimas, setCentesimas] = useState(0)
@@ -78,10 +81,15 @@ export default function Game() {
   const [myTurn, setMyTurn] = useState(false)
   const [showAbandon, setShowAbandon] = useState(false)
   const [opponentGone, setOpponentGone] = useState(false)
+  const [disconnectCountdown, setDisconnectCountdown] = useState(15)
+  const disconnectCountdownRef = useRef(null)
   const [flashEvent, setFlashEvent] = useState(null)
   const [chatMsg, setChatMsg] = useState(null)
   const [showChat, setShowChat] = useState(false)
   const [leagueId, setLeagueId] = useState(null)
+  const isBotMatch = match?.is_bot_match || false
+
+  useBotPlayer({ match, matchId, isBotMatch, myTurn })
   const [inactivityProgress, setInactivityProgress] = useState(0)
   const [inactivityWarning, setInactivityWarning] = useState(false)
   const [cards, setCards] = useState({ p1: { yellow: 0, red: 0 }, p2: { yellow: 0, red: 0 } })
@@ -384,6 +392,8 @@ export default function Game() {
     heartbeatRef.current = setInterval(async () => {
       const field = isP1 ? 'player1_last_seen' : 'player2_last_seen'
       await supabase.from('matches').update({ [field]: new Date().toISOString() }).eq('id', matchId)
+      // Limpiar partidos zombie globalmente
+      supabase.rpc('close_zombie_matches').then(() => {})
 
       // Ambos jugadores verifican inactividad del jugador con el turno
       const { data: current } = await supabase
@@ -460,11 +470,20 @@ export default function Game() {
     }, 10)
   }
   function startDisconnectWatcher(m, p) {
+    if (m.is_bot_match) return
     clearTimeout(warnRef.current)
     clearTimeout(disconnectRef.current)
     warnRef.current = setTimeout(() => {
       setOpponentGone('warning')
-    }, 10000)
+      setDisconnectCountdown(9)
+      clearInterval(disconnectCountdownRef.current)
+      disconnectCountdownRef.current = setInterval(() => {
+        setDisconnectCountdown(n => {
+          if (n <= 1) { clearInterval(disconnectCountdownRef.current); return 0 }
+          return n - 1
+        })
+      }, 1000)
+    }, 6000)
     disconnectRef.current = setTimeout(async () => {
       setOpponentGone('gone')
       const isP1 = m.player1_id === p.id
@@ -479,7 +498,7 @@ export default function Game() {
       }).eq('id', matchId)
       await updateStats(sp1, sp2, matchRef.current, p)
       if (mountedRef.current) navigate('/result/' + matchId)
-    }, 30000)
+    }, 15000)
   }
 
   async function sendChatMessage(message) {
@@ -692,8 +711,12 @@ export default function Game() {
 
     try {
       await processPlay(total, forced)
+    } catch(e) {
+      console.error('processPlay error:', e)
     } finally {
       processingRef.current = false
+      runningRef.current = false
+      iAmTheShooterRef.current = false
     }
   }
 
@@ -746,14 +769,19 @@ export default function Game() {
 
     if (ev.result === 'FALTA') {
       // Guardar pending y esperar que el rival elija la barrera
-      const event = { emoji: '🧤', label: `🧤 FALTA de ${p.username} — el rival elige la barrera` }
+      const isBotGame = matchRef.current?.is_bot_match || false
+      const autoBarrier = isBotGame ? JSON.stringify({ min: 30, max: 35 }) : null
+      const event = isBotGame
+        ? { emoji: '🧤', label: `🧤 FALTA de ${p.username} — barrera en 30-35` }
+        : { emoji: '🧤', label: `🧤 FALTA de ${p.username} — el rival elige la barrera` }
       setLastPlay(event)
       setPendingType('FALTA')
+      if (isBotGame) setBarrierOptions(null)
       await supabase.from('matches').update({
         elapsed_centesimas: total,
         timer_running: false,
         pending_type: 'FALTA',
-        barrier_range: null,
+        barrier_range: autoBarrier,
         last_event: JSON.stringify(event),
         turn_started_at: new Date().toISOString(),
         turn_sequence: (matchRef.current?.turn_sequence || 0) + 1,
@@ -877,7 +905,15 @@ export default function Game() {
     setShowProShooterPopup(false)
     proShooterPopupShownRef.current = false
 
-    await commitPlay(total, ev.result, sp1, sp2, true, m, p, event)
+    // Determinar resultType para plays — refleja si hubo gol y de qué tipo
+    const finalResultType = ev.result === 'GOL_PROPIO' ? 'GOL_PROPIO' :
+      !gol ? (pending ? pending + '_FALLO' : 'NADA') :
+      pending === 'FALTA' ? 'GOL_FALTA' :
+      pending === 'PENALTY' ? 'GOL_PENALTY' :
+      pending === 'CORNER' ? 'GOL_CORNER' :
+      'GOL_DIRECTO'
+
+    await commitPlay(total, finalResultType, sp1, sp2, true, m, p, event)
   }
 
   async function activateProShooter(use) {
@@ -993,7 +1029,7 @@ export default function Game() {
         last_event: JSON.stringify({ emoji: '🥅', label: 'Penaltis a muerte súbita' }),
         current_turn: m.player1_id,
       }).eq('id', matchId)
-      if (mountedRef.current) navigate('/shootout/' + matchId)
+      if (mountedRef.current) setTimeout(() => navigate('/shootout/' + matchId), 2000)
       return
     }
 
@@ -1037,7 +1073,7 @@ export default function Game() {
     if (finished) {
       // Solo el jugador que hizo la última jugada actualiza stats
       await updateStats(sp1, sp2, m, p)
-      if (mountedRef.current) navigate('/result/' + matchId)
+      if (mountedRef.current) setTimeout(() => navigate('/result/' + matchId), 2000)
     }
   }
 
@@ -1058,6 +1094,36 @@ export default function Game() {
     })
     if (xpRes.data) {
       await supabase.from('matches').update({ xp_result: xpRes.data }).eq('id', matchId)
+    }
+
+    // Racha diaria y misiones — solo partidos completados normalmente
+    const lastEv = match.last_event ? JSON.parse(match.last_event) : null
+    const isAbandon = lastEv?.label?.includes('abandonó') || lastEv?.label?.includes('inactividad') || lastEv?.label?.includes('desconectado')
+    if (!isAbandon) {
+      const isP1 = match.player1_id === p.id
+      const myScore = isP1 ? match.score_p1 : match.score_p2
+      const oppScore = isP1 ? match.score_p2 : match.score_p1
+      const won = match.winner_id === p.id
+
+      // Contar goles de falta del jugador en este partido
+      const { data: myPlays } = await supabase
+        .from('plays').select('result').eq('match_id', matchId).eq('player_id', p.id)
+      const goalsScored = myPlays?.filter(pl => ['GOL_DIRECTO','GOL_FALTA','GOL_PENALTY','GOL_CORNER'].includes(pl.result)).length || 0
+      const goalsFalta = myPlays?.filter(pl => pl.result === 'GOL_FALTA').length || 0
+      const cleanSheet = won && oppScore === 0
+
+      await supabase.rpc('update_daily_streak', { p_player_id: p.id })
+      const missionsRes = await supabase.rpc('update_daily_missions', {
+        p_player_id: p.id,
+        p_match_id: matchId,
+        p_won: won,
+        p_goals_scored: goalsScored,
+        p_goals_falta: goalsFalta,
+        p_clean_sheet: cleanSheet,
+      })
+      if (missionsRes.data?.completed_missions?.length > 0) {
+        await supabase.from('matches').update({ missions_result: missionsRes.data }).eq('id', matchId)
+      }
     }
   }
 
@@ -1156,7 +1222,7 @@ export default function Game() {
       {/* Banner desconexión */}
       {opponentGone === 'warning' && (
         <div style={styles.disconnectBanner}>
-          <span style={styles.disconnectBannerText}>⚽ Esperando respuesta de tu oponente...</span>
+          <span style={styles.disconnectBannerText}>⚽ Rival desaparecido — victoria en {disconnectCountdown}s</span>
         </div>
       )}
 

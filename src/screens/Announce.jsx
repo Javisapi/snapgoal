@@ -62,6 +62,8 @@ export default function Announce() {
       .from('players').select('*').eq('id', oppId).single()
     setOpponent(opp)
 
+    if (m.is_bot_match) setOpponentReady(true)
+
     // Historial enfrentamientos directos
     const { data: h2h } = await supabase.from('matches')
       .select('winner_id,player1_id,player2_id')
@@ -139,14 +141,23 @@ export default function Announce() {
     const isP1 = match.player1_id === player.id
     const update = isP1 ? { player1_ready: true } : { player2_ready: true }
 
-    // Verificar si el rival ya está listo
+    if (match.is_bot_match) {
+      clearInterval(countdownRef.current)
+      await supabase.from('matches').update({
+        ...update,
+        status: 'playing',
+        turn_started_at: new Date().toISOString(),
+      }).eq('id', matchId)
+      navigate('/game/' + matchId)
+      return
+    }
+
+    // Lógica original para partidas humano vs humano
     const { data: current } = await supabase
       .from('matches').select('*').eq('id', matchId).single()
-
     const bothReady = isP1
       ? (current.player2_ready === true)
       : (current.player1_ready === true)
-
     if (bothReady) {
       clearInterval(countdownRef.current)
       await supabase.from('matches').update({
@@ -170,7 +181,10 @@ export default function Announce() {
             : 'Ningún jugador confirmó a tiempo.'
           }
         </p>
-        <button style={styles.btnPrimary} onClick={() => navigate('/')}>Volver al inicio</button>
+        {match?.league_id && (
+          <button style={styles.btnPrimary} onClick={() => navigate('/league/' + match.league_id)}>Volver a la Liga</button>
+        )}
+        <button style={match?.league_id ? styles.btnSecondary : styles.btnPrimary} onClick={() => navigate('/')}>Volver al inicio</button>
       </div>
     </div>
   )
@@ -290,6 +304,7 @@ const styles = {
   countdownFill: { height: '100%', borderRadius: '2px' },
   countdownText: { fontSize: '0.75rem', color: 'rgba(255,255,255,0.25)', textAlign: 'center', margin: 0 },
   btnPrimary: { background: '#ffb400', color: '#141414', border: 'none', borderRadius: '12px', padding: '1.25rem', fontSize: '1.1rem', fontWeight: '900', cursor: 'pointer', width: '100%', letterSpacing: '1px' },
+  btnSecondary: { background: 'transparent', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '12px', padding: '1rem', fontSize: '1rem', cursor: 'pointer', width: '100%' },
   cancelBox: { display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center', justifyContent: 'center', height: '100%' },
   cancelTitle: { fontSize: '1.5rem', fontWeight: '800', color: '#fff', margin: 0 },
   cancelText: { fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', margin: 0 },

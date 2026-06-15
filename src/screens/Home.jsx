@@ -5,6 +5,7 @@ import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
 import { useSearchParams } from 'react-router-dom'
 import ProtectAccount, { useShouldShowProtect, ProtectedBadge } from '../components/ProtectAccount'
+import { useTrackPresence, usePresenceMap } from '../hooks/usePresence'
 
 async function deleteAccount(playerId) {
   await supabase.from('plays').delete().eq('player_id', playerId)
@@ -23,8 +24,10 @@ const HOME_CSS = `
 `
 
 export default function Home() {
-  const { player, loading, registerPlayer } = useAuth()
+  const { player, loading, registerPlayer, refreshPlayer } = useAuth()
   const [username, setUsername] = useState('')
+  const [streak, setStreak] = useState(0)
+  const [skills, setSkills] = useState({ sniper: 0, glove: 0 })
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -38,11 +41,28 @@ export default function Home() {
   const [showRecover, setShowRecover] = useState(false)
   const [recoverEmail, setRecoverEmail] = useState('')
   const [recoverSent, setRecoverSent] = useState(false)
-  const [recoverLoading, setRecoverLoading] = useState(false)
   const [recoverError, setRecoverError] = useState('')
+  const [recoverLoading, setRecoverLoading] = useState(false)
+  usePresenceMap((map) => setOnlineCount(Object.keys(map).length))
+  useTrackPresence(player?.id, 'idle')
+
+  useEffect(() => {
+    if (!player?.id) return
+    supabase.from('daily_streaks').select('current_streak').eq('player_id', player.id).single()
+      .then(({ data }) => { if (data) setStreak(data.current_streak) })
+    supabase.from('player_items').select('item_type,stock').eq('player_id', player.id)
+      .then(({ data }) => {
+        if (data) {
+          const sniper = data.find(i => i.item_type === 'pro_shooter')?.stock || 0
+          const glove = data.find(i => i.item_type === 'golden_glove')?.stock || 0
+          setSkills({ sniper, glove })
+        }
+      })
+  }, [player?.id])
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const joinCode = searchParams.get('join')
+  const openProtect = searchParams.get('protect')
 
   useEffect(() => {
     const s = document.createElement('style')
@@ -53,7 +73,7 @@ export default function Home() {
   useEffect(() => {
     if (player) {
       requestPermissionAndSubscribe(supabase, player.id)
-      if (useShouldShowProtect(player)) setShowProtect(true)
+      if (useShouldShowProtect(player) || openProtect) setShowProtect(true)
     }
   }, [player])
 
@@ -89,7 +109,7 @@ export default function Home() {
     setError('')
     const { player: newPlayer, error: authError } = await registerPlayer(name)
     if (authError) { setError(authError); setSaving(false); return }
-    navigate('/queue')
+    navigate('/tutorial')
   }
 
   useEffect(() => {
@@ -97,6 +117,12 @@ export default function Home() {
       navigate('/leagues?join=' + joinCode)
     }
   }, [joinCode, player])
+
+  useEffect(() => {
+    const onVerified = () => { if (refreshPlayer) refreshPlayer() }
+    window.addEventListener('player_verified', onVerified)
+    return () => window.removeEventListener('player_verified', onVerified)
+  }, [])
 
   useEffect(() => {
     if (!player) return
@@ -109,14 +135,6 @@ export default function Home() {
       }, 3000)
     }
   }, [player])
-
-  async function handlePlay() {
-    const { data: { session } } = await supabase.auth.getSession()
-    if (session && player) {
-      sessionStorage.setItem('player_' + session.user.id, JSON.stringify(player))
-      navigate('/queue')
-    }
-  }
 
   async function handleRecover() {
     const trimmed = recoverEmail.trim().toLowerCase()
@@ -131,8 +149,19 @@ export default function Home() {
       options: { emailRedirectTo: 'https://snapgoal.vercel.app/verify', shouldCreateUser: false }
     })
     setRecoverLoading(false)
-    if (error) { setRecoverError('No encontramos una cuenta con ese email. ¿Lo has protegido antes?'); return }
+    if (error) {
+      setRecoverError('No encontramos una cuenta con ese email. ¿Lo has protegido antes?')
+      return
+    }
     setRecoverSent(true)
+  }
+
+  async function handlePlay() {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (session && player) {
+      sessionStorage.setItem('player_' + session.user.id, JSON.stringify(player))
+      navigate('/queue')
+    }
   }
 
   async function handleDeleteAccount() {
@@ -232,12 +261,20 @@ export default function Home() {
         </div>
       </div>
 
+      <style>{`@keyframes tutorialBtnGlow{0%,100%{box-shadow:0 0 6px rgba(147,197,253,0.2),0 0 12px rgba(147,197,253,0.1)}50%{box-shadow:0 0 14px rgba(147,197,253,0.5),0 0 28px rgba(147,197,253,0.2)}}`}</style>
       <div style={styles.playerSection}>
         <p style={styles.playerGreeting}>Bienvenido</p>
         <div style={{display:'flex', alignItems:'center', gap:'0.6rem'}}>
           <p style={styles.playerName}>{player.username}</p>
           {player?.email_verified && <ProtectedBadge />}
+          <button onClick={() => navigate('/tutorial')} style={{background:'rgba(96,165,250,0.15)',border:'1px solid rgba(147,197,253,0.4)',borderRadius:'20px',padding:'3px 10px',fontSize:'0.7rem',fontWeight:'800',color:'#93c5fd',cursor:'pointer',whiteSpace:'nowrap',animation:'tutorialBtnGlow 2s ease-in-out infinite',flexShrink:0}}>✦ Tutorial</button>
         </div>
+        {(skills.sniper > 0 || skills.glove > 0) && (
+          <div style={{display:'flex', gap:'0.75rem', alignItems:'center', marginBottom:'0.25rem'}}>
+            <span style={{fontSize:'0.8rem', color:'rgba(255,255,255,0.5)', fontWeight:'600'}}>🎯 ×{skills.sniper}</span>
+            <span style={{fontSize:'0.8rem', color:'rgba(255,255,255,0.5)', fontWeight:'600'}}>🧤 ×{skills.glove}</span>
+          </div>
+        )}
         <div style={styles.playerMeta}>
           <span style={styles.playerMetaItem}>{player.total_points} pts</span>
           <span style={styles.playerMetaDot} />
@@ -280,19 +317,25 @@ export default function Home() {
           <span style={styles.cardSubLight}>Competir</span>
         </button>
       </div>
-      <button style={styles.academyBtn} onClick={() => navigate('/academy')}>
-        <svg viewBox="0 0 24 24" fill="none" style={{width:'20px',height:'20px',flexShrink:0}}>
-          <circle cx="12" cy="12" r="10" stroke="#ffb400" strokeWidth="1.5" fill="none"/>
-          <circle cx="12" cy="12" r="5.5" stroke="#ffb400" strokeWidth="1" fill="none"/>
-          <circle cx="12" cy="12" r="2" fill="#ffb400"/>
-          <line x1="12" y1="1" x2="12" y2="4" stroke="#ffb400" strokeWidth="1.5" strokeLinecap="round"/>
-          <line x1="12" y1="20" x2="12" y2="23" stroke="#ffb400" strokeWidth="1.5" strokeLinecap="round"/>
-          <line x1="1" y1="12" x2="4" y2="12" stroke="#ffb400" strokeWidth="1.5" strokeLinecap="round"/>
-          <line x1="20" y1="12" x2="23" y2="12" stroke="#ffb400" strokeWidth="1.5" strokeLinecap="round"/>
-        </svg>
-        <span style={styles.academyBtnLabel}>Academy — Entrena tu precisión</span>
-        <span style={styles.academyBtnArrow}>›</span>
-      </button>
+      <div style={{display:'flex',gap:'0.5rem',width:'100%'}}>
+        <button style={styles.academyBtn} onClick={() => navigate('/academy')}>
+          <svg viewBox="0 0 24 24" fill="none" style={{width:'18px',height:'18px',flexShrink:0}}>
+            <circle cx="12" cy="12" r="10" stroke="#ffb400" strokeWidth="1.5" fill="none"/>
+            <circle cx="12" cy="12" r="5.5" stroke="#ffb400" strokeWidth="1" fill="none"/>
+            <circle cx="12" cy="12" r="2" fill="#ffb400"/>
+            <line x1="12" y1="1" x2="12" y2="4" stroke="#ffb400" strokeWidth="1.5" strokeLinecap="round"/>
+            <line x1="12" y1="20" x2="12" y2="23" stroke="#ffb400" strokeWidth="1.5" strokeLinecap="round"/>
+            <line x1="1" y1="12" x2="4" y2="12" stroke="#ffb400" strokeWidth="1.5" strokeLinecap="round"/>
+            <line x1="20" y1="12" x2="23" y2="12" stroke="#ffb400" strokeWidth="1.5" strokeLinecap="round"/>
+          </svg>
+          <span style={styles.academyBtnLabel}>Academy</span>
+        </button>
+        <button style={styles.missionsBtn} onClick={() => navigate('/missions')}>
+          <span style={{fontSize:'1.1rem'}}>🏟️</span>
+          <span style={styles.missionsBtnLabel}>Vestuario</span>
+          {streak > 0 && <span style={{fontSize:'0.7rem',color:'#ffb400',fontWeight:'800'}}>🔥{streak}</span>}
+        </button>
+      </div>
 
       <div style={styles.secondaryRow}>
         <button style={styles.btnIcon} onClick={() => navigate('/ranking')}>
@@ -341,7 +384,10 @@ export default function Home() {
         const text = '⚽ Únete a SnapGoal. Partidos rápidos, Ligas y mucho más. https://snapgoal.vercel.app'
         window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank')
       }}>🎁 Invita a un amigo</button>
-      {!player?.email_verified && <button style={styles.btnProtect} onClick={() => setShowProtect(true)}>🔒 Proteger mi cuenta</button>}
+      {!player?.email_verified && <div style={{display:'flex', flexDirection:'column', gap:'0.4rem'}}>
+        <p style={{fontSize:'0.72rem', color:'#ffb400', textAlign:'center', margin:0, fontWeight:'600'}}>🎁 Verifica tu cuenta y recibe 5 🎯 + 5 🧤</p>
+        <button style={styles.btnProtect} onClick={() => setShowProtect(true)}>🔒 Proteger mi cuenta</button>
+      </div>}
       <button style={styles.btnGhost} onClick={() => setShowDeleteConfirm(true)}>Borrar cuenta</button>
     </div>
   )
@@ -393,7 +439,7 @@ export default function Home() {
         <button style={styles.btnSecondary} onClick={() => navigate('/leagues')}>🏆 Mis Ligas</button>
         <button style={styles.btnSecondary} onClick={() => navigate('/rules')}>Reglas</button>
         <button style={styles.btnGhost} onClick={() => setShowRegisterInfo(true)}>¿Cómo crear mi perfil?</button>
-        <button style={styles.btnGhost} onClick={() => setShowRecover(true)}>🔑 ¿Ya tienes cuenta? Recupérala</button>
+        <button style={{...styles.btnGhost, color:'rgba(255,180,0,0.5)'}} onClick={() => setShowRecover(true)}>🔑 Ya tengo cuenta — recuperar acceso</button>
       </div>
 
       {showRecover && (
@@ -458,9 +504,11 @@ const styles = {
   cardLeagueLabel: { fontSize:'0.95rem', fontWeight:'800', color:'rgba(255,180,0,0.9)', letterSpacing:'0.2px', margin:0 },
   cardSub: { fontSize:'0.7rem', color:'rgba(0,0,0,0.35)', marginTop:'2px', fontWeight:'500' },
   cardSubLight: { fontSize:'0.7rem', color:'rgba(255,180,0,0.4)', marginTop:'2px', fontWeight:'500' },
-  academyBtn: { display:'flex', alignItems:'center', gap:'0.75rem', width:'100%', background:'rgba(255,180,0,0.06)', border:'1px solid rgba(255,180,0,0.2)', borderRadius:'14px', padding:'0.9rem 1rem', cursor:'pointer', textAlign:'left' },
+  academyBtn: { display:'flex', alignItems:'center', gap:'0.75rem', flex:1, background:'rgba(255,180,0,0.06)', border:'1px solid rgba(255,180,0,0.2)', borderRadius:'14px', padding:'0.9rem 1rem', cursor:'pointer', textAlign:'left' },
   academyBtnLabel: { flex:1, fontSize:'0.88rem', fontWeight:'700', color:'rgba(255,180,0,0.8)', letterSpacing:'0.2px' },
   academyBtnArrow: { fontSize:'1.2rem', color:'rgba(255,180,0,0.4)' },
+  missionsBtn: { display:'flex', alignItems:'center', justifyContent:'center', gap:'0.4rem', flex:1, background:'rgba(255,180,0,0.06)', border:'1px solid rgba(255,180,0,0.2)', borderRadius:'14px', padding:'0.9rem 1rem', cursor:'pointer' },
+  missionsBtnLabel: { fontSize:'0.88rem', fontWeight:'700', color:'rgba(255,180,0,0.8)' },
   secondaryRow: { display:'flex', gap:'0.75rem', width:'100%' },
   btnIcon: { flex:1, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:'14px', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', cursor:'pointer', padding:'0.85rem 0.5rem' },
   btnIconLabel: { fontSize:'0.72rem', fontWeight:'600', color:'rgba(255,255,255,0.4)', letterSpacing:'0.5px' },

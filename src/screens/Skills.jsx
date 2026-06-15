@@ -18,7 +18,7 @@ const SKILLS = [
       '← IZQUIERDA: bloqueas las centésimas 00–49. Tu rival solo puede marcar entre 50–99 (y acertando par/impar).',
       'Tu rival no sabe qué lado has elegido hasta después de tirar.',
       'Si el penalty se para gracias al Iron Fist, aparece una animación especial.',
-      'Cada jugador empieza con 3 Iron Fists. Una vez usados, se agotan.',
+      'Una vez usados, se agotan. Consigue más completando misiones en el Vestuario.',
     ]
   },
   {
@@ -30,16 +30,17 @@ const SKILLS = [
       'La ventana de gol normal es de 5 centésimas (ej: 30–35).',
       'Si activas el Sniper, la ventana se amplía a 10 centésimas (ej: 30–40).',
       'Tu rival ve que has activado el Sniper antes de que tires.',
-      'Cada jugador empieza con 3 Snipers. Una vez usados, se agotan.',
+      'Una vez usados, se agotan. Consigue más completando misiones en el Vestuario.',
     ]
   }
 ]
 
 const HOW_TO_GET = [
-  'Cada jugador empieza con 3 Iron Fists y 3 Snipers gratis.',
-  'Por cada 100 XP ganados por encima de 1500 (es decir, al llegar a 1600, 1700, 1800...) recibes automáticamente 3 Iron Fists y 3 Snipers adicionales.',
+  'Los nuevos jugadores empiezan sin skills.',
+  'Protege tu cuenta con email y recibe 5 Iron Fists y 5 Snipers de bienvenida.',
+  'Completa las misiones diarias del Vestuario para ganar más skills.',
+  'La racha diaria también premia con skills cada 5 días consecutivos jugados.',
   'No hay límite de acumulación — puedes tener tantos como quieras.',
-  'En el futuro se podrán conseguir más habilidades especiales.',
 ]
 
 export default function Skills() {
@@ -69,10 +70,7 @@ export default function Skills() {
                 <p style={styles.skillName}>{skill.name}</p>
                 <p style={styles.skillDesc}>{skill.description}</p>
               </div>
-              <div style={styles.stockBadge}>
-                <span style={styles.stockNum}>3</span>
-                <span style={styles.stockLabel}>iniciales</span>
-              </div>
+
             </div>
             <div style={styles.divider} />
             <div style={styles.howto}>

@@ -2,6 +2,8 @@ import { useEffect, useState, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
+const CERVERAI_ID = 'ec21fbbe-c14f-4677-aa19-052fd54ff364'
+
 async function getPlayer() {
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) return null
@@ -13,7 +15,7 @@ async function getPlayer() {
   return data
 }
 
-const QUEUE_TIMEOUT_MS = 10000 // 10 segundos máximo de búsqueda
+const QUEUE_TIMEOUT_MS = 10000
 
 export default function Queue() {
   const navigate = useNavigate()
@@ -21,6 +23,7 @@ export default function Queue() {
   const leagueId = searchParams.get('league')
   const [dots, setDots] = useState('')
   const [noMatch, setNoMatch] = useState(false)
+  const [countdown, setCountdown] = useState(10)
   const stateRef = useRef({
     cancelled: false,
     queueId: null,
@@ -28,15 +31,15 @@ export default function Queue() {
     intervals: [],
     timeoutId: null,
   })
+  const initDoneRef = useRef(false)
 
   useEffect(() => {
     const dotsInterval = setInterval(() => setDots(d => d.length >= 3 ? '' : d + '.'), 500)
+    const countdownInterval = setInterval(() => setCountdown(n => n > 0 ? n - 1 : 0), 1000)
+    stateRef.current.intervals.push(countdownInterval)
     stateRef.current.intervals.push(dotsInterval)
     init()
-
-    return () => {
-      cleanup()
-    }
+    return () => { cleanup() }
   }, [])
 
   function cleanup() {
@@ -44,54 +47,74 @@ export default function Queue() {
     stateRef.current.intervals.forEach(i => clearInterval(i))
     clearTimeout(stateRef.current.timeoutId)
     if (stateRef.current.channel) supabase.removeChannel(stateRef.current.channel)
-    // Eliminar de la cola al salir
     if (stateRef.current.queueId) {
-      supabase.from('matchmaking_queue')
-        .delete()
-        .eq('id', stateRef.current.queueId)
+      supabase.from('matchmaking_queue').delete().eq('id', stateRef.current.queueId)
     }
   }
 
+  async function createBotMatch(player, leagueId = null) {
+    const { data: match, error } = await supabase
+      .from('matches')
+      .insert({
+        player1_id: player.id,
+        player2_id: CERVERAI_ID,
+        current_turn: player.id,
+        status: 'announcing',
+        is_bot_match: true,
+        bot_name: 'Cerverai',
+        player2_ready: true,
+        ...(leagueId ? { league_id: leagueId } : {}),
+      })
+      .select()
+      .single()
+    if (error || !match) return null
+    return match.id
+  }
+
   async function init() {
+    if (initDoneRef.current) return
+    initDoneRef.current = true
+    stateRef.current.cancelled = false
     const p = await getPlayer()
     if (!p || stateRef.current.cancelled) { navigate('/'); return }
 
-    // Limpiar entradas anteriores de este jugador
     await supabase.from('matchmaking_queue').delete().eq('player_id', p.id)
 
-    // Calcular expiración — exactamente 10 segundos desde ahora
     const expiresAt = new Date(Date.now() + QUEUE_TIMEOUT_MS).toISOString()
-
-    // Entrar en cola con expiración
     const { data: entry, error } = await supabase
       .from('matchmaking_queue')
-      .insert({ player_id: p.id, status: 'waiting', expires_at: expiresAt })
+      .insert({ player_id: p.id, status: 'waiting', expires_at: expiresAt, league_id: leagueId || null })
       .select().single()
 
     if (error || stateRef.current.cancelled) return
     stateRef.current.queueId = entry.id
 
-    // Timeout exacto de 10 segundos — si no hay partido, cancelar y mostrar mensaje
+    // Timeout: si no hay rival, crear partido contra el bot
     stateRef.current.timeoutId = setTimeout(async () => {
       if (stateRef.current.cancelled) return
       stateRef.current.cancelled = true
-      // Limpiar cola
       await supabase.from('matchmaking_queue').delete().eq('id', entry.id)
       stateRef.current.queueId = null
       if (stateRef.current.channel) supabase.removeChannel(stateRef.current.channel)
       stateRef.current.intervals.forEach(i => clearInterval(i))
+
+      const matchId = await createBotMatch(p, leagueId || null)
+      if (matchId) {
+        navigate('/announce/' + matchId)
+        return
+      }
       setNoMatch(true)
     }, QUEUE_TIMEOUT_MS)
 
     // Intentar emparejar inmediatamente
     const matchId = await tryMatchOnServer(p.id)
-    if (matchId && !stateRef.current.cancelled) {
+    console.log("CANCELLED:", stateRef.current.cancelled)
+        if (matchId && !stateRef.current.cancelled) {
       clearTimeout(stateRef.current.timeoutId)
       navigate('/announce/' + matchId)
       return
     }
 
-    // Escuchar cuando me empareja el servidor
     const channel = supabase
       .channel('my-queue-' + entry.id)
       .on('postgres_changes', {
@@ -101,7 +124,6 @@ export default function Queue() {
       }, async (payload) => {
         if (payload.new.status === 'matched' && !stateRef.current.cancelled) {
           clearTimeout(stateRef.current.timeoutId)
-          // Reintentar hasta 10 veces con 500ms entre intentos
           let found = false
           for (let i = 0; i < 10; i++) {
             if (stateRef.current.cancelled) break
@@ -125,7 +147,6 @@ export default function Queue() {
       .subscribe()
     stateRef.current.channel = channel
 
-    // Polling con jitter aleatorio entre 1-4 segundos para distribuir carga
     function scheduleNextPoll() {
       if (stateRef.current.cancelled) return
       const jitter = 1000 + Math.random() * 3000
@@ -198,7 +219,10 @@ export default function Queue() {
           <span style={styles.radarEmoji}>⚽</span>
         </div>
         <h2 style={styles.title}>Buscando rival{dots}</h2>
-        <p style={styles.subtitle}>{leagueId ? 'Buscando rival en tu liga' : 'Tienes 10 segundos para encontrar partido'}</p>
+        <div style={styles.countdownBox}>
+          <span style={styles.countdownNumber}>{countdown}</span>
+          <span style={styles.countdownLabel}>{leagueId ? 'segundos para encontrar rival en tu liga' : 'segundos para encontrar rival'}</span>
+        </div>
       </div>
       <button style={styles.btnCancel} onClick={() => { cleanup(); navigate('/') }}>Cancelar</button>
     </div>
@@ -215,6 +239,9 @@ const styles = {
   radarEmoji: { fontSize: '2rem', position: 'relative', zIndex: 1 },
   title: { fontSize: '1.5rem', fontWeight: '700', color: '#fff', textAlign: 'center', minWidth: '240px' },
   subtitle: { color: 'rgba(255,255,255,0.3)', fontSize: '0.85rem', textAlign: 'center' },
+  countdownBox: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' },
+  countdownNumber: { fontSize: '3.5rem', fontWeight: '900', color: '#ffb400', lineHeight: 1, fontVariantNumeric: 'tabular-nums' },
+  countdownLabel: { fontSize: '0.85rem', color: 'rgba(255,255,255,0.3)', textAlign: 'center' },
   btnCancel: { background: 'transparent', color: 'rgba(255,255,255,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '1rem 2rem', fontSize: '1rem', cursor: 'pointer', width: '100%' },
   btnPrimary: { background: '#ffb400', color: '#141414', border: 'none', borderRadius: '12px', padding: '1.1rem', fontSize: '1rem', fontWeight: '800', cursor: 'pointer', width: '100%' },
   noMatchIcon: { fontSize: '3rem', color: 'rgba(255,255,255,0.2)', fontWeight: '900', lineHeight: 1, marginBottom: '1rem' },

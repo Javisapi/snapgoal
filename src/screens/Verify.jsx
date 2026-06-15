@@ -4,51 +4,43 @@ import { supabase } from '../lib/supabase'
 
 export default function Verify() {
   const navigate = useNavigate()
-  const [status, setStatus] = useState('loading') // loading | success | error
+  const [status, setStatus] = useState('loading')
 
   useEffect(() => {
     async function processToken() {
       try {
-        // Supabase pone el token en el hash de la URL
         const hash = window.location.hash
-        const params = new URLSearchParams(hash.replace('#', ''))
-        const accessToken = params.get('access_token')
-        const refreshToken = params.get('refresh_token')
-        const type = params.get('type')
+        const hashParams = new URLSearchParams(hash.replace('#', ''))
+        const accessToken = hashParams.get('access_token')
+        const refreshToken = hashParams.get('refresh_token')
 
-        // También puede venir como query params
         const searchParams = new URLSearchParams(window.location.search)
         const tokenHash = searchParams.get('token_hash')
-        const tokenType = searchParams.get('type')
+        const type = searchParams.get('type')
 
         let session = null
 
         if (accessToken && refreshToken) {
-          // Caso 1: tokens en el hash
           const { data, error } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
           if (error) throw error
           session = data.session
         } else if (tokenHash) {
-          // Caso 2: token_hash en query params
-          const { data, error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: tokenType || 'email' })
+          const { data, error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: type || 'email' })
           if (error) throw error
           session = data.session
         } else {
-          // Caso 3: Supabase ya procesó el token, verificar sesión activa
           const { data } = await supabase.auth.getSession()
           session = data.session
         }
 
         if (!session?.user) throw new Error('No session')
 
-        // Buscar el player por auth_id
         let { data: player } = await supabase
           .from('players')
           .select('id, email_verified, email')
           .eq('auth_id', session.user.id)
           .single()
 
-        // Si no encontramos por auth_id, buscar por email (sesión anónima reconectada)
         if (!player && session.user.email) {
           const { data: playerByEmail } = await supabase
             .from('players')
@@ -63,6 +55,8 @@ export default function Verify() {
 
         if (player) {
           await supabase.from('players').update({ email_verified: true, email: session.user.email }).eq('id', player.id)
+          // Dar 5 skills por verificar la cuenta
+          await supabase.rpc('grant_verification_skills', { p_player_id: player.id })
           const key = 'player_' + session.user.id
           const cached = JSON.parse(sessionStorage.getItem(key) || '{}')
           sessionStorage.setItem(key, JSON.stringify({ ...cached, email_verified: true, email: session.user.email }))
@@ -111,9 +105,9 @@ export default function Verify() {
 }
 
 const styles = {
-  container: { height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#141414', padding: '2rem' },
-  card: { background: '#1c1c1c', border: '1px solid rgba(255,180,0,0.2)', borderRadius: '20px', padding: '2.5rem 2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', width: '100%', maxWidth: '380px', textAlign: 'center' },
-  icon: { fontSize: '3rem', margin: 0 },
-  title: { fontSize: '1.4rem', fontWeight: '800', color: '#fff', margin: 0, letterSpacing: '-0.5px' },
-  sub: { fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', margin: 0, lineHeight: 1.6 },
+  container: { height:'100%', display:'flex', alignItems:'center', justifyContent:'center', background:'#141414', padding:'2rem' },
+  card: { background:'#1c1c1c', border:'1px solid rgba(255,180,0,0.2)', borderRadius:'20px', padding:'2.5rem 2rem', display:'flex', flexDirection:'column', alignItems:'center', gap:'1rem', width:'100%', maxWidth:'380px', textAlign:'center' },
+  icon: { fontSize:'3rem', margin:0 },
+  title: { fontSize:'1.4rem', fontWeight:'800', color:'#fff', margin:0, letterSpacing:'-0.5px' },
+  sub: { fontSize:'0.9rem', color:'rgba(255,255,255,0.4)', margin:0, lineHeight:1.6 },
 }

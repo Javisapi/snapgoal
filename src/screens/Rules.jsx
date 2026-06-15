@@ -38,7 +38,7 @@ const SECTIONS = [
     title: '🧤 Falta (:98)',
     color: 'rgba(255,255,255,0.7)',
     rules: [
-      'El rival elige la barrera: 20-30, 30-40 o 40-50.',
+      'El rival elige la barrera: 20-25, 30-35 o 40-45.',
       'El tirador ve el rango y vuelve a tirar.',
       'Si para dentro del rango → GOL. Si no → fallo, turno cambia.',
     ]
@@ -108,8 +108,8 @@ const SECTIONS = [
       'Los jugadores nuevos empiezan con 1500 XP.',
       'Al ganar sumas XP. Al perder restas XP. La cantidad depende del nivel relativo de ambos jugadores.',
       'Ejemplo real: jugador A tiene 1500 XP y jugador B tiene 1800 XP. Si gana A (el más débil) → A gana +270 XP y B pierde -270 XP. Si gana B (el favorito) → B gana solo +85 XP y A pierde -85 XP. El sistema premia las sorpresas y penaliza poco los resultados esperados.',
-      'El XP solo se calcula en partidos generales. Los partidos de liga NO afectan al XP.',
-      'Por cada 100 XP ganados por encima de 1500 (1600, 1700, 1800...) recibes automáticamente 3 Iron Fists y 3 Snipers adicionales.',
+      'El XP se calcula en todos los partidos, tanto generales como de liga.',
+
       'Al terminar cada partido verás cuántos XP has ganado o perdido.',
       'El ranking general está ordenado por XP.',
     ]
@@ -140,6 +140,7 @@ export default function Rules() {
 
   return (
     <div style={styles.container}>
+      <style>{`@keyframes tutorialGlow { 0%,100%{box-shadow:0 0 8px rgba(255,220,120,0.3),0 0 16px rgba(255,220,120,0.1)} 50%{box-shadow:0 0 16px rgba(255,220,120,0.6),0 0 32px rgba(255,220,120,0.25)} }`}</style>
       <div style={styles.header}>
         <button style={styles.backBtn} onClick={() => navigate('/')}>← volver</button>
         <div style={styles.headerTitle}>
@@ -165,6 +166,7 @@ export default function Rules() {
         ))}
         <div style={{ height: '2rem' }} />
       </div>
+      <button style={styles.tutorialBtn} onClick={() => navigate('/tutorial')}>📖 Tutorial</button>
     </div>
   )
 }
@@ -172,6 +174,7 @@ export default function Rules() {
 const styles = {
   container: { height: '100%', display: 'flex', flexDirection: 'column', background: '#141414', overflow: 'hidden' },
   header: { padding: '2.5rem 1.75rem 1rem', flexShrink: 0 },
+  tutorialBtn: { position: 'fixed', bottom: '1.5rem', left: '1.5rem', right: '1.5rem', width: 'calc(100% - 3rem)', background: 'rgba(20,20,20,0.97)', border: '1px solid rgba(255,220,120,0.5)', borderRadius: '14px', color: '#ffe085', fontSize: '0.95rem', fontWeight: '800', cursor: 'pointer', padding: '1rem', zIndex: 100, animation: 'tutorialGlow 2s ease-in-out infinite' },
   backBtn: { background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.25)', fontSize: '0.8rem', cursor: 'pointer', padding: 0, marginBottom: '1rem', letterSpacing: '0.5px' },
   headerTitle: { display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '0.5rem' },
   title: { fontSize: '2.5rem', fontWeight: '900', color: '#fff', letterSpacing: '-2px', margin: 0, lineHeight: 1 },

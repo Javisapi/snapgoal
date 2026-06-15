@@ -57,5 +57,15 @@ export function useAuth() {
     return { player: newPlayer }
   }
 
-  return { player, loading, registerPlayer, setPlayer }
+  async function refreshPlayer() {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return
+    const { data: p } = await supabase.from('players').select('*').eq('auth_id', session.user.id).single()
+    if (p) {
+      setPlayer(p)
+      sessionStorage.setItem('player_' + session.user.id, JSON.stringify(p))
+    }
+  }
+
+  return { player, loading, registerPlayer, setPlayer, refreshPlayer }
 }
