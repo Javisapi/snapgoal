@@ -905,7 +905,15 @@ export default function Game() {
     setShowProShooterPopup(false)
     proShooterPopupShownRef.current = false
 
-    await commitPlay(total, ev.result, sp1, sp2, true, m, p, event)
+    // Determinar resultType para plays — refleja si hubo gol y de qué tipo
+    const finalResultType = ev.result === 'GOL_PROPIO' ? 'GOL_PROPIO' :
+      !gol ? (pending || ev.result || 'NADA') :
+      pending === 'FALTA' ? 'FALTA' :
+      pending === 'PENALTY' ? 'PENALTY' :
+      pending === 'CORNER' ? 'CORNER' :
+      'GOL_DIRECTO'
+
+    await commitPlay(total, finalResultType, sp1, sp2, true, m, p, event)
   }
 
   async function activateProShooter(use) {
