@@ -262,6 +262,10 @@ export default function Shootout() {
         }
 
         if (updated.status === 'finished') {
+          clearInterval(intervalRef.current)
+          intervalRef.current = null
+          timerVersionRef.current += 1
+          setRunning(false)
           setTimeout(() => navigate('/result/' + matchId), 2500)
           return
         }
@@ -440,6 +444,12 @@ export default function Shootout() {
   }
 
   async function finishShootout(m, winnerId, score, baseUpdates) {
+    // Parar cronómetro inmediatamente
+    clearInterval(intervalRef.current)
+    intervalRef.current = null
+    timerVersionRef.current += 1
+    setRunning(false)
+
     const isP1 = m.player1_id === player.id
     const sp1 = m.score_p1 + (winnerId === m.player1_id ? 1 : 0)
     const sp2 = m.score_p2 + (winnerId === m.player2_id ? 1 : 0)
