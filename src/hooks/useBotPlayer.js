@@ -142,6 +142,7 @@ async function botProcessPlay(total, matchId, match, processingRef) {
       const gol = last2 >= range.min && last2 <= range.max
       event = { emoji: gol ? '⚽' : '🧤', label: gol ? `⚽ Gol de falta de Cerverai (${last2})` : `🧤 Falta fallada por Cerverai (${last2} fuera de ${range.min}-${range.max})` }
       if (gol) { if (p1) sp1++; else sp2++ }
+      pending = gol ? 'GOL_FALTA' : 'FALTA_FALLO'
     }
   } else if (pending === 'CORNER') {
     const gol = last2 % 10 === 0
@@ -297,8 +298,8 @@ async function botProcessPlay(total, matchId, match, processingRef) {
 
     const { data: humanPlays } = await supabase
       .from('plays').select('result').eq('match_id', matchId).eq('player_id', humanId)
-    const goalsScored = humanPlays?.filter(pl => ['GOL_DIRECTO','FALTA','PENALTY','CORNER'].includes(pl.result)).length || 0
-    const goalsFalta = humanPlays?.filter(pl => pl.result === 'FALTA').length || 0
+    const goalsScored = humanPlays?.filter(pl => ['GOL_DIRECTO','GOL_FALTA','GOL_PENALTY','GOL_CORNER'].includes(pl.result)).length || 0
+    const goalsFalta = humanPlays?.filter(pl => pl.result === 'GOL_FALTA').length || 0
 
     await supabase.rpc('update_daily_streak', { p_player_id: humanId })
     const missionsRes = await supabase.rpc('update_daily_missions', {

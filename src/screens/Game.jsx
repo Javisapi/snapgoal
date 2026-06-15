@@ -907,10 +907,10 @@ export default function Game() {
 
     // Determinar resultType para plays — refleja si hubo gol y de qué tipo
     const finalResultType = ev.result === 'GOL_PROPIO' ? 'GOL_PROPIO' :
-      !gol ? (pending || ev.result || 'NADA') :
-      pending === 'FALTA' ? 'FALTA' :
-      pending === 'PENALTY' ? 'PENALTY' :
-      pending === 'CORNER' ? 'CORNER' :
+      !gol ? (pending ? pending + '_FALLO' : 'NADA') :
+      pending === 'FALTA' ? 'GOL_FALTA' :
+      pending === 'PENALTY' ? 'GOL_PENALTY' :
+      pending === 'CORNER' ? 'GOL_CORNER' :
       'GOL_DIRECTO'
 
     await commitPlay(total, finalResultType, sp1, sp2, true, m, p, event)
@@ -1108,8 +1108,8 @@ export default function Game() {
       // Contar goles de falta del jugador en este partido
       const { data: myPlays } = await supabase
         .from('plays').select('result').eq('match_id', matchId).eq('player_id', p.id)
-      const goalsScored = myPlays?.filter(pl => ['GOL_DIRECTO','FALTA','PENALTY','CORNER'].includes(pl.result)).length || 0
-      const goalsFalta = myPlays?.filter(pl => pl.result === 'FALTA').length || 0
+      const goalsScored = myPlays?.filter(pl => ['GOL_DIRECTO','GOL_FALTA','GOL_PENALTY','GOL_CORNER'].includes(pl.result)).length || 0
+      const goalsFalta = myPlays?.filter(pl => pl.result === 'GOL_FALTA').length || 0
       const cleanSheet = won && oppScore === 0
 
       await supabase.rpc('update_daily_streak', { p_player_id: p.id })
