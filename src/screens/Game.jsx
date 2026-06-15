@@ -767,7 +767,11 @@ export default function Game() {
 
     const ev = evaluatePlay(total)
 
-    if (ev.result === 'FALTA') {
+    // Si hay empate al tiempo, ignorar eventos especiales e ir a shootout
+    const secsNow = Math.floor(total / 100)
+    const isEmpateAlTiempo = secsNow >= 30 && sp1 === sp2
+
+    if (ev.result === 'FALTA' && !isEmpateAlTiempo) {
       // Guardar pending y esperar que el rival elija la barrera
       const isBotGame = matchRef.current?.is_bot_match || false
       const autoBarrier = isBotGame ? JSON.stringify({ min: 30, max: 35 }) : null
@@ -790,7 +794,7 @@ export default function Game() {
       return
     }
 
-    if (ev.result === 'CORNER') {
+    if (ev.result === 'CORNER' && !isEmpateAlTiempo) {
       const event = { emoji: '🚩', label: `🚩 CÓRNER de ${p.username} — para en múltiplo de 10 para GOL` }
       setLastPlay(event)
       setPendingType('CORNER')
@@ -805,7 +809,7 @@ export default function Game() {
       return
     }
 
-    if (ev.result === 'PENALTY') {
+    if (ev.result === 'PENALTY' && !isEmpateAlTiempo) {
       const event = { emoji: '🥅', label: `🥅 PENALTY de ${p.username} — elige par o impar` }
       setLastPlay(event)
       setPendingType('PENALTY')
@@ -1023,6 +1027,11 @@ export default function Game() {
         elapsed_centesimas: total,
         timer_running: false,
         status: 'shootout',
+        pending_type: null,
+        barrier_range: null,
+        penalty_choice: null,
+        golden_glove_state: null,
+        pro_shooter_active: false,
         shootout_round: 1,
         shootout_state: { round: 1, a_scored: null, b_scored: null, a_choice: null, b_choice: null },
         shootout_score: { a: 0, b: 0 },

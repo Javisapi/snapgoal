@@ -46,6 +46,8 @@ export default function Shootout() {
   const [showChoicePopup, setShowChoicePopup] = useState(false)
   const [lastMsg, setLastMsg] = useState(null)
   const [flash, setFlash] = useState(null)
+  const [showAnnounce, setShowAnnounce] = useState(true)
+  const [announceCountdown, setAnnounceCountdown] = useState(3)
 
   const intervalRef = useRef(null)
   const startPerfRef = useRef(null)
@@ -203,6 +205,28 @@ export default function Shootout() {
     const { data: opp } = await supabase.from('players').select('*').eq('id', oppId).single()
     setOpponent(opp)
 
+    // Limpiar cualquier pending residual del partido normal
+    if (m.pending_type || m.barrier_range || m.penalty_choice) {
+      await supabase.from('matches').update({
+        pending_type: null,
+        barrier_range: null,
+        penalty_choice: null,
+        golden_glove_state: null,
+        pro_shooter_active: false,
+      }).eq('id', matchId)
+    }
+
+    // Mostrar pantalla de anuncio 3 segundos antes de empezar
+    let cd = 3
+    const cdInterval = setInterval(() => {
+      cd--
+      setAnnounceCountdown(cd)
+      if (cd <= 0) {
+        clearInterval(cdInterval)
+        setShowAnnounce(false)
+      }
+    }, 1000)
+
     // Soy jugador A (player1) o B (player2)?
     const isP1 = m.player1_id === p.id
     const myTurn = m.current_turn === p.id
@@ -238,7 +262,7 @@ export default function Shootout() {
         }
 
         if (updated.status === 'finished') {
-          navigate('/result/' + matchId)
+          setTimeout(() => navigate('/result/' + matchId), 2500)
           return
         }
 
@@ -441,12 +465,38 @@ export default function Shootout() {
       await supabase.from('matches').update({ xp_result: xpRes.data }).eq('id', matchId)
     }
 
-    navigate('/result/' + matchId)
+    setTimeout(() => navigate('/result/' + matchId), 2500)
   }
 
   if (!match || !opponent || !player || !shootoutState) return (
     <div style={styles.container}>
       <p style={{ color: 'rgba(255,255,255,0.3)', textAlign: 'center' }}>Cargando...</p>
+    </div>
+  )
+
+  if (showAnnounce) return (
+    <div style={{...styles.container, justifyContent:'center', alignItems:'center', gap:'2rem'}}>
+      <p style={{fontSize:'0.7rem',color:'rgba(255,255,255,0.3)',letterSpacing:'3px',margin:0}}>EMPATE — TIEMPO AGOTADO</p>
+      <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:'0.5rem'}}>
+        <span style={{fontSize:'4rem',lineHeight:1,animation:'tensionPulse 1s ease-in-out infinite'}}>🥅</span>
+        <h1 style={{fontSize:'2.5rem',fontWeight:'900',color:'#ffb400',margin:0,letterSpacing:'-1px',textAlign:'center'}}>TANDA DE<br/>PENALTIS</h1>
+        <p style={{fontSize:'0.9rem',color:'rgba(255,255,255,0.4)',margin:0,textAlign:'center'}}>Muerte súbita — turno por turno</p>
+      </div>
+      <div style={{display:'flex',alignItems:'center',gap:'1.5rem',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:'16px',padding:'1rem 2rem'}}>
+        <div style={{textAlign:'center'}}>
+          <p style={{fontSize:'0.7rem',color:'rgba(255,255,255,0.3)',margin:'0 0 4px',letterSpacing:'1px'}}>{player.username.toUpperCase()}</p>
+          <span style={{fontSize:'2.5rem',fontWeight:'900',color:'#fff'}}>{match.score_p1}</span>
+        </div>
+        <span style={{fontSize:'1rem',color:'rgba(255,255,255,0.2)',fontWeight:'700'}}>—</span>
+        <div style={{textAlign:'center'}}>
+          <p style={{fontSize:'0.7rem',color:'rgba(255,255,255,0.3)',margin:'0 0 4px',letterSpacing:'1px'}}>{opponent.username.toUpperCase()}</p>
+          <span style={{fontSize:'2.5rem',fontWeight:'900',color:'#fff'}}>{match.score_p2}</span>
+        </div>
+      </div>
+      <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:'0.5rem'}}>
+        <span style={{fontSize:'3rem',fontWeight:'900',color:'#ffb400'}}>{announceCountdown}</span>
+        <p style={{fontSize:'0.75rem',color:'rgba(255,255,255,0.25)',margin:0}}>segundos para empezar</p>
+      </div>
     </div>
   )
 
@@ -490,6 +540,11 @@ export default function Shootout() {
         <div style={styles.scoreBlock}>
           <span style={styles.scoreName}>{opponent.username}</span>
           <span style={styles.scoreNum}>{oppScore}</span>
+          {(isP1 ? shootoutState.b_choice : shootoutState.a_choice) && (
+            <span style={{...styles.choiceBadge, color:'rgba(255,255,255,0.5)'}}>
+              {(isP1 ? shootoutState.b_choice : shootoutState.a_choice).toUpperCase()} ✓
+            </span>
+          )}
         </div>
       </div>
 
