@@ -22,11 +22,19 @@ const MISSION_META = {
   secret:          { name: '???',                     desc: 'Completa 2 misiones para descubrir', icon: '🔒', reward: '2 🎯 + 2 🧤' },
 }
 
-const SECRET_REVEALED = {
-  name: '¡Accidente Histórico!',
-  desc: 'Mete un gol en propia... a propósito',
-  icon: '💥',
+const SECRET_TYPES = [
+  { name: '¡Accidente Histórico!', desc: 'Mete un gol en propia... a propósito',                          icon: '💥' },
+  { name: '¡Velocidad de Vértigo!', desc: 'Mete 3 goles antes del segundo 15',                             icon: '⚡' },
+  { name: '¡Primer Tiro, Primer Gol!', desc: 'Mete un gol directo (:00) en tu primer tiro del partido',   icon: '🎯' },
+  { name: '¡Goleada Perfecta!', desc: 'Gana 5-0 sin que sea por abandono ni inactividad',                  icon: '🔥' },
+]
+
+function getTodaySecretType() {
+  const doy = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000)
+  return doy % 4
 }
+
+const SECRET_REVEALED = SECRET_TYPES[getTodaySecretType()]
 
 const CSS = `
   @keyframes missionComplete { 0%{transform:scale(1)} 50%{transform:scale(1.03)} 100%{transform:scale(1)} }

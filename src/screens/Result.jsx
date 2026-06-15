@@ -334,7 +334,11 @@ export default function Result() {
       clean_sheet_win: 'Muralla Infranqueable',
       falta_goals_10: 'Sniper de Élite',
       play_10: 'Maratoniano',
-      secret: '¡Accidente Histórico!',
+      secret: (() => {
+        const doy = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000)
+        const types = ['¡Accidente Histórico!', '¡Velocidad de Vértigo!', '¡Primer Tiro, Primer Gol!', '¡Goleada Perfecta!']
+        return types[doy % 4]
+      })(),
     }
     const missionIcons = {
       win_streak_3: '🏆', goals_20: '💥', clean_sheet_win: '🛡️',
