@@ -109,7 +109,7 @@ export default function Home() {
     setError('')
     const { player: newPlayer, error: authError } = await registerPlayer(name)
     if (authError) { setError(authError); setSaving(false); return }
-    navigate('/queue')
+    navigate('/tutorial')
   }
 
   useEffect(() => {

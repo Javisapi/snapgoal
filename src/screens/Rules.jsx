@@ -142,6 +142,7 @@ export default function Rules() {
     <div style={styles.container}>
       <div style={styles.header}>
         <button style={styles.backBtn} onClick={() => navigate('/')}>← volver</button>
+        <button style={styles.tutorialBtn} onClick={() => navigate('/tutorial')}>📖 Tutorial</button>
         <div style={styles.headerTitle}>
           <h1 style={styles.title}>Reglas</h1>
           <div style={styles.titleLine} />
@@ -172,6 +173,7 @@ export default function Rules() {
 const styles = {
   container: { height: '100%', display: 'flex', flexDirection: 'column', background: '#141414', overflow: 'hidden' },
   header: { padding: '2.5rem 1.75rem 1rem', flexShrink: 0 },
+  tutorialBtn: { background: 'rgba(255,180,0,0.1)', border: '1px solid rgba(255,180,0,0.25)', borderRadius: '10px', color: '#ffb400', fontSize: '0.8rem', fontWeight: '700', cursor: 'pointer', padding: '6px 12px' },
   backBtn: { background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.25)', fontSize: '0.8rem', cursor: 'pointer', padding: 0, marginBottom: '1rem', letterSpacing: '0.5px' },
   headerTitle: { display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '0.5rem' },
   title: { fontSize: '2.5rem', fontWeight: '900', color: '#fff', letterSpacing: '-2px', margin: 0, lineHeight: 1 },
