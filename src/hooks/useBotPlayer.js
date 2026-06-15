@@ -6,7 +6,7 @@ const BARRIERS = [[20,25],[30,35],[40,45]]
 
 function humanError() {
   // Error de reflejos: ±4 centésimas del objetivo, sesgado hacia 0
-  const errors = [-4,-3,-2,-1,-1,0,0,0,1,1,2,3,4]
+  const errors = [-8,-6,-4,-3,-2,-1,-1,0,0,0,1,1,2,3,4,6,8]
   return errors[Math.floor(Math.random() * errors.length)]
 }
 
@@ -17,8 +17,8 @@ function randomCentesima(base, pending, barrierRange) {
   if (pending === 'FALTA' && barrierRange) {
     const { min, max } = barrierRange
     const center = Math.round((min + max) / 2)
-    if (Math.random() < 0.90) {
-      // 90%: apuntar al centro de la barrera con error ±4
+    if (Math.random() < 0.80) {
+      // 80%: apuntar al centro de la barrera con error ±8
       const target = center - pos
       const raw = (target <= 0 ? target + 100 : target) + humanError()
       return Math.max(6, raw)
@@ -37,8 +37,8 @@ function randomCentesima(base, pending, barrierRange) {
     return Math.max(6, dist + humanError())
   }
 
-  // Tirada normal: 90% apunta a :00 ±4 centésimas, 10% distribución aleatoria
-  if (Math.random() < 0.90) {
+  // Tirada normal: 80% apunta a :00 ±8 centésimas, 20% distribución aleatoria
+  if (Math.random() < 0.80) {
     const distToNext00 = pos === 0 ? 100 : 100 - pos
     return Math.max(6, distToNext00 + humanError())
   }
