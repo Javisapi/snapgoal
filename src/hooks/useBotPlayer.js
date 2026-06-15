@@ -21,7 +21,7 @@ function randomCentesima(base, pending, barrierRange) {
       // 80%: apuntar al centro de la barrera con error ±8
       const target = center - pos
       const raw = (target <= 0 ? target + 100 : target) + humanError()
-      return Math.max(6, raw)
+      return Math.max(7, raw)
     }
     // 10%: error mayor — puede fallar
     const r = Math.random()
@@ -34,13 +34,13 @@ function randomCentesima(base, pending, barrierRange) {
   if (pending === 'CORNER') {
     const nextMultiple = pos === 0 ? 10 : Math.ceil((pos + 1) / 10) * 10
     const dist = nextMultiple - pos
-    return Math.max(6, dist + humanError())
+    return Math.max(7, dist + humanError())
   }
 
   // Tirada normal: 80% apunta a :00 ±8 centésimas, 20% distribución aleatoria
   if (Math.random() < 0.80) {
     const distToNext00 = pos === 0 ? 100 : 100 - pos
-    return Math.max(6, distToNext00 + humanError())
+    return Math.max(7, distToNext00 + humanError())
   }
 
   // 10% — distribución imprecisa (error humano mayor)
@@ -138,7 +138,7 @@ export function useBotPlayer({ match, matchId, isBotMatch, myTurn }) {
       const barrierRange = match.barrier_range ? JSON.parse(match.barrier_range) : null
       const rawCents = randomCentesima(base, match.pending_type, barrierRange)
       // Garantizar mínimo 6 centésimas de avance (nadie puede tirar más rápido)
-      const cents = Math.max(rawCents, 6)
+      const cents = Math.max(rawCents, 7)
       const total = base + cents
 
       // Pequeña pausa para que el timer sea visible
