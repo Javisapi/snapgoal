@@ -170,6 +170,7 @@ export default function Missions() {
         <p style={styles.sectionTitle}>MISIONES DE HOY</p>
         <p style={styles.sectionSub}>{completedToday}/5 completadas · Se reinician a medianoche</p>
       </div>
+      <p style={styles.missionsNote}>Solo cuentan partidos completados — los abandonos no suman.</p>
 
       <div style={styles.missionsList}>
         {normalMissions.map(m => {
@@ -279,6 +280,7 @@ const styles = {
   sectionTitle: { fontSize: '0.65rem', color: 'rgba(255,255,255,0.3)', letterSpacing: '2px', margin: 0 },
   sectionSub: { fontSize: '0.65rem', color: 'rgba(255,255,255,0.2)', margin: 0 },
   missionsList: { display: 'flex', flexDirection: 'column', gap: '0.75rem' },
+  missionsNote: { fontSize: '0.72rem', color: 'rgba(255,255,255,0.2)', margin: '-0.25rem 0 0', fontStyle: 'italic' },
   missionCard: { border: '1px solid', borderRadius: '14px', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.6rem', transition: 'all 0.3s ease' },
   missionTop: { display: 'flex', alignItems: 'center', gap: '0.75rem' },
   missionIcon: { fontSize: '1.5rem', flexShrink: 0 },
