@@ -135,6 +135,7 @@ async function botProcessPlay(total, matchId, match, processingRef) {
   let changeTurn = true
 
   const pending = fresh.pending_type
+  let botResultType = pending || 'NORMAL'
 
   if (pending === 'FALTA') {
     const range = fresh.barrier_range ? JSON.parse(fresh.barrier_range) : null
@@ -142,7 +143,7 @@ async function botProcessPlay(total, matchId, match, processingRef) {
       const gol = last2 >= range.min && last2 <= range.max
       event = { emoji: gol ? '⚽' : '🧤', label: gol ? `⚽ Gol de falta de Cerverai (${last2})` : `🧤 Falta fallada por Cerverai (${last2} fuera de ${range.min}-${range.max})` }
       if (gol) { if (p1) sp1++; else sp2++ }
-      pending = gol ? 'GOL_FALTA' : 'FALTA_FALLO'
+      botResultType = gol ? 'GOL_FALTA' : 'FALTA_FALLO'
     }
   } else if (pending === 'CORNER') {
     const gol = last2 % 10 === 0
