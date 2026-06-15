@@ -199,6 +199,55 @@ Habilidad ofensiva en faltas. Amplía la ventana de gol de 5 a 10 centésimas (d
 
 ## Versiones estables
 
+### v1.9-stable — Vestuario, Misiones Diarias y Robustez
+
+#### Bot Cerverai
+- Cerverai disponible también en partidas de liga (puntos de liga y XP se acumulan para el humano)
+- Fix: barrera en falta de Cerverai — el humano elige libremente
+- Fix: registro correcto de plays de Cerverai (GOL_DIRECTO, GOL_FALTA, GOL_CORNER)
+- Fix: matchmaking de liga filtrado por `league_id` en cola (evita emparejamiento entre ligas)
+
+#### Vestuario (Desafíos diarios)
+- Nueva sección **🏟️ Vestuario** accesible desde Home (botón al lado de Academy)
+- **Racha diaria** con círculos visuales (5 círculos por ciclo) y premio cada 5 días consecutivos
+  - 5 días: 2 🎯 + 2 🧤 · 10 días: 3 🎯 + 3 🧤 · y así sucesivamente
+  - Timezone ajustado a Europe/Madrid
+- **5 misiones diarias** con nombres épicos, reinicio a medianoche:
+  - 🏆 Hat-Trick de Victorias — gana 3 seguidas (1 🎯 + 1 🧤)
+  - 💥 Beast Mode — 20 goles en un día (2 🎯 + 2 🧤)
+  - 🛡️ Muralla Infranqueable — gana sin recibir goles (1 🎯 + 1 🧤)
+  - ⚡ Sniper de Élite — 10 goles de falta (2 🎯 + 2 🧤)
+  - 🎮 Maratoniano — juega 10 partidos hoy (2 🎯 + 2 🧤)
+- **Misión secreta 🔒** — se desbloquea al completar 2 misiones; requiere meter un gol en propia
+- **Banner de misión completada** entre replay y resultado — botón "✓ ¡Recibido!" para cada misión
+- **Contador total** de misiones completadas en la pantalla del Vestuario
+- Racha visible en el botón del Vestuario en Home (🔥 N días)
+- Nuevas tablas SQL: `daily_streaks`, `daily_missions`
+- Nuevas funciones SQL: `update_daily_streak`, `update_daily_missions`, `increment_missions_completed`
+- Nueva columna en `players`: `missions_completed`
+- Nueva columna en `matches`: `missions_result`
+
+#### Resultado y Replay
+- Replay del último gol a cámara lenta antes del resultado
+  - Empieza en la jugada anterior al último gol del ganador
+  - Termina exactamente en la centésima del gol
+  - Indicador REC 🔴 parpadeante, nombre del ganador en grande, tipo de gol
+- Botón **📲 Compartir en WhatsApp** con link directo al resultado del partido (solo cuando el ganador metió un gol real)
+- 2 segundos de margen antes de navegar a resultado o shootout tras última jugada
+
+#### Robustez
+- Disconnect watcher reducido de 30s a 15s; warning de 10s a 6s
+- Countdown visible cuando rival desaparece ("victoria en Xs")
+- Función SQL `close_zombie_matches` — cierra partidos con >3 min sin actividad, llamada desde heartbeat
+- Fix `processingRef` — siempre se resetea en `finally` aunque `processPlay` falle
+- Fix: resultType correcto en plays (GOL_DIRECTO, GOL_FALTA, GOL_PENALTY, GOL_CORNER vs FALTA_FALLO etc.)
+- Fix: caché del jugador actualizado tras cada partido — stats correctas en Announce
+- Fix: countdown de 10s visible en búsqueda de liga igual que en búsqueda general
+
+#### Ligas
+- Partido cancelado en Announce: botón "Volver a la Liga" además de "Volver al inicio"
+- Fix: matchmaking de liga filtrado por `league_id` — evita emparejamiento entre ligas distintas
+
 ### v1.8-stable — Cerverai (bot)
 - Bot Cerverai garantiza rival siempre (partidas normales y de liga)
 - Lógica de juego sesgada hacia centésimas altas (cercanas a 00)
