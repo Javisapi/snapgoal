@@ -257,7 +257,7 @@ export default function Missions() {
               <p style={styles.missionReward}>5 🎯 + 5 🧤 — recompensa única</p>
             </div>
           </div>
-          <button style={styles.btnCatenaccio} onClick={() => navigate('/')}>
+          <button style={styles.btnCatenaccio} onClick={() => navigate('/?protect=1')}>
             🔒 Proteger mi cuenta
           </button>
         </div>

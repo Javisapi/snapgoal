@@ -53,6 +53,7 @@ export default function Home() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const joinCode = searchParams.get('join')
+  const openProtect = searchParams.get('protect')
 
   useEffect(() => {
     const s = document.createElement('style')
@@ -63,7 +64,7 @@ export default function Home() {
   useEffect(() => {
     if (player) {
       requestPermissionAndSubscribe(supabase, player.id)
-      if (useShouldShowProtect(player)) setShowProtect(true)
+      if (useShouldShowProtect(player) || openProtect) setShowProtect(true)
     }
   }, [player])
 
