@@ -110,7 +110,9 @@ export function useBotPlayer({ match, matchId, isBotMatch, myTurn }) {
         .from('matches').select('elapsed_centesimas').eq('id', matchId).single()
       const base = current?.elapsed_centesimas || 0
       const barrierRange = match.barrier_range ? JSON.parse(match.barrier_range) : null
-      const cents = randomCentesima(base, match.pending_type, barrierRange)
+      const rawCents = randomCentesima(base, match.pending_type, barrierRange)
+      // Garantizar mínimo 6 centésimas de avance (nadie puede tirar más rápido)
+      const cents = Math.max(rawCents, 6)
       const total = base + cents
 
       // Pequeña pausa para que el timer sea visible

@@ -108,7 +108,7 @@ const SECTIONS = [
       'Los jugadores nuevos empiezan con 1500 XP.',
       'Al ganar sumas XP. Al perder restas XP. La cantidad depende del nivel relativo de ambos jugadores.',
       'Ejemplo real: jugador A tiene 1500 XP y jugador B tiene 1800 XP. Si gana A (el más débil) → A gana +270 XP y B pierde -270 XP. Si gana B (el favorito) → B gana solo +85 XP y A pierde -85 XP. El sistema premia las sorpresas y penaliza poco los resultados esperados.',
-      'El XP solo se calcula en partidos generales. Los partidos de liga NO afectan al XP.',
+      'El XP se calcula en todos los partidos, tanto generales como de liga.',
 
       'Al terminar cada partido verás cuántos XP has ganado o perdido.',
       'El ranking general está ordenado por XP.',
