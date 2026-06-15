@@ -366,7 +366,10 @@ export default function Home() {
         const text = '⚽ Únete a SnapGoal. Partidos rápidos, Ligas y mucho más. https://snapgoal.vercel.app'
         window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank')
       }}>🎁 Invita a un amigo</button>
-      {!player?.email_verified && <button style={styles.btnProtect} onClick={() => setShowProtect(true)}>🔒 Proteger mi cuenta</button>}
+      {!player?.email_verified && <div style={{display:'flex', flexDirection:'column', gap:'0.4rem'}}>
+        <p style={{fontSize:'0.72rem', color:'#ffb400', textAlign:'center', margin:0, fontWeight:'600'}}>🎁 Verifica tu cuenta y recibe 5 🎯 + 5 🧤</p>
+        <button style={styles.btnProtect} onClick={() => setShowProtect(true)}>🔒 Proteger mi cuenta</button>
+      </div>}
       <button style={styles.btnGhost} onClick={() => setShowDeleteConfirm(true)}>Borrar cuenta</button>
     </div>
   )

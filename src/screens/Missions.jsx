@@ -247,6 +247,22 @@ export default function Missions() {
         })()}
       </div>
 
+      {!player?.email_verified && (
+        <div style={styles.catenaccioCard}>
+          <div style={styles.missionTop}>
+            <span style={styles.missionIcon}>🔒</span>
+            <div style={styles.missionInfo}>
+              <p style={styles.missionName}>Catenaccio</p>
+              <p style={styles.missionDesc}>Protege tu cuenta con email y recibe 5 🎯 + 5 🧤</p>
+              <p style={styles.missionReward}>5 🎯 + 5 🧤 — recompensa única</p>
+            </div>
+          </div>
+          <button style={styles.btnCatenaccio} onClick={() => navigate('/')}>
+            🔒 Proteger mi cuenta
+          </button>
+        </div>
+      )}
+
       <button style={styles.btnPlay} onClick={() => navigate('/queue')}>
         ⚽ Buscar partido
       </button>
@@ -293,4 +309,6 @@ const styles = {
   missionBarBg: { height: '3px', background: 'rgba(255,255,255,0.08)', borderRadius: '2px', overflow: 'hidden' },
   missionBarFill: { height: '100%', borderRadius: '2px', transition: 'width 0.5s ease' },
   btnPlay: { background: '#ffb400', color: '#141414', border: 'none', borderRadius: '12px', padding: '1.1rem', fontSize: '1rem', fontWeight: '800', cursor: 'pointer', width: '100%', marginTop: 'auto' },
+  catenaccioCard: { background: 'rgba(255,180,0,0.06)', border: '1px solid rgba(255,180,0,0.2)', borderRadius: '14px', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' },
+  btnCatenaccio: { background: 'rgba(255,180,0,0.15)', border: '1px solid rgba(255,180,0,0.3)', borderRadius: '10px', padding: '0.75rem', fontSize: '0.9rem', fontWeight: '800', color: '#ffb400', cursor: 'pointer', width: '100%' },
 }
