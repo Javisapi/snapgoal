@@ -318,6 +318,14 @@ export default function Result() {
   }[replayResult] || 'Gol'
 
   // Banner de misión completada — pantalla intermedia entre replay y resultado
+  function handleClaimMission() {
+    if (currentMissionIdx + 1 < completedMissions.length) {
+      setCurrentMissionIdx(i => i + 1)
+    } else {
+      setShowMissionBanner(false)
+    }
+  }
+
   if (showMissionBanner && completedMissions.length > 0) {
     const mission = completedMissions[currentMissionIdx]
     const missionNames = {
@@ -332,42 +340,45 @@ export default function Result() {
       win_streak_3: '🏆', goals_20: '💥', clean_sheet_win: '🛡️',
       falta_goals_10: '⚡', play_10: '🎮', secret: '💥',
     }
-    setTimeout(() => {
-      if (currentMissionIdx + 1 < completedMissions.length) {
-        setCurrentMissionIdx(i => i + 1)
-      } else {
-        setShowMissionBanner(false)
-      }
-    }, 2500)
     return (
-      <div style={{ height:'100%', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', background:'#141414', padding:'3rem 2rem', gap:'2.5rem', animation:'missionBannerIn 0.4s ease forwards' }}>
+      <div style={{ height:'100%', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'space-between', background:'#141414', padding:'3rem 2rem 4rem', animation:'missionBannerIn 0.4s ease forwards' }}>
         <p style={{ fontSize:'0.65rem', color:'rgba(255,255,255,0.25)', letterSpacing:'3px', textTransform:'uppercase', margin:0 }}>MISIÓN COMPLETADA</p>
-        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'1rem' }}>
+
+        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'2rem' }}>
           <span style={{ fontSize:'5rem', lineHeight:1 }}>{missionIcons[mission.mission] || '⚡'}</span>
-          <h2 style={{ fontSize:'2rem', fontWeight:'900', color:'#ffb400', margin:0, textAlign:'center', letterSpacing:'-0.5px', textShadow:'0 0 30px rgba(255,180,0,0.4)' }}>
+          <h2 style={{ fontSize:'2.2rem', fontWeight:'900', color:'#ffb400', margin:0, textAlign:'center', letterSpacing:'-0.5px', textShadow:'0 0 30px rgba(255,180,0,0.4)', lineHeight:1.1 }}>
             {missionNames[mission.mission] || mission.mission}
           </h2>
-        </div>
-        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'0.75rem' }}>
-          <p style={{ fontSize:'0.8rem', color:'rgba(255,255,255,0.3)', margin:0, letterSpacing:'1px' }}>RECOMPENSA</p>
-          <div style={{ display:'flex', gap:'1rem' }}>
-            <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'4px', background:'rgba(255,180,0,0.1)', border:'1px solid rgba(255,180,0,0.25)', borderRadius:'14px', padding:'1rem 1.5rem' }}>
-              <span style={{ fontSize:'1.8rem' }}>🎯</span>
-              <span style={{ fontSize:'1.2rem', fontWeight:'900', color:'#ffb400' }}>+{mission.snipers}</span>
-              <span style={{ fontSize:'0.65rem', color:'rgba(255,255,255,0.3)' }}>Sniper</span>
-            </div>
-            <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'4px', background:'rgba(255,180,0,0.1)', border:'1px solid rgba(255,180,0,0.25)', borderRadius:'14px', padding:'1rem 1.5rem' }}>
-              <span style={{ fontSize:'1.8rem' }}>🧤</span>
-              <span style={{ fontSize:'1.2rem', fontWeight:'900', color:'#ffb400' }}>+{mission.gloves}</span>
-              <span style={{ fontSize:'0.65rem', color:'rgba(255,255,255,0.3)' }}>Iron Fist</span>
+          <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'0.75rem', width:'100%' }}>
+            <p style={{ fontSize:'0.75rem', color:'rgba(255,255,255,0.3)', margin:0, letterSpacing:'1px' }}>RECOMPENSA</p>
+            <div style={{ display:'flex', gap:'1rem', width:'100%' }}>
+              <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:'6px', background:'rgba(255,180,0,0.1)', border:'1px solid rgba(255,180,0,0.25)', borderRadius:'14px', padding:'1.25rem 1rem' }}>
+                <span style={{ fontSize:'2rem' }}>🎯</span>
+                <span style={{ fontSize:'1.5rem', fontWeight:'900', color:'#ffb400' }}>+{mission.snipers}</span>
+                <span style={{ fontSize:'0.7rem', color:'rgba(255,255,255,0.3)' }}>Sniper</span>
+              </div>
+              <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:'6px', background:'rgba(255,180,0,0.1)', border:'1px solid rgba(255,180,0,0.25)', borderRadius:'14px', padding:'1.25rem 1rem' }}>
+                <span style={{ fontSize:'2rem' }}>🧤</span>
+                <span style={{ fontSize:'1.5rem', fontWeight:'900', color:'#ffb400' }}>+{mission.gloves}</span>
+                <span style={{ fontSize:'0.7rem', color:'rgba(255,255,255,0.3)' }}>Iron Fist</span>
+              </div>
             </div>
           </div>
         </div>
-        {completedMissions.length > 1 && (
-          <p style={{ fontSize:'0.7rem', color:'rgba(255,255,255,0.2)', margin:0 }}>
-            {currentMissionIdx + 1} de {completedMissions.length}
-          </p>
-        )}
+
+        <div style={{ width:'100%', display:'flex', flexDirection:'column', gap:'0.75rem' }}>
+          {completedMissions.length > 1 && (
+            <p style={{ fontSize:'0.7rem', color:'rgba(255,255,255,0.2)', margin:0, textAlign:'center' }}>
+              {currentMissionIdx + 1} de {completedMissions.length}
+            </p>
+          )}
+          <button
+            style={{ background:'#ffb400', color:'#141414', border:'none', borderRadius:'12px', padding:'1.25rem', fontSize:'1.1rem', fontWeight:'900', cursor:'pointer', width:'100%', letterSpacing:'0.5px' }}
+            onClick={handleClaimMission}
+          >
+            ✓ ¡Recibido!
+          </button>
+        </div>
       </div>
     )
   }
