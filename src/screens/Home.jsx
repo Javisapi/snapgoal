@@ -261,11 +261,13 @@ export default function Home() {
         </div>
       </div>
 
+      <style>{`@keyframes tutorialBtnGlow{0%,100%{box-shadow:0 0 6px rgba(147,197,253,0.2),0 0 12px rgba(147,197,253,0.1)}50%{box-shadow:0 0 14px rgba(147,197,253,0.5),0 0 28px rgba(147,197,253,0.2)}}`}</style>
       <div style={styles.playerSection}>
         <p style={styles.playerGreeting}>Bienvenido</p>
         <div style={{display:'flex', alignItems:'center', gap:'0.6rem'}}>
           <p style={styles.playerName}>{player.username}</p>
           {player?.email_verified && <ProtectedBadge />}
+          <button onClick={() => navigate('/tutorial')} style={{background:'rgba(96,165,250,0.15)',border:'1px solid rgba(147,197,253,0.4)',borderRadius:'20px',padding:'3px 10px',fontSize:'0.7rem',fontWeight:'800',color:'#93c5fd',cursor:'pointer',whiteSpace:'nowrap',animation:'tutorialBtnGlow 2s ease-in-out infinite',flexShrink:0}}>✦ Tutorial</button>
         </div>
         {(skills.sniper > 0 || skills.glove > 0) && (
           <div style={{display:'flex', gap:'0.75rem', alignItems:'center', marginBottom:'0.25rem'}}>

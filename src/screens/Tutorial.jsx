@@ -30,28 +30,25 @@ function SlideWelcome() {
   )
 }
 
-// Slide 2 — Cronómetro animado
+// Slide 2 — Cronómetro animado 18:47 → 19:00
 function SlideCronometro() {
-  const [cents, setCents] = useState(47)
+  const [totalCents, setTotalCents] = useState(1847)
   const [running, setRunning] = useState(false)
   const [gol, setGol] = useState(false)
   const intervalRef = useRef(null)
   const startRef = useRef(null)
-  const baseRef = useRef(47)
 
   useEffect(() => {
-    // Auto-demo: arranca a los 800ms
     const t = setTimeout(() => {
       setRunning(true)
       startRef.current = performance.now()
       intervalRef.current = setInterval(() => {
         const elapsed = Math.floor((performance.now() - startRef.current) / 10)
-        const val = (baseRef.current + elapsed) % 100
-        setCents(val)
-        // Para automáticamente al llegar cerca de 00
-        if (baseRef.current + elapsed >= 100) {
+        const val = 1847 + elapsed
+        setTotalCents(val)
+        if (val >= 1900) {
           clearInterval(intervalRef.current)
-          setCents(0)
+          setTotalCents(1900)
           setRunning(false)
           setGol(true)
         }
@@ -60,28 +57,31 @@ function SlideCronometro() {
     return () => { clearTimeout(t); clearInterval(intervalRef.current) }
   }, [])
 
+  const secs = Math.floor(totalCents / 100)
+  const cents = totalCents % 100
+
   return (
     <div style={S.slide}>
       <p style={S.eyebrow}>EL CRONÓMETRO</p>
-      <div style={{position:'relative',display:'flex',flexDirection:'column',alignItems:'center',gap:'0.5rem'}}>
+      <div style={{position:'relative',display:'flex',flexDirection:'column',alignItems:'center',gap:'0.75rem'}}>
         {gol && <div style={{position:'absolute',width:'200px',height:'200px',borderRadius:'50%',border:'3px solid #ffb400',animation:'goalRing 0.8s ease-out forwards',pointerEvents:'none'}}/>}
         <div style={{...S.timerBox, borderColor: running ? 'rgba(255,180,0,0.6)' : gol ? '#ffb400' : 'rgba(255,255,255,0.1)', boxShadow: running ? '0 0 30px rgba(255,180,0,0.3)' : 'none', transition:'all 0.3s ease'}}>
           <span style={{fontSize:'0.65rem',color:'rgba(255,255,255,0.3)',letterSpacing:'3px',marginBottom:'4px'}}>SEG : CEN</span>
           <div style={{display:'flex',alignItems:'center',gap:'4px'}}>
-            <span style={{fontSize:'4rem',fontWeight:'900',color: gol ? '#ffb400' : running ? '#fff' : 'rgba(255,255,255,0.6)',fontVariantNumeric:'tabular-nums',transition:'color 0.2s'}}>18</span>
+            <span style={{fontSize:'4rem',fontWeight:'900',color: gol ? '#ffb400' : running ? '#fff' : 'rgba(255,255,255,0.6)',fontVariantNumeric:'tabular-nums',transition:'color 0.2s'}}>{String(secs).padStart(2,'0')}</span>
             <span style={{fontSize:'3rem',color:'rgba(255,255,255,0.3)'}}>:</span>
             <span style={{fontSize:'4rem',fontWeight:'900',color: gol ? '#ffb400' : running ? '#fff' : 'rgba(255,255,255,0.6)',fontVariantNumeric:'tabular-nums',transition:'color 0.2s'}}>{String(cents).padStart(2,'0')}</span>
           </div>
         </div>
         {gol && (
           <div style={{animation:'goalPop 0.5s cubic-bezier(0.175,0.885,0.32,1.275) forwards',opacity:0}}>
-            <span style={{fontSize:'3rem',fontWeight:'900',color:'#ffb400',letterSpacing:'-1px'}}>⚽ GOL</span>
+            <span style={{fontSize:'3rem',fontWeight:'900',color:'#ffb400',letterSpacing:'-1px'}}>⚽ GOL DIRECTO</span>
           </div>
         )}
       </div>
       {!gol
-        ? <p style={S.desc}>{running ? 'El cronómetro corre... ¡para en :00!' : 'Pulsa START → STOP. La centésima decide.'}</p>
-        : <p style={{...S.desc,color:'#ffb400',fontWeight:'700'}}>¡Parar en :00 = Gol directo!</p>
+        ? <p style={S.desc}>{running ? 'El cronómetro corre... ¡para en :00!' : 'START → STOP. La centésima decide.'}</p>
+        : <p style={{...S.desc,color:'#ffb400',fontWeight:'700'}}>¡:00 = Gol directo!</p>
       }
     </div>
   )
@@ -129,49 +129,122 @@ function SlideEventos() {
   )
 }
 
-// Slide 4 — Penalty interactivo
+// Slide 4 — Penalty interactivo con cronómetro real
 function SlidePenalty() {
   const [chosen, setChosen] = useState(null)
+  const [phase, setPhase] = useState('choose') // choose | shoot | result
+  const [totalCents, setTotalCents] = useState(0)
+  const [running, setRunning] = useState(false)
   const [result, setResult] = useState(null)
-  useEffect(() => {
-    if (chosen !== null) {
-      const t = setTimeout(() => {
-        // centésima aleatoria par
-        const gol = chosen === 'par'
-        setResult(gol)
-      }, 600)
-      return () => clearTimeout(t)
-    }
-  }, [chosen])
+  const intervalRef = useRef(null)
+  const startRef = useRef(null)
+  const baseRef = useRef(0)
+
+  function startTimer() {
+    if (running) return
+    baseRef.current = totalCents
+    startRef.current = performance.now()
+    setRunning(true)
+    intervalRef.current = setInterval(() => {
+      const elapsed = Math.floor((performance.now() - startRef.current) / 10)
+      setTotalCents(baseRef.current + elapsed)
+    }, 10)
+  }
+
+  function stopTimer() {
+    if (!running) return
+    clearInterval(intervalRef.current)
+    const elapsed = Math.floor((performance.now() - startRef.current) / 10)
+    const total = baseRef.current + elapsed
+    setTotalCents(total)
+    setRunning(false)
+    const last1 = total % 10
+    const gol = chosen === 'par' ? last1 % 2 === 0 : last1 % 2 !== 0
+    setResult(gol)
+    setPhase('result')
+  }
+
+  function reset() {
+    clearInterval(intervalRef.current)
+    setChosen(null)
+    setPhase('choose')
+    setTotalCents(0)
+    setRunning(false)
+    setResult(null)
+    baseRef.current = 0
+  }
+
+  const secs = Math.floor(totalCents / 100)
+  const cents = totalCents % 100
+  const last1 = totalCents % 10
+
   return (
     <div style={S.slide}>
-      <span style={{fontSize:'3.5rem',lineHeight:1}}>🥅</span>
-      <h2 style={S.title}><span style={{color:'#ffb400'}}>Penalty</span></h2>
-      <p style={S.desc}>Paraste en :99. Elige PAR o IMPAR.<br/>Si la última centésima coincide → GOL.</p>
-      {result === null ? (
-        <div style={{display:'flex',gap:'0.75rem',width:'100%'}}>
-          {['par','impar'].map(c => (
-            <button key={c} style={{
-              flex:1,padding:'1.1rem',borderRadius:'14px',border:'2px solid',
-              borderColor: chosen === c ? '#ffb400' : 'rgba(255,255,255,0.15)',
-              background: chosen === c ? 'rgba(255,180,0,0.15)' : 'rgba(255,255,255,0.04)',
-              color: chosen === c ? '#ffb400' : 'rgba(255,255,255,0.6)',
-              fontSize:'1rem',fontWeight:'900',cursor:'pointer',
-              animation: chosen === c ? 'glow 0.4s ease' : 'none',
-              transition:'all 0.2s',
-            }} onClick={() => !chosen && setChosen(c)}>
-              {c.toUpperCase()}
-            </button>
-          ))}
-        </div>
-      ) : (
-        <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:'0.5rem',animation:'goalPop 0.5s cubic-bezier(0.175,0.885,0.32,1.275) forwards',opacity:0}}>
-          <span style={{fontSize:'3rem'}}>{result ? '⚽' : '🥅'}</span>
-          <span style={{fontSize:'1.5rem',fontWeight:'900',color: result ? '#ffb400' : 'rgba(255,255,255,0.4)'}}>
-            {result ? '¡GOL!' : 'Fallado'}
-          </span>
-          <button style={{marginTop:'0.5rem',background:'none',border:'none',color:'rgba(255,255,255,0.3)',fontSize:'0.8rem',cursor:'pointer'}} onClick={() => {setChosen(null);setResult(null)}}>
-            Intentar de nuevo
+      <span style={{fontSize:'2.5rem',lineHeight:1}}>🥅</span>
+      <h2 style={{...S.title,fontSize:'1.5rem'}}><span style={{color:'#ffb400'}}>Penalty</span> — ¡Pruébalo!</h2>
+
+      {phase === 'choose' && (
+        <>
+          <p style={S.desc}>Paraste en :99. Elige PAR o IMPAR.<br/>Si la última centésima coincide → GOL.</p>
+          <div style={{display:'flex',gap:'0.75rem',width:'100%'}}>
+            {['par','impar'].map(ch => (
+              <button key={ch} style={{
+                flex:1,padding:'1.1rem',borderRadius:'14px',border:'2px solid',
+                borderColor:'rgba(255,255,255,0.15)',background:'rgba(255,255,255,0.04)',
+                color:'rgba(255,255,255,0.7)',fontSize:'1rem',fontWeight:'900',cursor:'pointer',transition:'all 0.2s',
+              }} onClick={() => { setChosen(ch); setPhase('shoot') }}>
+                {ch.toUpperCase()}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+
+      {phase === 'shoot' && (
+        <>
+          <p style={{...S.desc,color:'#ffb400',fontWeight:'700'}}>Elegiste <strong>{chosen.toUpperCase()}</strong> — ¡ahora tira!</p>
+          <div style={{...S.timerBox, borderColor: running ? 'rgba(255,180,0,0.6)' : 'rgba(255,255,255,0.1)', boxShadow: running ? '0 0 30px rgba(255,180,0,0.3)' : 'none', width:'100%'}}>
+            <span style={{fontSize:'0.65rem',color:'rgba(255,255,255,0.3)',letterSpacing:'3px',marginBottom:'4px'}}>SEG : CEN</span>
+            <div style={{display:'flex',alignItems:'center',gap:'4px'}}>
+              <span style={{fontSize:'3.5rem',fontWeight:'900',color:running?'#fff':'rgba(255,255,255,0.5)',fontVariantNumeric:'tabular-nums'}}>{String(secs).padStart(2,'0')}</span>
+              <span style={{fontSize:'2.5rem',color:'rgba(255,255,255,0.3)'}}>:</span>
+              <span style={{fontSize:'3.5rem',fontWeight:'900',color:running?'#fff':'rgba(255,255,255,0.5)',fontVariantNumeric:'tabular-nums'}}>{String(cents).padStart(2,'0')}</span>
+            </div>
+            {running && <p style={{fontSize:'0.7rem',color:'rgba(255,255,255,0.3)',margin:'4px 0 0'}}>última cen: <strong style={{color:'#ffb400'}}>{last1} ({last1%2===0?'par':'impar'})</strong></p>}
+          </div>
+          <button
+            style={{
+              width:'120px',height:'120px',borderRadius:'50%',border:'none',cursor:'pointer',
+              background: running ? '#ff4444' : '#ffb400',
+              display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:'4px',
+              boxShadow: running ? '0 0 0 8px rgba(255,68,68,0.15)' : '0 0 0 8px rgba(255,180,0,0.15)',
+              fontSize:'0.8rem',fontWeight:'900',color:'#141414',
+            }}
+            onClick={() => running ? stopTimer() : startTimer()}
+          >
+            <div style={{width: running?'20px':'14px',height:running?'20px':'14px',background:'#141414',borderRadius:running?'4px':'50%'}}/>
+            {running ? 'PARAR' : 'START'}
+          </button>
+        </>
+      )}
+
+      {phase === 'result' && (
+        <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:'0.75rem',width:'100%'}}>
+          <div style={{animation:'goalPop 0.5s cubic-bezier(0.175,0.885,0.32,1.275) forwards',opacity:0,display:'flex',flexDirection:'column',alignItems:'center',gap:'0.5rem'}}>
+            <span style={{fontSize:'4rem'}}>{result ? '⚽' : '🥅'}</span>
+            <span style={{fontSize:'2rem',fontWeight:'900',color: result ? '#ffb400' : 'rgba(255,255,255,0.4)'}}>
+              {result ? '¡GOOOL!' : 'Fallado'}
+            </span>
+            <p style={{fontSize:'0.85rem',color:'rgba(255,255,255,0.4)',margin:0}}>
+              Elegiste <strong style={{color:'#fff'}}>{chosen}</strong> · Centésima: <strong style={{color:'#ffb400'}}>{totalCents % 10}</strong> ({(totalCents%10)%2===0?'par':'impar'})
+            </p>
+          </div>
+          <button style={{
+            background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.12)',
+            borderRadius:'12px',padding:'0.9rem',fontSize:'0.95rem',fontWeight:'800',
+            color:'rgba(255,255,255,0.6)',cursor:'pointer',width:'100%',marginTop:'0.5rem',
+          }} onClick={reset}>
+            🔄 Intentar de nuevo
           </button>
         </div>
       )}
@@ -211,9 +284,9 @@ function SlideFalta() {
   )
 }
 
-// Slide 6 — Corner
+// Slide 6 — Corner: empieza en :97, para en :30
 function SlideCorner() {
-  const [cents, setCents] = useState(63)
+  const [totalCents, setTotalCents] = useState(97)
   const [running, setRunning] = useState(false)
   const [gol, setGol] = useState(false)
   const intervalRef = useRef(null)
@@ -224,11 +297,11 @@ function SlideCorner() {
       const start = performance.now()
       intervalRef.current = setInterval(() => {
         const elapsed = Math.floor((performance.now() - start) / 10)
-        const val = (63 + elapsed) % 100
-        setCents(val)
-        if (63 + elapsed >= 137) { // para en 00 del siguiente ciclo
+        const val = 97 + elapsed
+        setTotalCents(val)
+        if (val >= 130) {
           clearInterval(intervalRef.current)
-          setCents(0)
+          setTotalCents(130)
           setRunning(false)
           setGol(true)
         }
@@ -237,18 +310,29 @@ function SlideCorner() {
     return () => { clearTimeout(t); clearInterval(intervalRef.current) }
   }, [])
 
+  const secs = Math.floor(totalCents / 100)
+  const cents = totalCents % 100
+
   return (
     <div style={S.slide}>
       <span style={{fontSize:'3.5rem',lineHeight:1}}>🚩</span>
       <h2 style={S.title}><span style={{color:'#ffb400'}}>Córner</span></h2>
       <p style={S.desc}>Paraste en :97. Tira de nuevo.<br/>Para en múltiplo de 10 → GOL.</p>
-      <div style={{...S.timerBox,borderColor: gol ? '#ffb400' : 'rgba(255,255,255,0.1)'}}>
-        <span style={{fontSize:'3rem',fontWeight:'900',color: gol ? '#ffb400' : '#fff',fontVariantNumeric:'tabular-nums'}}>
-          :{String(cents).padStart(2,'0')}
-        </span>
+      <div style={{...S.timerBox, borderColor: gol ? '#ffb400' : running ? 'rgba(255,180,0,0.4)' : 'rgba(255,255,255,0.1)', boxShadow: gol ? '0 0 30px rgba(255,180,0,0.4)' : 'none', transition:'all 0.3s'}}>
+        <span style={{fontSize:'0.65rem',color:'rgba(255,255,255,0.3)',letterSpacing:'3px',marginBottom:'4px'}}>SEG : CEN</span>
+        <div style={{display:'flex',alignItems:'center',gap:'4px'}}>
+          <span style={{fontSize:'3.5rem',fontWeight:'900',color: gol ? '#ffb400' : '#fff',fontVariantNumeric:'tabular-nums'}}>{String(secs).padStart(2,'0')}</span>
+          <span style={{fontSize:'2.5rem',color:'rgba(255,255,255,0.3)'}}>:</span>
+          <span style={{fontSize:'3.5rem',fontWeight:'900',color: gol ? '#ffb400' : '#fff',fontVariantNumeric:'tabular-nums'}}>{String(cents).padStart(2,'0')}</span>
+        </div>
       </div>
-      {gol && <p style={{fontSize:'1.2rem',fontWeight:'900',color:'#ffb400',animation:'goalPop 0.5s ease forwards',opacity:0}}>⚽ ¡:00 = GOL de córner!</p>}
-      {!gol && <p style={{fontSize:'0.8rem',color:'rgba(255,255,255,0.3)'}}>:10 · :20 · :30 · :40 · :50 · :60 · :70 · :80 · :90 · :00</p>}
+      {gol
+        ? <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:'0.25rem',animation:'goalPop 0.5s ease forwards',opacity:0}}>
+            <span style={{fontSize:'2rem',fontWeight:'900',color:'#ffb400'}}>⚽ ¡GOL de córner!</span>
+            <p style={{fontSize:'0.8rem',color:'rgba(255,255,255,0.5)',margin:0}}>:30 es múltiplo de 10 ✓</p>
+          </div>
+        : <p style={{fontSize:'0.8rem',color:'rgba(255,255,255,0.3)'}}>Múltiplos de 10: :10 · :20 · :30 · :40 · :50 · :60 · :70 · :80 · :90 · :00</p>
+      }
     </div>
   )
 }
@@ -356,37 +440,56 @@ function SlideSkills() {
   )
 }
 
-// Slide 10 — Vestuario
+// Slide 10 — Vestuario con misiones
 function SlideVestuario() {
-  const [streakDay, setStreakDay] = useState(0)
+  const [visible, setVisible] = useState(0)
+  const missions = [
+    { icon:'⚡', name:'Sniper de Élite',        reward:'2🎯+2🧤', progress:4,  target:10 },
+    { icon:'💥', name:'Beast Mode',             reward:'2🎯+2🧤', progress:12, target:20 },
+    { icon:'🎮', name:'Maratoniano',             reward:'2🎯+2🧤', progress:3,  target:10 },
+    { icon:'🏆', name:'Hat-Trick de Victorias', reward:'1🎯+1🧤', progress:2,  target:3  },
+    { icon:'🛡️', name:'Muralla Infranqueable',  reward:'1🎯+1🧤', progress:0,  target:1  },
+    { icon:'🔒', name:'Misión Secreta',          reward:'2🎯+2🧤', progress:0,  target:1, locked:true },
+  ]
   useEffect(() => {
     let i = 0
     const t = setInterval(() => {
       i++
-      setStreakDay(i)
-      if (i >= 5) clearInterval(t)
-    }, 300)
+      setVisible(i)
+      if (i >= missions.length) clearInterval(t)
+    }, 250)
     return () => clearInterval(t)
   }, [])
   return (
-    <div style={S.slide}>
-      <span style={{fontSize:'3.5rem',lineHeight:1}}>🏟️</span>
-      <h2 style={S.title}>El<br/><span style={{color:'#ffb400'}}>Vestuario</span></h2>
-      <p style={S.desc}>5 misiones diarias. Complétalas para ganar skills.</p>
-      <div style={{display:'flex',gap:'0.5rem',justifyContent:'center',margin:'0.5rem 0'}}>
-        {[1,2,3,4,5].map(i => (
+    <div style={{...S.slide,gap:'0.6rem'}}>
+      <div style={{display:'flex',alignItems:'center',gap:'0.5rem'}}>
+        <span style={{fontSize:'2rem',lineHeight:1}}>🏟️</span>
+        <h2 style={{...S.title,fontSize:'1.5rem',margin:0}}>El <span style={{color:'#ffb400'}}>Vestuario</span></h2>
+      </div>
+      <p style={{...S.desc,fontSize:'0.82rem'}}>5 misiones diarias + 1 secreta. Complétalas para ganar skills.</p>
+      <div style={{width:'100%',display:'flex',flexDirection:'column',gap:'0.4rem'}}>
+        {missions.map((m, i) => i < visible && (
           <div key={i} style={{
-            width:'40px',height:'40px',borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',
-            background: i <= streakDay ? '#ffb400' : 'rgba(255,255,255,0.06)',
-            border: `2px solid ${i <= streakDay ? '#ffb400' : 'rgba(255,255,255,0.1)'}`,
-            boxShadow: i <= streakDay ? '0 0 12px rgba(255,180,0,0.5)' : 'none',
-            transition:'all 0.3s ease',
+            display:'flex',alignItems:'center',gap:'0.6rem',
+            background: m.locked ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.03)',
+            border:`1px solid ${m.locked ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.08)'}`,
+            borderRadius:'10px',padding:'0.5rem 0.75rem',
+            animation:'fadeUp 0.25s ease forwards',opacity:0,
           }}>
-            {i <= streakDay && <span style={{fontSize:'0.9rem',animation:'streakFire 0.5s ease'}}>🔥</span>}
+            <span style={{fontSize:'1.1rem',flexShrink:0}}>{m.icon}</span>
+            <span style={{flex:1,fontSize:'0.78rem',fontWeight:'700',color: m.locked ? 'rgba(255,255,255,0.3)' : '#fff'}}>{m.name}</span>
+            {!m.locked && (
+              <div style={{display:'flex',alignItems:'center',gap:'0.4rem'}}>
+                <div style={{width:'40px',height:'4px',background:'rgba(255,255,255,0.08)',borderRadius:'2px',overflow:'hidden'}}>
+                  <div style={{width:`${(m.progress/m.target)*100}%`,height:'100%',background:'#ffb400',borderRadius:'2px'}}/>
+                </div>
+                <span style={{fontSize:'0.65rem',color:'rgba(255,255,255,0.3)',minWidth:'24px'}}>{m.progress}/{m.target}</span>
+              </div>
+            )}
+            <span style={{fontSize:'0.65rem',color:'#ffb400',fontWeight:'700',flexShrink:0}}>{m.reward}</span>
           </div>
         ))}
       </div>
-      <p style={{fontSize:'0.8rem',color:'#ffb400',fontWeight:'700',margin:0}}>Racha de 5 días → 2 🎯 + 2 🧤</p>
     </div>
   )
 }
