@@ -476,11 +476,15 @@ export default function Result() {
       </div>
 
       <div style={{ ...styles.statsBox, animation: 'slideUp 0.4s ease 0.4s both' }}>
-        <div style={styles.statRow}>
-          <span style={styles.statLabel}>puntos ganados</span>
-          <span style={{ ...styles.statVal, color: '#ffb400' }}>+{pointsEarned}</span>
-        </div>
-        <div style={styles.statDivider} />
+        {match?.league_id && (
+          <>
+            <div style={styles.statRow}>
+              <span style={styles.statLabel}>puntos de liga</span>
+              <span style={{ ...styles.statVal, color: '#ffb400' }}>+{pointsEarned}</span>
+            </div>
+            <div style={styles.statDivider} />
+          </>
+        )}
         {xpDelta !== null && (
           <>
             <div style={styles.statRow}>
