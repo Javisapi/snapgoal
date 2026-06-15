@@ -47,6 +47,7 @@ export default function Missions() {
   const [streak, setStreak] = useState(null)
   const [missions, setMissions] = useState([])
   const [loading, setLoading] = useState(true)
+  const [skills, setSkills] = useState({ sniper: 0, glove: 0 })
 
   useEffect(() => {
     const s = document.createElement('style')
@@ -85,6 +86,14 @@ export default function Missions() {
       setMissions(ordered)
     }
 
+    const { data: itemsData } = await supabase.from('player_items').select('item_type,stock').eq('player_id', p.id)
+    if (itemsData) {
+      setSkills({
+        sniper: itemsData.find(i => i.item_type === 'pro_shooter')?.stock || 0,
+        glove: itemsData.find(i => i.item_type === 'golden_glove')?.stock || 0,
+      })
+    }
+
     setLoading(false)
   }
 
@@ -120,6 +129,22 @@ export default function Missions() {
           <span style={styles.totalBadgeText}>⚡ {player.missions_completed} misiones completadas en total</span>
         </div>
       )}
+      <div style={styles.skillsCard}>
+        <p style={styles.skillsTitle}>TUS SKILLS</p>
+        <div style={styles.skillsRow}>
+          <div style={styles.skillItem}>
+            <span style={styles.skillEmoji}>🎯</span>
+            <span style={styles.skillCount}>{skills.sniper}</span>
+            <span style={styles.skillLabel}>Sniper</span>
+          </div>
+          <div style={styles.skillsDivider}/>
+          <div style={styles.skillItem}>
+            <span style={styles.skillEmoji}>🧤</span>
+            <span style={styles.skillCount}>{skills.glove}</span>
+            <span style={styles.skillLabel}>Iron Fist</span>
+          </div>
+        </div>
+      </div>
 
       {/* Racha */}
       <div style={styles.streakCard}>
@@ -308,6 +333,14 @@ const styles = {
   missionProgress: { fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', fontWeight: '700', flexShrink: 0 },
   missionBarBg: { height: '3px', background: 'rgba(255,255,255,0.08)', borderRadius: '2px', overflow: 'hidden' },
   missionBarFill: { height: '100%', borderRadius: '2px', transition: 'width 0.5s ease' },
+  skillsCard: { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', alignItems: 'center' },
+  skillsTitle: { fontSize: '0.65rem', color: 'rgba(255,255,255,0.3)', letterSpacing: '2px', margin: 0 },
+  skillsRow: { display: 'flex', alignItems: 'center', gap: '2rem', justifyContent: 'center' },
+  skillItem: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' },
+  skillEmoji: { fontSize: '2rem', lineHeight: 1 },
+  skillCount: { fontSize: '2.5rem', fontWeight: '900', color: '#ffb400', lineHeight: 1 },
+  skillLabel: { fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', fontWeight: '600' },
+  skillsDivider: { width: '1px', height: '60px', background: 'rgba(255,255,255,0.08)' },
   btnPlay: { background: '#ffb400', color: '#141414', border: 'none', borderRadius: '12px', padding: '1.1rem', fontSize: '1rem', fontWeight: '800', cursor: 'pointer', width: '100%', marginTop: 'auto' },
   catenaccioCard: { background: 'rgba(255,180,0,0.06)', border: '1px solid rgba(255,180,0,0.2)', borderRadius: '14px', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' },
   btnCatenaccio: { background: 'rgba(255,180,0,0.15)', border: '1px solid rgba(255,180,0,0.3)', borderRadius: '10px', padding: '0.75rem', fontSize: '0.9rem', fontWeight: '800', color: '#ffb400', cursor: 'pointer', width: '100%' },

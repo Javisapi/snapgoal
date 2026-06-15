@@ -27,6 +27,7 @@ export default function Home() {
   const { player, loading, registerPlayer, refreshPlayer } = useAuth()
   const [username, setUsername] = useState('')
   const [streak, setStreak] = useState(0)
+  const [skills, setSkills] = useState({ sniper: 0, glove: 0 })
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -49,6 +50,14 @@ export default function Home() {
     if (!player?.id) return
     supabase.from('daily_streaks').select('current_streak').eq('player_id', player.id).single()
       .then(({ data }) => { if (data) setStreak(data.current_streak) })
+    supabase.from('player_items').select('item_type,stock').eq('player_id', player.id)
+      .then(({ data }) => {
+        if (data) {
+          const sniper = data.find(i => i.item_type === 'pro_shooter')?.stock || 0
+          const glove = data.find(i => i.item_type === 'golden_glove')?.stock || 0
+          setSkills({ sniper, glove })
+        }
+      })
   }, [player?.id])
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -258,6 +267,12 @@ export default function Home() {
           <p style={styles.playerName}>{player.username}</p>
           {player?.email_verified && <ProtectedBadge />}
         </div>
+        {(skills.sniper > 0 || skills.glove > 0) && (
+          <div style={{display:'flex', gap:'0.75rem', alignItems:'center', marginBottom:'0.25rem'}}>
+            <span style={{fontSize:'0.8rem', color:'rgba(255,255,255,0.5)', fontWeight:'600'}}>🎯 ×{skills.sniper}</span>
+            <span style={{fontSize:'0.8rem', color:'rgba(255,255,255,0.5)', fontWeight:'600'}}>🧤 ×{skills.glove}</span>
+          </div>
+        )}
         <div style={styles.playerMeta}>
           <span style={styles.playerMetaItem}>{player.total_points} pts</span>
           <span style={styles.playerMetaDot} />
