@@ -140,7 +140,7 @@ export default function Rules() {
 
   return (
     <div style={styles.container}>
-      <style>{`@keyframes tutorialGlow { 0%,100%{box-shadow:0 0 8px rgba(255,220,120,0.3),0 0 16px rgba(255,220,120,0.1)} 50%{box-shadow:0 0 16px rgba(255,220,120,0.6),0 0 32px rgba(255,220,120,0.25)} }`}</style>
+      <style>{`@keyframes tutorialBtnGlow { 0%,100%{box-shadow:0 0 6px rgba(147,197,253,0.2),0 0 12px rgba(147,197,253,0.1)} 50%{box-shadow:0 0 14px rgba(147,197,253,0.5),0 0 28px rgba(147,197,253,0.2)} }`}</style>
       <div style={styles.header}>
         <button style={styles.backBtn} onClick={() => navigate('/')}>← volver</button>
         <div style={styles.headerTitle}>

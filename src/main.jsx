@@ -13,4 +13,11 @@ if (sessionStorage.getItem('cache_version') !== CACHE_VERSION) {
 
 registerPushSW()
 
+// Detectar nuevo SW y recargar automáticamente
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    window.location.reload()
+  })
+}
+
 createRoot(document.getElementById('root')).render(<App />)
