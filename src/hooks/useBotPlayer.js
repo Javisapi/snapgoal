@@ -5,12 +5,11 @@ const CERVERAI_ID = 'ec21fbbe-c14f-4677-aa19-052fd54ff364'
 const BARRIERS = [[20,25],[30,35],[40,45]]
 
 function humanError(dist) {
-  // Error proporcional a la distancia (A) con zonas definidas (B)
-  // Cuanto más lejos del objetivo, mayor margen de error
+  // Error proporcional a la distancia, máximo ±7
   let maxErr
   if (dist <= 20)      maxErr = Math.max(1, Math.round(dist / 20))  // zona caliente: ±1
-  else if (dist <= 45) maxErr = Math.max(2, Math.round(dist / 15))  // zona media: ±2-3
-  else                 maxErr = Math.max(3, Math.round(dist / 12))  // zona fría: ±3-8
+  else if (dist <= 45) maxErr = Math.max(3, Math.round(dist / 15))  // zona media: ±2-3
+  else                 maxErr = Math.min(7, Math.max(4, Math.round(dist / 12)))  // zona fría: ±4-7
 
   // Error aleatorio entre -maxErr y +maxErr, sesgado hacia 0
   const range = maxErr * 2 + 1
@@ -45,12 +44,15 @@ function randomCentesima(base, pending, barrierRange) {
     return 8 + Math.floor(Math.random() * 88) // 8-95
   }
 
-  // Corner: apuntar al próximo múltiplo de 10
+  // Corner: apuntar a :20 o :30 (no :10, demasiado fácil) con error ±5
   if (pending === 'CORNER') {
-    const nextMultiple = pos === 0 ? 10 : Math.ceil((pos + 1) / 10) * 10
-    let dist = nextMultiple - pos
-    if (dist < 7) dist += 10 // saltar al siguiente múltiplo si está muy cerca
-    return Math.max(7, dist + humanError(dist))
+    // Elegir entre :20 y :30 del ciclo actual
+    const target = Math.random() < 0.5 ? 20 : 30
+    let dist = target - pos
+    if (dist <= 0) dist += 100
+    if (dist < 7) dist += 10
+    const err = Math.floor(Math.random() * 11) - 5 // ±5
+    return Math.max(7, dist + err)
   }
 
   // Tirada normal: 80% apunta a :00 con error, 20% distribución aleatoria
