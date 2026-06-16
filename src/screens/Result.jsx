@@ -119,7 +119,6 @@ export default function Result() {
     const completedMissionsData = m.missions_result?.completed_missions || []
     if (completedMissionsData.length > 0) {
       setCompletedMissions(completedMissionsData)
-      // El banner se activa después del replay (ver setInterval del replay)
     }
 
     // Replay del último gol — obtener todas las jugadas ordenadas globalmente
@@ -152,6 +151,10 @@ export default function Result() {
     setReplayResult(lastPlayResult)
     setReplayGoalCents(goalCents)
     setReplayCents(startCents)
+    // Si no hay replay válido, mostrar banner directamente
+    if (!lastPlay || goalCents === finalCents) {
+      if (completedMissionsData.length > 0) setShowMissionBanner(true)
+    }
     let current = startCents
     const totalFrames = Math.max(goalCents - startCents, 1)
     const frameDuration = Math.min(Math.max(Math.floor(2400 / totalFrames), 20), 120)
@@ -162,10 +165,7 @@ export default function Result() {
         clearInterval(replayIntervalRef.current)
         setTimeout(() => {
           setShowReplay(false)
-          // Mostrar banner de misión después del replay
-          if (completedMissionsData.length > 0) {
-            setShowMissionBanner(true)
-          }
+          setShowMissionBanner(true)
         }, 1000)
       }
     }, frameDuration)
