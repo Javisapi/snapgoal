@@ -151,6 +151,12 @@ export function useBotPlayer({ match, matchId, isBotMatch, myTurn }) {
       const cents = Math.max(rawCents, 7)
       const total = base + cents
 
+      // Esperar el tiempo equivalente a las centésimas que avanza
+      // para que el observador humano vea el cronómetro correr
+      // 1 centésima = 10ms reales, añadir 200ms de margen para latencia de red
+      const visualDelay = cents * 10 + 200
+      await new Promise(r => setTimeout(r, visualDelay))
+
       await botProcessPlay(total, matchId, match, processingRef)
     }, randomDelay())
   }, [match?.current_turn, match?.pending_type, match?.barrier_range, match?.penalty_choice, match?.timer_running, match?.turn_sequence])
