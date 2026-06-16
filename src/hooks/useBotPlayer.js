@@ -8,9 +8,9 @@ function humanError(dist) {
   // Error proporcional a la distancia (A) con zonas definidas (B)
   // Cuanto más lejos del objetivo, mayor margen de error
   let maxErr
-  if (dist <= 20)      maxErr = Math.max(2, Math.round(dist / 7))   // zona caliente: ±2-3
-  else if (dist <= 45) maxErr = Math.max(4, Math.round(dist / 7))   // zona media: ±3-6
-  else                 maxErr = Math.max(7, Math.round(dist / 7))   // zona fría: ±7-14
+  if (dist <= 20)      maxErr = Math.max(1, Math.round(dist / 20))  // zona caliente: ±1
+  else if (dist <= 45) maxErr = Math.max(2, Math.round(dist / 15))  // zona media: ±2-3
+  else                 maxErr = Math.max(3, Math.round(dist / 12))  // zona fría: ±3-8
 
   // Error aleatorio entre -maxErr y +maxErr, sesgado hacia 0
   const range = maxErr * 2 + 1
@@ -26,8 +26,8 @@ function randomCentesima(base, pending, barrierRange) {
   if (pending === 'FALTA' && barrierRange) {
     const { min, max } = barrierRange
     const center = Math.round((min + max) / 2)
-    if (Math.random() < 0.80) {
-      // 80%: apuntar al centro de la barrera con error ±8
+    if (Math.random() < 0.93) {
+      // 93%: apuntar al centro con error mínimo
       const target = center - pos
       const distToCenter = target <= 0 ? target + 100 : target
       const raw = distToCenter + humanError(distToCenter)
@@ -47,8 +47,8 @@ function randomCentesima(base, pending, barrierRange) {
     return Math.max(7, dist + humanError(dist))
   }
 
-  // Tirada normal: 80% apunta a :00 ±8 centésimas, 20% distribución aleatoria
-  if (Math.random() < 0.80) {
+  // Tirada normal: 93% apunta a :00 con error mínimo, 7% distribución aleatoria
+  if (Math.random() < 0.93) {
     const distToNext00 = pos === 0 ? 100 : 100 - pos
     return Math.max(7, distToNext00 + humanError(distToNext00))
   }
