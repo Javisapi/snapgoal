@@ -902,7 +902,7 @@ export default function Game() {
     }
 
     if (gol) triggerFlash('goal', 'GOL')
-    if (ev.result === 'GOL_PROPIO') triggerFlash('owngoal', 'GOL PROPIO')
+    if (ev.result === 'GOL_PROPIO' && !pending) triggerFlash('owngoal', 'GOL PROPIO')
     const ggState = m.golden_glove_state
     if (ggState?.used && !gol && pending === 'PENALTY') triggerFlash('glove', '🧤 IRON FIST')
 
