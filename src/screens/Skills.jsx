@@ -38,8 +38,9 @@ const SKILLS = [
 const HOW_TO_GET = [
   'Los nuevos jugadores empiezan sin skills.',
   'Protege tu cuenta con email y recibe 5 Iron Fists y 5 Snipers de bienvenida.',
-  'Completa las misiones diarias del Vestuario para ganar más skills.',
-  'La racha diaria también premia con skills cada 5 días consecutivos jugados.',
+  'Completa las misiones diarias del Vestuario para ganar Iron Fists y Snipers.',
+  'La racha diaria premia con skills cada 5 días consecutivos jugados.',
+  'Completa las 6 misiones del día (incluida la secreta) para ganar 1 Mano de Dios 🙏.',
   'No hay límite de acumulación — puedes tener tantos como quieras.',
 ]
 

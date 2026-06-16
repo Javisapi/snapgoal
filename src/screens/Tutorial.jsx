@@ -415,16 +415,17 @@ function SlideSkills() {
   const [active, setActive] = useState(null)
   return (
     <div style={S.slide}>
-      <h2 style={S.title}>Habilidades<br/><span style={{color:'#ffb400'}}>especiales</span></h2>
-      <p style={S.desc}>Dos skills que pueden cambiar el partido. Consíguelas en el Vestuario.</p>
+      <h2 style={S.title}><span style={{color:'#ffb400'}}>Skills</span></h2>
+      <p style={S.desc}>Tres habilidades especiales que pueden cambiar el partido.</p>
       <div style={{width:'100%',display:'flex',flexDirection:'column',gap:'0.75rem'}}>
         {[
           { icon:'🧤', name:'Iron Fist', color:'#ffb400', desc:'En penalty: bloquea la mitad del cronómetro (00-49 ó 50-99). Tu rival no sabe qué lado elegiste.' },
           { icon:'🎯', name:'Sniper',    color:'#ffb400', desc:'En falta: tu ventana de gol se amplía al doble. De 5 centésimas a 10.' },
+          { icon:'🙏', name:'Mano de Dios', color:'#7dd3fc', desc:'La super skill. Modifica tu centésima en ±1. :99→:00 GOL, :01→:00 GOL, :98→:99 Penalty, :97→:98 Falta, :96→:97 Córner. Solo se consigue completando las 6 misiones del Vestuario.' },
         ].map((skill,i) => (
           <div key={i} style={{
-            background: active===i ? 'rgba(255,180,0,0.08)' : 'rgba(255,255,255,0.03)',
-            border:`1px solid ${active===i ? 'rgba(255,180,0,0.3)' : 'rgba(255,255,255,0.07)'}`,
+            background: active===i ? (i===2 ? 'rgba(100,180,255,0.08)' : 'rgba(255,180,0,0.08)') : 'rgba(255,255,255,0.03)',
+            border:`1px solid ${active===i ? (i===2 ? 'rgba(100,180,255,0.3)' : 'rgba(255,180,0,0.3)') : 'rgba(255,255,255,0.07)'}`,
             borderRadius:'14px',padding:'1rem',cursor:'pointer',transition:'all 0.2s',
           }} onClick={() => setActive(active===i ? null : i)}>
             <div style={{display:'flex',alignItems:'center',gap:'0.75rem'}}>

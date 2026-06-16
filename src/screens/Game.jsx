@@ -63,6 +63,13 @@ const ProShooterStock = ({ stock }) => (
   </span>
 )
 
+const HogStock = ({ stock }) => (
+  <span style={{display:'flex',alignItems:'center',gap:'2px',fontSize:'0.65rem',color:'#7dd3fc',fontWeight:'700'}}>
+    🙏
+    {stock > 1 && <span>×{stock}</span>}
+  </span>
+)
+
 const GloveStock = ({ stock }) => (
   <span style={{display:'flex',alignItems:'center',gap:'2px',fontSize:'0.65rem',color:'#ffb400',fontWeight:'700'}}>
     <GloveIcon />
@@ -108,6 +115,8 @@ export default function Game() {
   const gloveTimerRef = useRef(null)
   const [proShooterStock, setProShooterStock] = useState(0)
   const [oppProShooterStock, setOppProShooterStock] = useState(0)
+  const [handOfGodStock, setHandOfGodStock] = useState(0)
+  const [oppHandOfGodStock, setOppHandOfGodStock] = useState(0)
   const proShooterStockRef = useRef(0)
   const [proShooterActive, setProShooterActive] = useState(false)
   const [showProShooterPopup, setShowProShooterPopup] = useState(false)
@@ -235,6 +244,8 @@ export default function Game() {
       proShooterStockRef.current = ps?.stock || 0
       const hog = myItems.find(i => i.item_type === 'hand_of_god')
       setHandOfGodStock(hog?.stock || 0)
+      const oppHog = oppItems?.find(i => i.item_type === 'hand_of_god')
+      setOppHandOfGodStock(oppHog?.stock || 0)
     }
     if (oppItems) {
       const gg = oppItems.find(i => i.item_type === 'golden_glove')
@@ -1345,6 +1356,7 @@ export default function Game() {
           <span style={styles.playerScore}>{scoreMe}</span>
           {goldenGloveStock > 0 && <GloveStock stock={goldenGloveStock} />}
           {proShooterStock > 0 && <ProShooterStock stock={proShooterStock} />}
+          {handOfGodStock > 0 && <HogStock stock={handOfGodStock} />}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
           <button style={styles.abandonBtn} onClick={() => setShowAbandon(true)}>✕</button>
@@ -1359,6 +1371,7 @@ export default function Game() {
           <span style={styles.playerScore}>{scoreOpp}</span>
           {oppGoldenGloveStock > 0 && <GloveStock stock={oppGoldenGloveStock} />}
           {oppProShooterStock > 0 && <ProShooterStock stock={oppProShooterStock} />}
+          {oppHandOfGodStock > 0 && <HogStock stock={oppHandOfGodStock} />}
         </div>
       </div>
 
