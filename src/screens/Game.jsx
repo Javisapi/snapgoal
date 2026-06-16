@@ -307,8 +307,18 @@ export default function Game() {
         } else if (!updated.timer_running) {
           if (iAmTheShooterRef.current || processingRef.current) {
             // Soy el tirador o estoy procesando — display ya congelado, ignorar
-          } else if (!runningRef.current) {
-            // Soy el observador con cronómetro parado — mostrar valor final
+          } else if (runningRef.current) {
+            // Soy el observador y el timer estaba corriendo — congelar en el valor local actual
+            // NO saltar al valor del servidor para evitar el salto brusco visual
+            timerVersionRef.current += 1
+            clearInterval(intervalRef.current)
+            intervalRef.current = null
+            runningRef.current = false
+            setRunning(false)
+            // Sincronizar offsetRef con el valor del servidor para la siguiente tirada
+            offsetRef.current = updated.elapsed_centesimas || 0
+          } else {
+            // Soy el observador con cronómetro ya parado — mostrar valor del servidor
             timerVersionRef.current += 1
             clearInterval(intervalRef.current)
             intervalRef.current = null
