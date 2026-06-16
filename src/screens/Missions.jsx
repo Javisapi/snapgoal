@@ -5,11 +5,9 @@ import { supabase } from '../lib/supabase'
 async function getPlayer() {
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) return null
-  const key = 'player_' + session.user.id
-  const cached = sessionStorage.getItem(key)
-  if (cached) return JSON.parse(cached)
+  // Siempre fresco — Missions muestra stats que cambian frecuentemente
   const { data } = await supabase.from('players').select('*').eq('auth_id', session.user.id).single()
-  if (data) sessionStorage.setItem(key, JSON.stringify(data))
+  if (data) sessionStorage.setItem('player_' + session.user.id, JSON.stringify(data))
   return data
 }
 
@@ -61,7 +59,7 @@ export default function Missions() {
     if (!p) { navigate('/'); return }
     setPlayer(p)
 
-    const today = new Date().toISOString().split('T')[0]
+    const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Madrid' })
 
     const { data: streakData } = await supabase
       .from('daily_streaks').select('*').eq('player_id', p.id).single()
