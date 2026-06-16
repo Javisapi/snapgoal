@@ -45,7 +45,7 @@ export default function Missions() {
   const [streak, setStreak] = useState(null)
   const [missions, setMissions] = useState([])
   const [loading, setLoading] = useState(true)
-  const [skills, setSkills] = useState({ sniper: 0, glove: 0 })
+  const [skills, setSkills] = useState({ sniper: 0, glove: 0, hog: 0 })
 
   useEffect(() => {
     const s = document.createElement('style')
@@ -89,6 +89,7 @@ export default function Missions() {
       setSkills({
         sniper: itemsData.find(i => i.item_type === 'pro_shooter')?.stock || 0,
         glove: itemsData.find(i => i.item_type === 'golden_glove')?.stock || 0,
+        hog: itemsData.find(i => i.item_type === 'hand_of_god')?.stock || 0,
       })
     }
 
@@ -141,6 +142,12 @@ export default function Missions() {
             <span style={styles.skillCount}>{skills.glove}</span>
             <span style={styles.skillLabel}>Iron Fist</span>
           </div>
+          <div style={styles.skillsDivider}/>
+          <div style={styles.skillItem}>
+            <span style={styles.skillEmoji}>🙏</span>
+            <span style={styles.skillCount}>{skills.hog}</span>
+            <span style={styles.skillLabel}>Mano de Dios</span>
+          </div>
         </div>
       </div>
 
@@ -191,7 +198,7 @@ export default function Missions() {
       {/* Misiones del día */}
       <div style={styles.sectionHeader}>
         <p style={styles.sectionTitle}>MISIONES DE HOY</p>
-        <p style={styles.sectionCompleted}>{completedToday}/5 completadas</p>
+        <p style={styles.sectionCompleted}>{completedToday}/{missions.length} completadas</p>
       </div>
       <p style={styles.sectionReset}>Todas las misiones se reinician a medianoche CE(S)T</p>
       <p style={styles.missionsNote}>Solo cuentan partidos completados — los abandonos no suman.</p>
@@ -269,6 +276,14 @@ export default function Missions() {
             </div>
           )
         })()}
+      </div>
+
+      <div style={{background:'rgba(100,180,255,0.06)',border:'1px solid rgba(100,180,255,0.2)',borderRadius:'14px',padding:'1rem',display:'flex',alignItems:'center',gap:'0.75rem'}}>
+        <span style={{fontSize:'2rem'}}>🙏</span>
+        <div>
+          <p style={{margin:'0 0 2px',fontSize:'0.88rem',fontWeight:'800',color:'#7dd3fc'}}>Mano de Dios</p>
+          <p style={{margin:0,fontSize:'0.75rem',color:'rgba(200,230,255,0.5)',lineHeight:1.4}}>Completa las 6 misiones del día (incluida la secreta) para conseguirla</p>
+        </div>
       </div>
 
       {!player?.email_verified && (

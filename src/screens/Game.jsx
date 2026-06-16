@@ -11,6 +11,10 @@ const GAME_CSS = `
   @keyframes cardShake { 0%,100%{transform:translateX(0) rotate(0deg)} 20%{transform:translateX(-10px) rotate(-3deg)} 40%{transform:translateX(10px) rotate(3deg)} 60%{transform:translateX(-6px) rotate(-2deg)} 80%{transform:translateX(6px) rotate(2deg)} }
   @keyframes flashOverlayGold { 0%{opacity:0} 20%{opacity:1} 100%{opacity:0} }
   @keyframes flashOverlayRed { 0%{opacity:0} 15%{opacity:1} 100%{opacity:0} }
+  @keyframes hogIn { 0%{opacity:0;transform:scale(0.8)} 100%{opacity:1;transform:scale(1)} }
+  @keyframes hogGlow { 0%,100%{text-shadow:0 0 20px rgba(100,180,255,0.5)} 50%{text-shadow:0 0 60px rgba(100,180,255,1),0 0 100px rgba(200,230,255,0.8)} }
+  @keyframes hogRays { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+  @keyframes hogFlash { 0%{opacity:0;transform:scale(0.5)} 30%{opacity:1;transform:scale(1.1)} 70%{opacity:1;transform:scale(1)} 100%{opacity:0} }
   @keyframes paloShake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-12px)} 40%{transform:translateX(12px)} 60%{transform:translateX(-8px)} 80%{transform:translateX(8px)} }
 `
 
@@ -108,6 +112,11 @@ export default function Game() {
   const [proShooterActive, setProShooterActive] = useState(false)
   const [showProShooterPopup, setShowProShooterPopup] = useState(false)
   const proShooterPopupShownRef = useRef(false)
+  const [handOfGodStock, setHandOfGodStock] = useState(0)
+  const [showHandOfGodPopup, setShowHandOfGodPopup] = useState(false)
+  const [showHandOfGodFlash, setShowHandOfGodFlash] = useState(false)
+  const handOfGodTimerRef = useRef(null)
+  const handOfGodPendingCentsRef = useRef(null)
   const [showPenaltyPopup, setShowPenaltyPopup] = useState(false)
 
   const intervalRef = useRef(null)
@@ -223,6 +232,8 @@ export default function Game() {
       const ps = myItems.find(i => i.item_type === 'pro_shooter')
       setProShooterStock(ps?.stock || 0)
       proShooterStockRef.current = ps?.stock || 0
+      const hog = myItems.find(i => i.item_type === 'hand_of_god')
+      setHandOfGodStock(hog?.stock || 0)
     }
     if (oppItems) {
       const gg = oppItems.find(i => i.item_type === 'golden_glove')
@@ -261,6 +272,12 @@ export default function Game() {
         const isMyTurn = updated.current_turn === playerRef.current?.id
         if (updated.cards_p1 && updated.cards_p2) setCards({ p1: updated.cards_p1, p2: updated.cards_p2 })
         if (updated.penalty_choice) setPenaltyChoice(updated.penalty_choice)
+
+        // Detectar Mano de Dios usada por el rival
+        if (updated.hand_of_god_state?.used && !showHandOfGodFlash) {
+          setShowHandOfGodFlash(true)
+          setTimeout(() => setShowHandOfGodFlash(false), 3000)
+        }
 
         // Detectar estado del Iron Fist
         const gg = updated.golden_glove_state
@@ -691,36 +708,43 @@ export default function Game() {
   }
 
   async function stopTimer(forced = false) {
-    // Si ya está procesando, ignorar siempre — incluso forzado
     if (processingRef.current) return
-    // Si no está corriendo y no es forzado, ignorar
     if (!forced && !runningRef.current) return
-    // Si es forzado pero no está corriendo, ignorar también
     if (forced && !runningRef.current) return
 
-    // Bloquear inmediatamente cualquier evento posterior
     processingRef.current = true
     runningRef.current = false
     iAmTheShooterRef.current = false
-    timerVersionRef.current += 1  // Invalida ticks pendientes
+    timerVersionRef.current += 1
 
-    // Limpiar intervalo INMEDIATAMENTE para congelar el display
     clearInterval(intervalRef.current)
     intervalRef.current = null
     clearTimeout(timeoutWarnRef.current)
     clearTimeout(timeoutRedRef.current)
 
-    // Calcular elapsed con performance.now() — mismo método que el display
-    // Usar preShootOffsetRef que fue capturado al inicio de startTimer
-    // para evitar que un update de Supabase haya modificado offsetRef
     const elapsed = Math.max(1, Math.floor((performance.now() - startPerfRef.current) / 10))
     const total = preShootOffsetRef.current + elapsed
     offsetRef.current = total
 
-    // Actualizar display inmediatamente y de forma definitiva
     setCentesimas(total)
     setRunning(false)
     setWarning(null)
+
+    // Mano de Dios: detectar :96-:99 o :01
+    const last2 = total % 100
+    const hogTrigger = [96, 97, 98, 99, 1].includes(last2)
+    if (!forced && hogTrigger && handOfGodStock > 0) {
+      handOfGodPendingCentsRef.current = total
+      setShowHandOfGodPopup(true)
+      processingRef.current = false
+      // Auto-dismiss en 5 segundos
+      handOfGodTimerRef.current = setTimeout(() => {
+        setShowHandOfGodPopup(false)
+        handOfGodPendingCentsRef.current = null
+        continueAfterHog(total, false)
+      }, 5000)
+      return
+    }
 
     try {
       await processPlay(total, forced)
@@ -731,6 +755,55 @@ export default function Game() {
       runningRef.current = false
       iAmTheShooterRef.current = false
     }
+  }
+
+  async function continueAfterHog(total, used) {
+    processingRef.current = true
+    try {
+      await processPlay(total, false)
+    } catch(e) {
+      console.error('processPlay error:', e)
+    } finally {
+      processingRef.current = false
+      runningRef.current = false
+      iAmTheShooterRef.current = false
+    }
+  }
+
+  async function activateHandOfGod(use) {
+    clearTimeout(handOfGodTimerRef.current)
+    setShowHandOfGodPopup(false)
+    const originalTotal = handOfGodPendingCentsRef.current
+    handOfGodPendingCentsRef.current = null
+
+    if (!use || !originalTotal) {
+      continueAfterHog(originalTotal, false)
+      return
+    }
+
+    // Descontar stock
+    const p = playerRef.current
+    await supabase.from('player_items').update({ stock: handOfGodStock - 1 })
+      .eq('player_id', p.id).eq('item_type', 'hand_of_god')
+    setHandOfGodStock(s => s - 1)
+
+    // Calcular nuevo total: sumar o restar 1
+    const last2 = originalTotal % 100
+    const newTotal = last2 === 1 ? originalTotal - 1 : originalTotal + 1
+    offsetRef.current = newTotal
+    setCentesimas(newTotal)
+
+    // Notificar al rival
+    await supabase.from('matches').update({
+      hand_of_god_state: { used: true, player: p.username },
+      elapsed_centesimas: newTotal,
+    }).eq('id', matchId)
+
+    setShowHandOfGodFlash(true)
+    setTimeout(() => setShowHandOfGodFlash(false), 3000)
+
+    // Continuar con el nuevo total
+    await continueAfterHog(newTotal, true)
   }
 
   async function processPlay(total, redCard) {
@@ -1389,6 +1462,46 @@ export default function Game() {
       {lastPlay?.label && !barrierOptions && (
         <div style={styles.lastPlayBox}>
           <span style={styles.lastPlayLabel}>{lastPlay.label}</span>
+        </div>
+      )}
+
+      {/* Popup Mano de Dios — solo el tirador */}
+      {showHandOfGodPopup && (
+        <div style={{position:'absolute',inset:0,background:'rgba(0,20,60,0.97)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',zIndex:70,gap:'1.5rem',padding:'2rem',animation:'hogIn 0.3s ease forwards'}}>
+          <div style={{position:'relative',display:'flex',alignItems:'center',justifyContent:'center'}}>
+            <div style={{position:'absolute',width:'160px',height:'160px',borderRadius:'50%',background:'conic-gradient(rgba(100,180,255,0.3),rgba(200,230,255,0.1),rgba(100,180,255,0.3))',animation:'hogRays 3s linear infinite'}}/>
+            <span style={{fontSize:'6rem',lineHeight:1,position:'relative',zIndex:1,animation:'hogGlow 1.5s ease-in-out infinite'}}>🙏</span>
+          </div>
+          <h2 style={{fontSize:'2rem',fontWeight:'900',color:'#e0f0ff',margin:0,textAlign:'center',letterSpacing:'-0.5px',textShadow:'0 0 30px rgba(100,180,255,0.8)'}}>MANO DE DIOS</h2>
+          <p style={{fontSize:'0.9rem',color:'rgba(200,230,255,0.6)',textAlign:'center',margin:0,lineHeight:1.5}}>
+            {(() => {
+              const last2 = (handOfGodPendingCentsRef.current || 0) % 100
+              if (last2 === 99) return '🙏 :99 → :00 — GOL DIRECTO'
+              if (last2 === 1)  return '🙏 :01 → :00 — GOL DIRECTO'
+              if (last2 === 98) return '🙏 :98 → :99 — Penalty'
+              if (last2 === 97) return '🙏 :97 → :98 — Falta'
+              if (last2 === 96) return '🙏 :96 → :97 — Córner'
+              return ''
+            })()}
+          </p>
+          <div style={{fontSize:'0.85rem',fontWeight:'800',color:'#7dd3fc',background:'rgba(100,180,255,0.1)',borderRadius:'20px',padding:'6px 16px',border:'1px solid rgba(100,180,255,0.3)'}}>🙏 Te quedan {handOfGodStock}</div>
+          <div style={{width:'100%',display:'flex',flexDirection:'column',gap:'0.75rem'}}>
+            <button style={{background:'linear-gradient(135deg,rgba(100,180,255,0.2),rgba(200,230,255,0.1))',border:'2px solid rgba(100,180,255,0.6)',borderRadius:'14px',padding:'1.1rem',fontSize:'1.1rem',fontWeight:'900',color:'#e0f0ff',cursor:'pointer',boxShadow:'0 0 20px rgba(100,180,255,0.4)'}} onClick={() => activateHandOfGod(true)}>🙏 Usar la Mano de Dios</button>
+            <button style={{background:'rgba(255,40,40,0.15)',border:'1.5px solid rgba(255,68,68,0.4)',borderRadius:'14px',padding:'1rem',color:'#ff6b6b',fontSize:'1rem',fontWeight:'800',cursor:'pointer'}} onClick={() => activateHandOfGod(false)}>✕ No usar</button>
+          </div>
+        </div>
+      )}
+
+      {/* Flash Mano de Dios — ambos jugadores */}
+      {showHandOfGodFlash && (
+        <div style={{position:'absolute',inset:0,background:'linear-gradient(135deg,rgba(0,20,80,0.97),rgba(0,40,120,0.95))',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',zIndex:70,gap:'1.5rem',animation:'hogFlash 3s ease forwards',pointerEvents:'none'}}>
+          <div style={{position:'relative',display:'flex',alignItems:'center',justifyContent:'center'}}>
+            <div style={{position:'absolute',width:'200px',height:'200px',borderRadius:'50%',background:'conic-gradient(rgba(100,180,255,0.5),rgba(255,255,255,0.1),rgba(100,180,255,0.5))',animation:'hogRays 2s linear infinite'}}/>
+            <div style={{position:'absolute',width:'240px',height:'240px',borderRadius:'50%',border:'2px solid rgba(100,180,255,0.3)',animation:'hogRays 4s linear infinite reverse'}}/>
+            <span style={{fontSize:'7rem',lineHeight:1,position:'relative',zIndex:1}}>🙏</span>
+          </div>
+          <h1 style={{fontSize:'2.5rem',fontWeight:'900',color:'#e0f0ff',margin:0,textAlign:'center',letterSpacing:'-1px',textShadow:'0 0 40px rgba(100,180,255,1),0 0 80px rgba(200,230,255,0.5)'}}>MANO DE DIOS</h1>
+          <p style={{fontSize:'1rem',color:'rgba(200,230,255,0.7)',margin:0,fontStyle:'italic',textAlign:'center'}}>«La mano de Dios»<br/>— Diego Armando Maradona, 1986</p>
         </div>
       )}
 
