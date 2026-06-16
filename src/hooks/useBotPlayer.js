@@ -30,7 +30,9 @@ function randomCentesima(base, pending, barrierRange) {
       let dist = center - pos
       if (dist <= 0) dist += 100  // siguiente ciclo
       if (dist < 7) dist += 100   // mínimo 7 centésimas
-      const raw = dist + humanError(dist)
+      // Error ±2-3 sobre el centro → ~50% de probabilidad de caer en la barrera (5 cents de ancho)
+      const faltaErr = Math.floor(Math.random() * 7) - 3  // -3 a +3
+      const raw = dist + faltaErr
       return Math.max(7, raw)
     }
     // 20%: error mayor — puede fallar (fuera del rango)
