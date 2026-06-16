@@ -275,7 +275,8 @@ export default function Game() {
         if (updated.penalty_choice) setPenaltyChoice(updated.penalty_choice)
 
         // Detectar Mano de Dios usada por el rival
-        if (updated.hand_of_god_state?.used && !handOfGodFlashShownRef.current) {
+        // Solo el rival (no el tirador) ve el flash de Mano de Dios
+        if (updated.hand_of_god_state?.used && !handOfGodFlashShownRef.current && !iAmTheShooterRef.current) {
           handOfGodFlashShownRef.current = true
           setShowHandOfGodFlash(true)
           setTimeout(() => { setShowHandOfGodFlash(false) }, 3000)
@@ -803,9 +804,7 @@ export default function Game() {
       elapsed_centesimas: newTotal,
     }).eq('id', matchId)
 
-    setShowHandOfGodFlash(true)
-    setTimeout(() => setShowHandOfGodFlash(false), 3000)
-
+    // Solo el rival verá el flash via Realtime — el tirador no lo muestra localmente
     // Continuar con el nuevo total
     await continueAfterHog(newTotal, true)
   }
