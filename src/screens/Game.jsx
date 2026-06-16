@@ -117,6 +117,7 @@ export default function Game() {
   const [showHandOfGodFlash, setShowHandOfGodFlash] = useState(false)
   const handOfGodTimerRef = useRef(null)
   const handOfGodPendingCentsRef = useRef(null)
+  const handOfGodFlashShownRef = useRef(false)
   const [showPenaltyPopup, setShowPenaltyPopup] = useState(false)
 
   const intervalRef = useRef(null)
@@ -274,9 +275,10 @@ export default function Game() {
         if (updated.penalty_choice) setPenaltyChoice(updated.penalty_choice)
 
         // Detectar Mano de Dios usada por el rival
-        if (updated.hand_of_god_state?.used && !showHandOfGodFlash) {
+        if (updated.hand_of_god_state?.used && !handOfGodFlashShownRef.current) {
+          handOfGodFlashShownRef.current = true
           setShowHandOfGodFlash(true)
-          setTimeout(() => setShowHandOfGodFlash(false), 3000)
+          setTimeout(() => { setShowHandOfGodFlash(false) }, 3000)
         }
 
         // Detectar estado del Iron Fist
@@ -391,6 +393,8 @@ export default function Game() {
           runningRef.current = false
           iAmTheShooterRef.current = false
         }
+        // Resetear hand_of_god flash ref cuando cambia el turno
+        if (sequenceChanged) handOfGodFlashShownRef.current = false
         if (isMyTurn && !updated.timer_running && (sequenceChanged || gloveJustResolved)) {
           startInactivityTimer(playerRef.current, updated)
         } else if (!isMyTurn || updated.timer_running) {
@@ -1163,6 +1167,7 @@ export default function Game() {
       pending_type: null,
       barrier_range: null,
       penalty_choice: null,
+      hand_of_god_state: null,
       last_event: event ? JSON.stringify(event) : null,
       status: finished ? 'finished' : 'playing',
       winner_id: winnerId,

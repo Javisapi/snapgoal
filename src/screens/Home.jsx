@@ -27,7 +27,7 @@ export default function Home() {
   const { player, loading, registerPlayer, refreshPlayer } = useAuth()
   const [username, setUsername] = useState('')
   const [streak, setStreak] = useState(0)
-  const [skills, setSkills] = useState({ sniper: 0, glove: 0 })
+  const [skills, setSkills] = useState({ sniper: 0, glove: 0, hog: 0 })
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -55,7 +55,8 @@ export default function Home() {
         if (data) {
           const sniper = data.find(i => i.item_type === 'pro_shooter')?.stock || 0
           const glove = data.find(i => i.item_type === 'golden_glove')?.stock || 0
-          setSkills({ sniper, glove })
+          const hog = data.find(i => i.item_type === 'hand_of_god')?.stock || 0
+          setSkills({ sniper, glove, hog })
         }
       })
   }, [player?.id])
@@ -269,10 +270,11 @@ export default function Home() {
           {player?.email_verified && <ProtectedBadge />}
           <button onClick={() => navigate('/tutorial')} style={{background:'rgba(96,165,250,0.15)',border:'1px solid rgba(147,197,253,0.4)',borderRadius:'20px',padding:'3px 10px',fontSize:'0.7rem',fontWeight:'800',color:'#93c5fd',cursor:'pointer',whiteSpace:'nowrap',animation:'tutorialBtnGlow 2s ease-in-out infinite',flexShrink:0}}>✦ Tutorial</button>
         </div>
-        {(skills.sniper > 0 || skills.glove > 0) && (
+        {(skills.sniper > 0 || skills.glove > 0 || skills.hog > 0) && (
           <div style={{display:'flex', gap:'0.75rem', alignItems:'center', marginBottom:'0.25rem'}}>
             <span style={{fontSize:'0.8rem', color:'rgba(255,255,255,0.5)', fontWeight:'600'}}>🎯 ×{skills.sniper}</span>
             <span style={{fontSize:'0.8rem', color:'rgba(255,255,255,0.5)', fontWeight:'600'}}>🧤 ×{skills.glove}</span>
+            {skills.hog > 0 && <span style={{fontSize:'0.8rem', color:'#7dd3fc', fontWeight:'600'}}>🙏 ×{skills.hog}</span>}
           </div>
         )}
         <div style={styles.playerMeta}>
