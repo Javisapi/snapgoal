@@ -150,11 +150,15 @@ export default function Result() {
 
     setReplayResult(lastPlayResult)
     setReplayGoalCents(goalCents)
-    setReplayCents(startCents)
-    // Si no hay replay válido, mostrar banner directamente
-    if (!lastPlay || goalCents === finalCents) {
+
+    // Si no hay replay válido (no se encontró gol del ganador), saltar replay y mostrar banner
+    if (lastGoalIdx < 0 || !lastPlay) {
+      setShowReplay(false)
       if (completedMissionsData.length > 0) setShowMissionBanner(true)
+      return
     }
+
+    setReplayCents(startCents)
     let current = startCents
     const totalFrames = Math.max(goalCents - startCents, 1)
     const frameDuration = Math.min(Math.max(Math.floor(2400 / totalFrames), 20), 120)
