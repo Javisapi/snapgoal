@@ -13,10 +13,10 @@ async function getPlayer() {
 
 const MISSION_META = {
   win_streak_3:    { name: 'Hat-Trick de Victorias', desc: 'Gana 3 partidos seguidos sin perder', icon: '🏆', reward: '1 🎯 + 1 🧤' },
-  goals_20:        { name: 'Beast Mode',             desc: 'Mete 20 goles en un día',            icon: '💥', reward: '2 🎯 + 2 🧤' },
+  goals_20:        { name: 'Beast Mode',             desc: 'Mete 30 goles en un día',            icon: '💥', reward: '1 🎯 + 1 🧤' },
   clean_sheet_win: { name: 'Muralla Infranqueable',  desc: 'Gana sin recibir ningún gol',        icon: '🛡️', reward: '1 🎯 + 1 🧤' },
-  falta_goals_10:  { name: 'Sniper de Élite',        desc: 'Mete 10 goles de falta hoy',         icon: '⚡', reward: '2 🎯 + 2 🧤' },
-  play_10:         { name: 'Maratoniano',             desc: 'Juega 10 partidos completados hoy',  icon: '🎮', reward: '2 🎯 + 2 🧤' },
+  falta_goals_10:  { name: 'Sniper de Élite',        desc: 'Mete 15 goles de falta hoy',         icon: '⚡', reward: '1 🎯 + 1 🧤' },
+  play_10:         { name: 'Maratoniano',             desc: 'Juega 25 partidos completados hoy',  icon: '🎮', reward: '1 🎯 + 1 🧤' },
   secret:          { name: '???',                     desc: 'Completa 2 misiones para descubrir', icon: '🔒', reward: '2 🎯 + 2 🧤' },
 }
 
@@ -71,7 +71,7 @@ export default function Missions() {
     if (!missionsData || missionsData.length === 0) {
       const empty = Object.keys(MISSION_META).filter(t => t !== 'secret').map(type => ({
         mission_type: type, progress: 0,
-        target: { win_streak_3: 3, goals_20: 20, clean_sheet_win: 1, falta_goals_10: 10, play_10: 10 }[type],
+        target: { win_streak_3: 3, goals_20: 30, clean_sheet_win: 1, falta_goals_10: 15, play_10: 25 }[type],
         completed: false, reward_claimed: false,
       }))
       setMissions(empty)
