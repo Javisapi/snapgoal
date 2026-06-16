@@ -151,9 +151,6 @@ export function useBotPlayer({ match, matchId, isBotMatch, myTurn }) {
       const cents = Math.max(rawCents, 7)
       const total = base + cents
 
-      // Pequeña pausa para que el timer sea visible
-      await new Promise(r => setTimeout(r, 300 + Math.random() * 400))
-
       await botProcessPlay(total, matchId, match, processingRef)
     }, randomDelay())
   }, [match?.current_turn, match?.pending_type, match?.barrier_range, match?.penalty_choice, match?.timer_running, match?.turn_sequence])
