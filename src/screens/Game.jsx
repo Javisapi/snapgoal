@@ -904,7 +904,7 @@ export default function Game() {
       gol = true
       label = `⚽ GOL de ${p.username}`
       if (p1) sp1 += 1; else sp2 += 1
-    } else if (ev.result === 'GOL_PROPIO') {
+    } else if (ev.result === 'GOL_PROPIO' && !pending) {
       label = `💥 GOL EN PROPIA de ${p.username} — punto para ${opp.username}`
       emoji = '💥'
       if (p1) sp2 += 1; else sp1 += 1
