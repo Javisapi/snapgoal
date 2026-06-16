@@ -288,8 +288,10 @@ export default function Game() {
         // Solo el rival (no el tirador) ve el flash de Mano de Dios
         if (updated.hand_of_god_state?.used && !handOfGodFlashShownRef.current && !iAmTheShooterRef.current) {
           handOfGodFlashShownRef.current = true
+          const hog = updated.hand_of_god_state
+          setLastPlay({ emoji: '🙏', label: `🙏 ${hog.player} usó la Mano de Dios: :${String(hog.from).padStart(2,'0')} → :${String(hog.to).padStart(2,'0')}` })
           setShowHandOfGodFlash(true)
-          setTimeout(() => { setShowHandOfGodFlash(false) }, 3000)
+          setTimeout(() => { setShowHandOfGodFlash(false) }, 1500)
         }
 
         // Detectar estado del Iron Fist
@@ -810,11 +812,15 @@ export default function Game() {
 
     // Notificar al rival
     await supabase.from('matches').update({
-      hand_of_god_state: { used: true, player: p.username },
+      hand_of_god_state: { used: true, player: p.username, from: last2orig, to: last2new },
       elapsed_centesimas: newTotal,
     }).eq('id', matchId)
 
-    // Solo el rival verá el flash via Realtime — el tirador no lo muestra localmente
+    // Mostrar texto informativo de lo que pasó
+    const last2orig = originalTotal % 100
+    const last2new = newTotal % 100
+    setLastPlay({ emoji: '🙏', label: `🙏 ${p.username} usó la Mano de Dios: :${String(last2orig).padStart(2,'0')} → :${String(last2new).padStart(2,'0')}` })
+
     // Continuar con el nuevo total
     await continueAfterHog(newTotal, true)
   }

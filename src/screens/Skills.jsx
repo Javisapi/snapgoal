@@ -7,6 +7,22 @@ const CSS = `
 
 const SKILLS = [
   {
+    id: 'hand_of_god',
+    name: '🙏 Mano de Dios',
+    description: 'La super skill. Modifica tu centésima de parada en ±1 centésima.',
+    howto: [
+      'Se activa automáticamente si paras en :96, :97, :98, :99 o :01 y tienes stock.',
+      'Tienes 5 segundos para decidir si usarla o no.',
+      ':99 → :00 = GOL DIRECTO 🔥',
+      ':01 → :00 = GOL DIRECTO 🔥',
+      ':98 → :99 = Penalty 🥅',
+      ':97 → :98 = Falta 🧤',
+      ':96 → :97 = Córner 🚩',
+      'El rival ve una animación especial cuando la usas.',
+      'Solo se consigue completando las 6 misiones del día en el Vestuario (incluida la secreta).',
+    ]
+  },
+  {
     id: 'iron_fist',
     name: 'Iron Fist',
     description: 'Habilidad defensiva para usar en los penalties.',

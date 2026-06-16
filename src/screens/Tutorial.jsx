@@ -421,7 +421,7 @@ function SlideSkills() {
         {[
           { icon:'🧤', name:'Iron Fist', color:'#ffb400', desc:'En penalty: bloquea la mitad del cronómetro (00-49 ó 50-99). Tu rival no sabe qué lado elegiste.' },
           { icon:'🎯', name:'Sniper',    color:'#ffb400', desc:'En falta: tu ventana de gol se amplía al doble. De 5 centésimas a 10.' },
-          { icon:'🙏', name:'Mano de Dios', color:'#7dd3fc', desc:'La super skill. Modifica tu centésima en ±1. :99→:00 GOL, :01→:00 GOL, :98→:99 Penalty, :97→:98 Falta, :96→:97 Córner. Solo se consigue completando las 6 misiones del Vestuario.' },
+          { icon:'🙏', name:'Mano de Dios', color:'#7dd3fc', desc:'Si paras en :99 o :01 → se convierte en :00 → GOL. Si paras en :98 → Penalty. En :97 → Falta. En :96 → Córner. Tienes 5s para decidir. Solo se consigue completando las 6 misiones diarias.' },
         ].map((skill,i) => (
           <div key={i} style={{
             background: active===i ? (i===2 ? 'rgba(100,180,255,0.08)' : 'rgba(255,180,0,0.08)') : 'rgba(255,255,255,0.03)',
