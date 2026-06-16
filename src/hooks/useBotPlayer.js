@@ -318,7 +318,7 @@ async function botProcessPlay(total, matchId, match, processingRef) {
   }).eq('id', matchId)
 
   if (finished) {
-    await supabase.rpc('finalize_match_stats', {
+    const xpRes = await supabase.rpc('finalize_match_stats', {
       p_match_id: matchId,
       p_player1_id: fresh.player1_id,
       p_player2_id: fresh.player2_id,
@@ -327,6 +327,9 @@ async function botProcessPlay(total, matchId, match, processingRef) {
       p_cards_p1: fresh.cards_p1 || { yellow: 0, red: 0 },
       p_cards_p2: fresh.cards_p2 || { yellow: 0, red: 0 },
     })
+    if (xpRes.data) {
+      await supabase.from('matches').update({ xp_result: xpRes.data }).eq('id', matchId)
+    }
 
     // Racha y misiones del jugador humano (player1 siempre es el humano en partidas bot)
     const humanId = fresh.player1_id
