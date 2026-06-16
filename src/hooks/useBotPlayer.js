@@ -22,34 +22,42 @@ function humanError(dist) {
 function randomCentesima(base, pending, barrierRange) {
   const pos = base % 100
 
-  // Falta: apuntar al centro de la barrera ±4 centésimas
+  // Falta: apuntar al centro de la barrera con error proporcional
   if (pending === 'FALTA' && barrierRange) {
     const { min, max } = barrierRange
     const center = Math.round((min + max) / 2)
-    if (Math.random() < 0.93) {
-      // 93%: apuntar al centro con error mínimo
-      const target = center - pos
-      const distToCenter = target <= 0 ? target + 100 : target
-      const raw = distToCenter + humanError(distToCenter)
+    if (Math.random() < 0.80) {
+      // 80%: apuntar al centro con error humanizado
+      let dist = center - pos
+      if (dist <= 0) dist += 100  // siguiente ciclo
+      if (dist < 7) dist += 100   // mínimo 7 centésimas
+      const raw = dist + humanError(dist)
       return Math.max(7, raw)
     }
-    // 10%: error mayor — puede fallar
-    const r = Math.random()
-    if (r < 0.60) return min + Math.floor(Math.random() * (max - min + 1))
-    if (r < 0.80) return Math.max(0, min - 1 - Math.floor(Math.random() * 7))
-    return Math.min(99, max + 1 + Math.floor(Math.random() * 7))
+    // 20%: error mayor — puede fallar (fuera del rango)
+    const miss = Math.random()
+    if (miss < 0.5) return Math.max(7, min - 1 - Math.floor(Math.random() * 10))
+    return Math.min(99, max + 1 + Math.floor(Math.random() * 10))
   }
 
-  // Corner: apuntar al próximo múltiplo de 10 ±4 centésimas
+  // Penalty: tirada aleatoria entre 8 y 95 centésimas (dentro del mismo segundo)
+  if (pending === 'PENALTY') {
+    return 8 + Math.floor(Math.random() * 88) // 8-95
+  }
+
+  // Corner: apuntar al próximo múltiplo de 10
   if (pending === 'CORNER') {
     const nextMultiple = pos === 0 ? 10 : Math.ceil((pos + 1) / 10) * 10
-    const dist = nextMultiple - pos
+    let dist = nextMultiple - pos
+    if (dist < 7) dist += 10 // saltar al siguiente múltiplo si está muy cerca
     return Math.max(7, dist + humanError(dist))
   }
 
-  // Tirada normal: 93% apunta a :00 con error mínimo, 7% distribución aleatoria
-  if (Math.random() < 0.93) {
-    const distToNext00 = pos === 0 ? 100 : 100 - pos
+  // Tirada normal: 80% apunta a :00 con error, 20% distribución aleatoria
+  // Si pos >= 94, apuntar al :00 del siguiente ciclo (pos+7 no puede llegar a :00)
+  if (Math.random() < 0.80) {
+    let distToNext00 = pos === 0 ? 100 : 100 - pos
+    if (distToNext00 < 7) distToNext00 += 100 // siguiente :00
     return Math.max(7, distToNext00 + humanError(distToNext00))
   }
 
