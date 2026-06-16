@@ -121,7 +121,6 @@ export default function Game() {
   const [proShooterActive, setProShooterActive] = useState(false)
   const [showProShooterPopup, setShowProShooterPopup] = useState(false)
   const proShooterPopupShownRef = useRef(false)
-  const [handOfGodStock, setHandOfGodStock] = useState(0)
   const [showHandOfGodPopup, setShowHandOfGodPopup] = useState(false)
   const [showHandOfGodFlash, setShowHandOfGodFlash] = useState(false)
   const handOfGodTimerRef = useRef(null)
