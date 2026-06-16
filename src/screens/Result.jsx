@@ -116,9 +116,10 @@ export default function Result() {
     setMatch(m)
 
     // Misiones completadas en este partido
-    if (m.missions_result?.completed_missions?.length > 0) {
-      setCompletedMissions(m.missions_result.completed_missions)
-      setShowMissionBanner(true)
+    const completedMissionsData = m.missions_result?.completed_missions || []
+    if (completedMissionsData.length > 0) {
+      setCompletedMissions(completedMissionsData)
+      // El banner se activa después del replay (ver setInterval del replay)
     }
 
     // Replay del último gol — obtener todas las jugadas ordenadas globalmente
@@ -159,7 +160,13 @@ export default function Result() {
       setReplayCents(current)
       if (current >= goalCents) {
         clearInterval(replayIntervalRef.current)
-        setTimeout(() => setShowReplay(false), 1000)
+        setTimeout(() => {
+          setShowReplay(false)
+          // Mostrar banner de misión después del replay
+          if (completedMissionsData.length > 0) {
+            setShowMissionBanner(true)
+          }
+        }, 1000)
       }
     }, frameDuration)
 
@@ -342,7 +349,7 @@ export default function Result() {
     }
     const missionIcons = {
       win_streak_3: '🏆', goals_20: '💥', clean_sheet_win: '🛡️',
-      falta_goals_10: '⚡', play_10: '🎮', secret: '💥',
+      falta_goals_10: '⚡', play_10: '🎮', secret: (() => { const doy = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000); return ['💥','⚡','🎯','🔥'][doy % 4] })(),
     }
     return (
       <div style={{ height:'100%', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'space-between', background:'#141414', padding:'3rem 2rem 4rem', animation:'missionBannerIn 0.4s ease forwards' }}>
@@ -380,7 +387,7 @@ export default function Result() {
             style={{ background:'#ffb400', color:'#141414', border:'none', borderRadius:'12px', padding:'1.25rem', fontSize:'1.1rem', fontWeight:'900', cursor:'pointer', width:'100%', letterSpacing:'0.5px' }}
             onClick={handleClaimMission}
           >
-            ✓ ¡Recibido!
+            🎁 Recoger Skills
           </button>
         </div>
       </div>
