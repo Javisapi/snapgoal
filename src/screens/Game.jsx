@@ -11,6 +11,7 @@ const GAME_CSS = `
   @keyframes cardShake { 0%,100%{transform:translateX(0) rotate(0deg)} 20%{transform:translateX(-10px) rotate(-3deg)} 40%{transform:translateX(10px) rotate(3deg)} 60%{transform:translateX(-6px) rotate(-2deg)} 80%{transform:translateX(6px) rotate(2deg)} }
   @keyframes flashOverlayGold { 0%{opacity:0} 20%{opacity:1} 100%{opacity:0} }
   @keyframes flashOverlayRed { 0%{opacity:0} 15%{opacity:1} 100%{opacity:0} }
+  @keyframes paloShake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-12px)} 40%{transform:translateX(12px)} 60%{transform:translateX(-8px)} 80%{transform:translateX(8px)} }
 `
 
 async function getPlayer() {
@@ -24,6 +25,7 @@ async function getPlayer() {
 function evaluatePlay(c) {
   const last2 = c % 100
   if (last2 === 0)  return { result: 'GOL_DIRECTO', changeTurn: true, scoreSelf: 1 }
+  if (last2 === 1)  return { result: 'AL_PALO', changeTurn: true }
   if (last2 === 99) return { result: 'PENALTY', changeTurn: false, pending: true }
   if (last2 === 98) return { result: 'FALTA', changeTurn: false, pending: true }
   if (last2 === 97) return { result: 'CORNER', changeTurn: false, pending: true }
@@ -895,6 +897,9 @@ export default function Game() {
       gol = true
       label = `⚽ GOL de ${p.username}`
       if (p1) sp1 += 1; else sp2 += 1
+    } else if (ev.result === 'AL_PALO') {
+      label = `🥅 ¡AL PALO! de ${p.username}`
+      emoji = '🥅'
     } else if (ev.result === 'GOL_PROPIO' && !pending) {
       label = `💥 GOL EN PROPIA de ${p.username} — punto para ${opp.username}`
       emoji = '💥'
@@ -903,6 +908,7 @@ export default function Game() {
 
     if (gol) triggerFlash('goal', 'GOL')
     if (ev.result === 'GOL_PROPIO' && !pending) triggerFlash('owngoal', 'GOL PROPIO')
+    if (ev.result === 'AL_PALO' && !pending) triggerFlash('palo', '🥅 AL PALO')
     const ggState = m.golden_glove_state
     if (ggState?.used && !gol && pending === 'PENALTY') triggerFlash('glove', '🧤 IRON FIST')
 
@@ -1185,8 +1191,8 @@ export default function Game() {
             fontSize: flashEvent.type === 'goal' ? '3.5rem' : '2.5rem',
             fontWeight:'900',
             letterSpacing:'-1px',
-            color: flashEvent.type === 'goal' ? '#ffb400' : flashEvent.type === 'owngoal' ? '#ff8800' : flashEvent.type === 'red' ? '#ff4444' : '#ffc800',
-            animation: flashEvent.type === 'red' || flashEvent.type === 'yellow' ? 'cardShake 0.4s ease, eventFlash 0.5s ease forwards' : 'eventFlash 0.5s ease forwards',
+            color: flashEvent.type === 'goal' ? '#ffb400' : flashEvent.type === 'owngoal' ? '#ff8800' : flashEvent.type === 'red' ? '#ff4444' : flashEvent.type === 'palo' ? '#ffffff' : '#ffc800',
+            animation: flashEvent.type === 'red' || flashEvent.type === 'yellow' ? 'cardShake 0.4s ease, eventFlash 0.5s ease forwards' : flashEvent.type === 'palo' ? 'paloShake 0.4s ease, eventFlash 0.6s ease forwards' : 'eventFlash 0.5s ease forwards',
             textShadow: flashEvent.type === 'goal' ? '0 0 40px rgba(255,180,0,0.5)' : 'none',
             textAlign:'center',
             lineHeight:1,
@@ -1208,7 +1214,7 @@ export default function Game() {
       {showChat && (
         <div style={styles.chatOverlay} onClick={() => setShowChat(false)}>
           <div style={styles.chatBox} onClick={e => e.stopPropagation()}>
-            {['⚽ GOOOL', '💥 BOOOM', '😂 AHAHAH', '🚩 VAR!!!', '🤨 REF?', '🤝 GG'].map(msg => (
+            {['⚽ GOOOL', '💥 BOOOM', '😂 AHAHAH', '🚩 VAR!!!', '🤨 REF?', '🤝 GG', '😱 NOOO'].map(msg => (
               <button key={msg} style={styles.chatMsgBtn} onClick={() => sendChatMessage(msg)}>
                 {msg}
               </button>
