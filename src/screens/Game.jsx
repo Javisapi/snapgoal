@@ -368,6 +368,12 @@ export default function Game() {
         // Reiniciar timer cuando turn_sequence cambia y es mi turno
         const sequenceChanged = (updated.turn_sequence || 0) !== (prevMatch?.turn_sequence || 0)
         const gloveJustResolved = prevMatch?.golden_glove_state?.waiting === true && !updated.golden_glove_state?.waiting
+        // Resetear processingRef cuando cambia el turno — evita bloqueo post-gol del rival
+        if (sequenceChanged && isMyTurn) {
+          processingRef.current = false
+          runningRef.current = false
+          iAmTheShooterRef.current = false
+        }
         if (isMyTurn && !updated.timer_running && (sequenceChanged || gloveJustResolved)) {
           startInactivityTimer(playerRef.current, updated)
         } else if (!isMyTurn || updated.timer_running) {
@@ -462,17 +468,17 @@ export default function Game() {
       clearInterval(intervalRef.current)
       intervalRef.current = null
     }
-    // Calcular cuánto tiempo ha pasado ya desde que arrancó (compensar latencia)
-    const alreadyElapsed = Math.floor((Date.now() - startedAtMs) / 10)
+    // Observador: arrancar desde base usando Date.now() como referencia local
+    // No compensar latencia — el valor del servidor al parar es la fuente de verdad
+    const observerNow = Date.now()
     offsetRef.current = base
-    setCentesimas(base + alreadyElapsed)
+    setCentesimas(base)
     timerVersionRef.current += 1
     const localVersion = timerVersionRef.current
-    const observerBase = base      // Constante para este intervalo
-    const observerStart = startedAtMs  // Constante para este intervalo
+    const observerBase = base
     intervalRef.current = setInterval(() => {
       if (timerVersionRef.current !== localVersion) return
-      setCentesimas(observerBase + Math.floor((Date.now() - observerStart) / 10))
+      setCentesimas(observerBase + Math.floor((Date.now() - observerNow) / 10))
     }, 10)
   }
   function startDisconnectWatcher(m, p) {
