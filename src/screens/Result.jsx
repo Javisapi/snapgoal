@@ -521,7 +521,7 @@ export default function Result() {
         </div>
         <div style={styles.statDivider} />
         <div style={styles.statRow}>
-          <span style={styles.statLabel}>V / E / D</span>
+          <span style={styles.statLabel}>V / D</span>
           <span style={styles.statVal}>{updatedPlayer.matches_won}V / {updatedPlayer.matches_lost}D</span>
         </div>
       </div>
