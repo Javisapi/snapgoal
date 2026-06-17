@@ -212,9 +212,11 @@ async function botProcessPlay(total, matchId, match, processingRef) {
     if (gol) { if (p1) sp1++; else sp2++ }
   } else if (pending === 'PENALTY') {
     const last1 = total % 10
+    const last2c = total % 100
     const choice = fresh.penalty_choice
-    const gol = choice === 'par' ? last1 % 2 === 0 : last1 % 2 !== 0
-    event = { emoji: gol ? '⚽' : '🥅', label: gol ? `⚽ Gol de penalty de Cerverai (${choice}, ${last1})` : `🥅 Penalty fallado por Cerverai (${choice}, ${last1})` }
+    const inRange = last2c >= 30 && last2c <= 70
+    const gol = (choice === 'par' ? last1 % 2 === 0 : last1 % 2 !== 0) && inRange
+    event = { emoji: gol ? '⚽' : '🥅', label: gol ? `⚽ Gol de penalty de Cerverai (${choice}, ${last2c})` : `🥅 Penalty fallado por Cerverai (${choice}, ${last2c}${!inRange ? ' — fuera de 30-70' : ''})` }
     if (gol) { if (p1) sp1++; else sp2++ }
   } else {
     // Tirada normal
