@@ -28,6 +28,12 @@ export default function Home() {
   const [username, setUsername] = useState('')
   const [streak, setStreak] = useState(0)
   const [parallax, setParallax] = useState({ x: 0, y: 0 })
+  const [showFieldIntro, setShowFieldIntro] = useState(true)
+
+  useEffect(() => {
+    const t = setTimeout(() => setShowFieldIntro(false), 2000)
+    return () => clearTimeout(t)
+  }, [])
 
   useEffect(() => {
     function handleOrientation(e) {
@@ -200,6 +206,25 @@ export default function Home() {
         transform:`translate(${parallax.x}px, ${parallax.y}px)`,
         transition:'transform 0.3s ease-out',
       }} />
+
+      {showFieldIntro && (
+        <div style={{ position:'fixed', inset:0, zIndex:50, background:'#0a120e', pointerEvents:'none', animation:'fieldIntroFadeOut 2s ease forwards' }}>
+          <svg viewBox="0 0 400 800" style={{ width:'100%', height:'100%' }}>
+            <line x1="0" y1="400" x2="400" y2="400"
+              stroke="#ffffff" strokeWidth="2.5"
+              filter="drop-shadow(0 0 6px rgba(255,255,255,0.9)) drop-shadow(0 0 16px rgba(180,255,220,0.6))"
+              strokeDasharray="400" style={{ animation:'fieldIntroDraw 1.1s ease forwards', '--dash-len':'400' }} />
+            <circle cx="200" cy="400" r="70" fill="none"
+              stroke="#ffffff" strokeWidth="2.5"
+              filter="drop-shadow(0 0 6px rgba(255,255,255,0.9)) drop-shadow(0 0 16px rgba(180,255,220,0.6))"
+              strokeDasharray="440" style={{ animation:'fieldIntroDraw 1.1s 0.3s ease forwards', '--dash-len':'440' }} />
+            <circle cx="200" cy="400" r="3" fill="#ffffff"
+              filter="drop-shadow(0 0 6px rgba(255,255,255,0.9))"
+              style={{ opacity:0, animation:'fieldIntroDraw 0.4s 1.2s ease forwards' }} />
+          </svg>
+        </div>
+      )}
+
       {showDeleteConfirm && (
         <div style={styles.overlay}>
           <div style={styles.modal}>

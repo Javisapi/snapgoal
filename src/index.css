@@ -24,3 +24,16 @@ html, body, #root {
   0%, 100% { filter: none; transform: scale(1); }
   50% { filter: drop-shadow(0 0 6px rgba(255,100,40,0.7)) saturate(1.4); transform: scale(1.15); }
 }
+
+@keyframes fieldIntroDraw {
+  0% { stroke-dashoffset: var(--dash-len); opacity: 0; }
+  15% { opacity: 1; }
+  60% { stroke-dashoffset: 0; opacity: 1; }
+  85% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes fieldIntroFadeOut {
+  0%, 75% { opacity: 1; }
+  100% { opacity: 0; }
+}
