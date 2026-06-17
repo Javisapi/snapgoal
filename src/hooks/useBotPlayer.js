@@ -345,7 +345,24 @@ async function botProcessPlay(total, matchId, match, processingRef) {
       await supabase.from('matches').update({ xp_result: xpRes.data }).eq('id', matchId)
     }
 
-    // Racha y misiones del jugador humano (player1 siempre es el humano en partidas bot)
+    // Racha y misiones del jugador humano — guard atómico anti-duplicado (evita carrera con Game.jsx)
+    const { data: claimResult } = await supabase
+      .from('matches')
+      .update({ missions_processed: true })
+      .eq('id', matchId)
+      .eq('missions_processed', false)
+      .select('id')
+
+    const wonClaim = claimResult && claimResult.length > 0
+
+    if (!wonClaim) {
+      processingRef.current = false
+      return
+    }
+
+    // Pequeña espera de seguridad para asegurar consistencia de lectura de plays
+    await new Promise(r => setTimeout(r, 150))
+
     const humanId = fresh.player1_id
     const humanWon = fresh.winner_id === humanId
     const humanScore = fresh.score_p1

@@ -1221,14 +1221,26 @@ export default function Game() {
       await supabase.from('matches').update({ xp_result: xpRes.data }).eq('id', matchId)
     }
 
-    // Racha diaria y misiones — solo partidos completados normalmente
+    // Racha diaria y misiones — guard atómico anti-duplicado (evita carrera con useBotPlayer.js)
+    const { data: claimResult } = await supabase
+      .from('matches')
+      .update({ missions_processed: true })
+      .eq('id', matchId)
+      .eq('missions_processed', false)
+      .select('id')
+
+    const wonClaim = claimResult && claimResult.length > 0
+
     const lastEv = match.last_event ? JSON.parse(match.last_event) : null
     const isAbandon = lastEv?.label?.includes('abandonó') || lastEv?.label?.includes('inactividad') || lastEv?.label?.includes('desconectado')
-    if (!isAbandon) {
+    if (!isAbandon && wonClaim) {
       const isP1 = match.player1_id === p.id
       const myScore = isP1 ? match.score_p1 : match.score_p2
       const oppScore = isP1 ? match.score_p2 : match.score_p1
       const won = match.winner_id === p.id
+
+      // Pequeña espera de seguridad para asegurar consistencia de lectura de plays
+      await new Promise(r => setTimeout(r, 150))
 
       // Contar goles de falta del jugador en este partido
       const { data: myPlays } = await supabase
