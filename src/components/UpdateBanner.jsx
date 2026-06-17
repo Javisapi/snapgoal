@@ -35,13 +35,10 @@ export default function UpdateBanner() {
     try {
       const res = await fetch('/version.json', { cache: 'no-store' })
       const data = await res.json()
-      const stored = localStorage.getItem('app_version')
-      if (stored && stored !== data.version) {
+      const stored = localStorage.getItem('app_version') || '0'
+      if (stored !== data.version) {
         setForceReload(true)
         setShow(true)
-      }
-      if (!stored) {
-        localStorage.setItem('app_version', data.version)
       }
     } catch (e) {
       // si falla la comprobación, no bloqueamos al usuario
