@@ -127,6 +127,7 @@ function App() {
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/verify-admin" element={<VerifyAdmin />} />
       </Routes>
+      <UpdateBanner />
     </BrowserRouter>
   )
 }
