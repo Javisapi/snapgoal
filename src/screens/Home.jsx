@@ -209,15 +209,17 @@ export default function Home() {
 
       {showFieldIntro && (
         <div style={{ position:'fixed', inset:0, zIndex:50, background:'#0a120e', pointerEvents:'none', animation:'fieldIntroFadeOut 2s ease forwards' }}>
-          <svg viewBox="0 0 400 800" style={{ width:'100%', height:'100%' }}>
-            <line x1="0" y1="400" x2="400" y2="400"
-              stroke="#ffffff" strokeWidth="3"
-              strokeDasharray="400" style={{ animation:'fieldIntroDraw 1.1s ease forwards', '--dash-len':'400', filter:'drop-shadow(0 0 4px #fff) drop-shadow(0 0 14px #fff) drop-shadow(0 0 30px rgba(200,255,230,0.9)) drop-shadow(0 0 60px rgba(150,255,210,0.6))' }} />
-            <circle cx="200" cy="400" r="70" fill="none"
-              stroke="#ffffff" strokeWidth="3"
-              strokeDasharray="440" style={{ animation:'fieldIntroDraw 1.1s 0.3s ease forwards', '--dash-len':'440', filter:'drop-shadow(0 0 4px #fff) drop-shadow(0 0 14px #fff) drop-shadow(0 0 30px rgba(200,255,230,0.9)) drop-shadow(0 0 60px rgba(150,255,210,0.6))' }} />
-            <circle cx="200" cy="400" r="3.5" fill="#ffffff"
-              style={{ opacity:0, animation:'fieldIntroDraw 0.4s 1.2s ease forwards', filter:'drop-shadow(0 0 6px #fff) drop-shadow(0 0 20px #fff) drop-shadow(0 0 40px rgba(200,255,230,0.9))' }} />
+          <svg viewBox="0 0 400 800" style={{ width:'100%', height:'100%', overflow:'visible' }}>
+            <g style={{ filter:'drop-shadow(0 0 10px #fff) drop-shadow(0 0 30px #fff) drop-shadow(0 0 60px #d4ffe9) drop-shadow(0 0 100px #aaffd6)' }}>
+              <line x1="0" y1="400" x2="400" y2="400"
+                stroke="#ffffff" strokeWidth="4"
+                strokeDasharray="400" style={{ animation:'fieldIntroDraw 1.1s ease forwards', '--dash-len':'400' }} />
+              <circle cx="200" cy="400" r="70" fill="none"
+                stroke="#ffffff" strokeWidth="4"
+                strokeDasharray="440" style={{ animation:'fieldIntroDraw 1.1s 0.3s ease forwards', '--dash-len':'440' }} />
+              <circle cx="200" cy="400" r="4" fill="#ffffff"
+                style={{ opacity:0, animation:'fieldIntroDraw 0.4s 1.2s ease forwards' }} />
+            </g>
           </svg>
         </div>
       )}
