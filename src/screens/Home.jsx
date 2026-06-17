@@ -226,7 +226,7 @@ export default function Home() {
     <div style={styles.container}>
       <div style={{
         position:'absolute', inset:'-20px', pointerEvents:'none', zIndex:0,
-        background:'radial-gradient(ellipse 140% 70% at 50% -10%, rgba(94,196,140,0.16), transparent 55%)',
+        background:"radial-gradient(ellipse 140% 70% at 50% -10%, rgba(94,196,140,0.16), transparent 55%), radial-gradient(ellipse 160% 90% at 50% 110%, rgba(34,90,60,0.14), transparent 60%)",
         transform:`translate(${parallax.x}px, ${parallax.y}px)`,
         transition:'transform 0.3s ease-out',
       }} />
@@ -572,7 +572,7 @@ export default function Home() {
 }
 
 const styles = {
-  container: { height:'100%', display:'flex', flexDirection:'column', justifyContent:'space-between', padding:'calc(3.5rem + env(safe-area-inset-top)) 2rem calc(4rem + env(safe-area-inset-bottom))', background:'#141414', position:'relative', animation:'fadeIn 0.4s ease forwards' },
+  container: { height:'100dvh', display:'flex', flexDirection:'column', justifyContent:'space-between', padding:'calc(3.5rem + env(safe-area-inset-top)) 2rem calc(4rem + env(safe-area-inset-bottom))', background:'#141414', position:'relative', animation:'fadeIn 0.4s ease forwards', boxSizing:'border-box' },
   top: { display:'flex', flexDirection:'column', gap:'0.75rem' },
   wordmark: { fontSize:'2.8rem', fontWeight:'900', color:'#fff', letterSpacing:'-2px', lineHeight:1 },
   wordmarkLine: { height:'3px', width:'48px', background:'#ffb400', borderRadius:'2px', animation:'lineDraw 0.5s ease 0.2s both' },
