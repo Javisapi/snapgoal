@@ -572,7 +572,7 @@ export default function Home() {
 }
 
 const styles = {
-  container: { height:'100%', display:'flex', flexDirection:'column', justifyContent:'space-between', padding:'3.5rem 2rem 4rem', background:'#141414', position:'relative', animation:'fadeIn 0.4s ease forwards' },
+  container: { height:'100%', display:'flex', flexDirection:'column', justifyContent:'space-between', padding:'calc(3.5rem + env(safe-area-inset-top)) 2rem calc(4rem + env(safe-area-inset-bottom))', background:'#141414', position:'relative', animation:'fadeIn 0.4s ease forwards' },
   top: { display:'flex', flexDirection:'column', gap:'0.75rem' },
   wordmark: { fontSize:'2.8rem', fontWeight:'900', color:'#fff', letterSpacing:'-2px', lineHeight:1 },
   wordmarkLine: { height:'3px', width:'48px', background:'#ffb400', borderRadius:'2px', animation:'lineDraw 0.5s ease 0.2s both' },
