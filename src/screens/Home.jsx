@@ -179,8 +179,8 @@ export default function Home() {
 
   async function handleVerifyCode() {
     const code = recoverCode.trim()
-    if (code.length !== 6) {
-      setRecoverCodeError('El código debe tener 6 dígitos')
+    if (code.length !== 8) {
+      setRecoverCodeError('El código debe tener 8 dígitos')
       return
     }
     setRecoverCodeLoading(true)
@@ -531,10 +531,10 @@ export default function Home() {
                   style={{...styles.input, marginBottom:'0.75rem', textAlign:'center', fontSize:'1.3rem', letterSpacing:'4px'}}
                   type="text"
                   inputMode="numeric"
-                  maxLength={6}
-                  placeholder="000000"
+                  maxLength={8}
+                  placeholder="00000000"
                   value={recoverCode}
-                  onChange={e => setRecoverCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  onChange={e => setRecoverCode(e.target.value.replace(/\D/g, '').slice(0, 8))}
                   onKeyDown={e => e.key === 'Enter' && handleVerifyCode()}
                 />
                 {recoverCodeError && <p style={{fontSize:'0.8rem', color:'#ff4444', margin:'0 0 0.5rem'}}>{recoverCodeError}</p>}
