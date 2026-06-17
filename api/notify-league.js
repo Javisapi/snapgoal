@@ -43,8 +43,8 @@ export default async function handler(req, res) {
   if (!subs?.length) return res.status(200).json({ sent: 0 })
 
   const payload = JSON.stringify({
-    title: `⚽ ${sender_name} está buscando rival`,
-    body: `🥅 ${sender_name} está buscando rival en la Liga ${leagueName} de SnapGoal. ¿Te unes?`,
+    title: `⚽ ${sender_name} te está retando!`,
+    body: `🥅 ${sender_name} con el que compartes Liga ${leagueName} de SnapGoal te desafía. ¿Te atreves?`,
     url: `/league/${league_id}`
   })
 
