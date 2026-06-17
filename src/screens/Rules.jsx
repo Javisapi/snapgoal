@@ -30,8 +30,9 @@ const SECTIONS = [
     color: 'rgba(255,255,255,0.7)',
     rules: [
       'El tirador elige par o impar.',
-      'Vuelve a tirar. Si la centésima es del tipo elegido → GOL.',
-      'Si no → fallo, turno cambia.',
+      'Vuelve a tirar. La centésima debe ser del tipo elegido Y estar entre :30 y :70 → GOL.',
+      'Fuera de ese rango (00-29 o 71-99) → fallo siempre, aunque coincida par/impar.',
+      'Si no cumple ambas condiciones → fallo, turno cambia.',
     ]
   },
   {

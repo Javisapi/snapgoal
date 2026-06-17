@@ -159,7 +159,9 @@ function SlidePenalty() {
     setTotalCents(total)
     setRunning(false)
     const last1 = total % 10
-    const gol = chosen === 'par' ? last1 % 2 === 0 : last1 % 2 !== 0
+    const last2 = total % 100
+    const inRange = last2 >= 30 && last2 <= 70
+    const gol = (chosen === 'par' ? last1 % 2 === 0 : last1 % 2 !== 0) && inRange
     setResult(gol)
     setPhase('result')
   }
@@ -185,7 +187,7 @@ function SlidePenalty() {
 
       {phase === 'choose' && (
         <>
-          <p style={S.desc}>Paraste en :99. Elige PAR o IMPAR.<br/>Si la última centésima coincide → GOL.</p>
+          <p style={S.desc}>Paraste en :99. Elige PAR o IMPAR.<br/>Si coincide Y caes entre :30-:70 → GOL.</p>
           <div style={{display:'flex',gap:'0.75rem',width:'100%'}}>
             {['par','impar'].map(ch => (
               <button key={ch} style={{

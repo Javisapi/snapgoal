@@ -946,6 +946,7 @@ export default function Game() {
       const choice = m.penalty_choice
       const gg = m.golden_glove_state
       const parImparOk = choice === 'par' ? last1 % 2 === 0 : last1 % 2 !== 0
+      const inRange = last2 >= 30 && last2 <= 70
 
       let gloveBlocked = false
       if (gg?.used && gg?.choice) {
@@ -954,7 +955,7 @@ export default function Game() {
         else gloveBlocked = last2 < 50
       }
 
-      gol = parImparOk && !gloveBlocked
+      gol = parImparOk && inRange && !gloveBlocked
 
       if (gg?.used) {
         if (gloveBlocked) {
@@ -968,8 +969,8 @@ export default function Game() {
         }
       } else {
         label = gol
-          ? `⚽ Gol de penalty de ${p.username} (eligió ${choice}, centésima: ${last1})`
-          : `🥅 Penalty fallado por ${p.username} (eligió ${choice}, centésima: ${last1})`
+          ? `⚽ Gol de penalty de ${p.username} (eligió ${choice}, centésima: ${last2})`
+          : `🥅 Penalty fallado por ${p.username} (eligió ${choice}, centésima: ${last2}${!inRange ? ' — fuera de 30-70' : ''})`
         emoji = gol ? '⚽' : '🥅'
       }
       if (gol) { if (p1) sp1 += 1; else sp2 += 1 }
