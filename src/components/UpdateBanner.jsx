@@ -36,12 +36,13 @@ export default function UpdateBanner() {
       const res = await fetch('/version.json', { cache: 'no-store' })
       const data = await res.json()
       const stored = localStorage.getItem('app_version') || '0'
+      console.log('[UpdateBanner] stored:', stored, 'server:', data.version, 'diff:', stored !== data.version)
       if (stored !== data.version) {
         setForceReload(true)
         setShow(true)
       }
     } catch (e) {
-      // si falla la comprobación, no bloqueamos al usuario
+      console.log('[UpdateBanner] error checking version:', e)
     }
   }
 
