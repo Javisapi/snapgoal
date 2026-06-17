@@ -64,7 +64,10 @@ export default function Ranking() {
   return (
     <div style={styles.container}>
       <div style={styles.header}>
-        <button style={styles.backBtn} onClick={() => navigate('/')}>← volver</button>
+        <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start'}}>
+          <button style={styles.backBtn} onClick={() => navigate('/')}>← volver</button>
+          <button style={styles.proStatsBtn} onClick={() => navigate('/pro-stats')}>📊 Estadísticas PRO</button>
+        </div>
         <div style={styles.headerTitle}>
           <h1 style={styles.title}>Ranking</h1>
           <div style={styles.titleLine} />

@@ -88,6 +88,7 @@ import Academy from './screens/Academy'
 import Missions from './screens/Missions'
 import Tutorial from './screens/Tutorial'
 import UpdateBanner from './components/UpdateBanner'
+import ProStats from './screens/ProStats'
 import TrainingGame from './screens/TrainingGame'
 import Announce from './screens/Announce'
 import Leagues from './screens/Leagues'
@@ -112,6 +113,7 @@ function App() {
         <Route path="/academy" element={<Academy />} />
         <Route path="/missions" element={<Missions />} />
         <Route path="/tutorial" element={<Tutorial />} />
+        <Route path="/pro-stats" element={<ProStats />} />
         <Route path="/academy/train/:type/:difficulty" element={<TrainingGame />} />
         <Route path="/announce/:matchId" element={<Announce />} />
         <Route path="/leagues" element={<Leagues />} />
