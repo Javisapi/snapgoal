@@ -29,10 +29,10 @@ const SKILLS = [
     howto: [
       'Cuando tu rival lanza un penalty y elige par o impar, se te pregunta si quieres usar el Iron Fist.',
       'Tienes 5 segundos para decidir. Si no respondes, se omite.',
-      'Si lo activas, eliges DERECHA o IZQUIERDA:',
-      '→ DERECHA: bloqueas las centésimas 50–99. Tu rival solo puede marcar entre 00–49 (y acertando par/impar).',
-      '← IZQUIERDA: bloqueas las centésimas 00–49. Tu rival solo puede marcar entre 50–99 (y acertando par/impar).',
-      'Tu rival no sabe qué lado has elegido hasta después de tirar.',
+      'Si lo activas, eliges PORTERO PAR o PORTERO IMPAR:',
+      'Si tu elección coincide con la del tirador, su penalty falla siempre, sin importar dónde pare el cronómetro.',
+      'Si no coincide, se aplica la regla normal: el tirador debe acertar par/impar Y parar entre :30 y :70.',
+      'Tu rival no sabe qué portero has elegido hasta después de tirar.',
       'Si el penalty se para gracias al Iron Fist, aparece una animación especial.',
       'Una vez usados, se agotan. Consigue más completando misiones en el Vestuario.',
     ]

@@ -950,9 +950,8 @@ export default function Game() {
 
       let gloveBlocked = false
       if (gg?.used && gg?.choice) {
-        // derecha = 50-99 bloqueado, izquierda = 00-49 bloqueado
-        if (gg.choice === 'derecha') gloveBlocked = last2 >= 50
-        else gloveBlocked = last2 < 50
+        // gg.choice es 'par' o 'impar' — si coincide con la elección del tirador, bloqueado
+        gloveBlocked = gg.choice === choice
       }
 
       gol = parImparOk && inRange && !gloveBlocked
@@ -1429,18 +1428,18 @@ export default function Game() {
         <div style={{position:'absolute',inset:0,background:'rgba(0,0,0,0.93)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:60,flexDirection:'column',gap:'14px',padding:'24px 18px'}}>
           <svg width='64' height='64' viewBox='0 0 24 24' fill='none'><path d='M6 8V6a2 2 0 0 1 2-2h1a2 2 0 0 1 2 2v1h1V5a2 2 0 0 1 2-2h1a1 1 0 0 1 1 1v4l1-1a1.5 1.5 0 0 1 2 2l-3 4v3a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3v-5L4 10a1.5 1.5 0 0 1 2-2l0 0z' fill='#ffb400' stroke='#cc8800' strokeWidth='0.5'/></svg>
           <p style={{color:'#fff',fontWeight:'900',fontSize:'1.7rem',letterSpacing:'-0.5px',margin:0}}>Iron Fist</p>
-          <p style={{color:'rgba(255,255,255,0.5)',fontSize:'0.95rem',textAlign:'center',lineHeight:1.5,margin:0}}>Bloquea la mitad del cronómetro.<br/>Tu rival no sabrá qué lado elegiste.</p>
+          <p style={{color:'rgba(255,255,255,0.5)',fontSize:'0.95rem',textAlign:'center',lineHeight:1.5,margin:0}}>Bloquea todas las centésimas PAR o IMPAR.<br/>Tu rival no sabrá qué portero elegiste.</p>
           <div style={{fontSize:'0.95rem',fontWeight:'800',color:'#ffb400',background:'rgba(255,180,0,0.15)',borderRadius:'20px',padding:'6px 16px',border:'1px solid rgba(255,180,0,0.4)'}}>🧤 Te quedan {goldenGloveStock}</div>
           <div style={{display:'flex',gap:'12px',width:'100%'}}>
-            <button style={{flex:1,background:'rgba(255,180,0,0.1)',border:'1.5px solid rgba(255,180,0,0.4)',borderRadius:'18px',padding:'20px 8px',display:'flex',flexDirection:'column',alignItems:'center',gap:'8px',cursor:'pointer'}} onClick={() => activateGloveDecision(true, 'izquierda')}>
-              <span style={{fontSize:'2.2rem',color:'#ffb400',lineHeight:1}}>←</span>
-              <span style={{fontSize:'1.1rem',fontWeight:'900',color:'#ffb400',letterSpacing:'0.5px'}}>IZQUIERDA</span>
-              <span style={{fontSize:'0.78rem',color:'rgba(255,255,255,0.4)',textAlign:'center',lineHeight:1.4}}>bloquear<br/>00–49</span>
+            <button style={{flex:1,background:'rgba(255,180,0,0.1)',border:'1.5px solid rgba(255,180,0,0.4)',borderRadius:'18px',padding:'20px 8px',display:'flex',flexDirection:'column',alignItems:'center',gap:'8px',cursor:'pointer'}} onClick={() => activateGloveDecision(true, 'par')}>
+              <span style={{fontSize:'1.4rem',color:'#ffb400',lineHeight:1}}>🧤</span>
+              <span style={{fontSize:'1.1rem',fontWeight:'900',color:'#ffb400',letterSpacing:'0.5px'}}>PORTERO PAR</span>
+              <span style={{fontSize:'0.78rem',color:'rgba(255,255,255,0.4)',textAlign:'center',lineHeight:1.4}}>bloquear<br/>centésimas pares</span>
             </button>
-            <button style={{flex:1,background:'rgba(255,180,0,0.1)',border:'1.5px solid rgba(255,180,0,0.4)',borderRadius:'18px',padding:'20px 8px',display:'flex',flexDirection:'column',alignItems:'center',gap:'8px',cursor:'pointer'}} onClick={() => activateGloveDecision(true, 'derecha')}>
-              <span style={{fontSize:'2.2rem',color:'#ffb400',lineHeight:1}}>→</span>
-              <span style={{fontSize:'1.1rem',fontWeight:'900',color:'#ffb400',letterSpacing:'0.5px'}}>DERECHA</span>
-              <span style={{fontSize:'0.78rem',color:'rgba(255,255,255,0.4)',textAlign:'center',lineHeight:1.4}}>bloquear<br/>50–99</span>
+            <button style={{flex:1,background:'rgba(255,180,0,0.1)',border:'1.5px solid rgba(255,180,0,0.4)',borderRadius:'18px',padding:'20px 8px',display:'flex',flexDirection:'column',alignItems:'center',gap:'8px',cursor:'pointer'}} onClick={() => activateGloveDecision(true, 'impar')}>
+              <span style={{fontSize:'1.4rem',color:'#ffb400',lineHeight:1}}>🧤</span>
+              <span style={{fontSize:'1.1rem',fontWeight:'900',color:'#ffb400',letterSpacing:'0.5px'}}>PORTERO IMPAR</span>
+              <span style={{fontSize:'0.78rem',color:'rgba(255,255,255,0.4)',textAlign:'center',lineHeight:1.4}}>bloquear<br/>centésimas impares</span>
             </button>
           </div>
           <button style={{width:'100%',background:'rgba(255,40,40,0.2)',border:'2px solid #ff4444',borderRadius:'14px',padding:'16px',color:'#ff4444',fontSize:'1rem',fontWeight:'900',cursor:'pointer',boxShadow:'0 0 12px rgba(255,60,60,0.5),0 0 24px rgba(255,60,60,0.25)'}} onClick={() => activateGloveDecision(false)}>✕ No usar el Iron Fist</button>

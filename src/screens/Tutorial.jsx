@@ -421,7 +421,7 @@ function SlideSkills() {
       <p style={S.desc}>Tres habilidades especiales que pueden cambiar el partido.</p>
       <div style={{width:'100%',display:'flex',flexDirection:'column',gap:'0.75rem'}}>
         {[
-          { icon:'🧤', name:'Iron Fist', color:'#ffb400', desc:'En penalty: bloquea la mitad del cronómetro (00-49 ó 50-99). Tu rival no sabe qué lado elegiste.' },
+          { icon:'🧤', name:'Iron Fist', color:'#ffb400', desc:'En penalty: bloquea todas las centésimas PAR o IMPAR. Si coincide con la elección del tirador, falla siempre. Tu rival no sabe qué portero elegiste.' },
           { icon:'🎯', name:'Sniper',    color:'#ffb400', desc:'En falta: tu ventana de gol se amplía al doble. De 5 centésimas a 10.' },
           { icon:'🙏', name:'Mano de Dios', color:'#7dd3fc', desc:'Si paras en :99 o :01 → se convierte en :00 → GOL. Si paras en :98 → Penalty. En :97 → Falta. En :96 → Córner. Tienes 5s para decidir. Solo se consigue completando las 6 misiones diarias.' },
         ].map((skill,i) => (
