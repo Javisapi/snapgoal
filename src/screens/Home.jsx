@@ -60,6 +60,9 @@ export default function Home() {
   const [recoverSent, setRecoverSent] = useState(false)
   const [recoverError, setRecoverError] = useState('')
   const [recoverLoading, setRecoverLoading] = useState(false)
+  const [recoverCode, setRecoverCode] = useState('')
+  const [recoverCodeError, setRecoverCodeError] = useState('')
+  const [recoverCodeLoading, setRecoverCodeLoading] = useState(false)
   usePresenceMap((map) => setOnlineCount(Object.keys(map).length))
   useTrackPresence(player?.id, 'idle')
 
@@ -172,6 +175,27 @@ export default function Home() {
       return
     }
     setRecoverSent(true)
+  }
+
+  async function handleVerifyCode() {
+    const code = recoverCode.trim()
+    if (code.length !== 6) {
+      setRecoverCodeError('El código debe tener 6 dígitos')
+      return
+    }
+    setRecoverCodeLoading(true)
+    setRecoverCodeError('')
+    const { error } = await supabase.auth.verifyOtp({
+      email: recoverEmail.trim().toLowerCase(),
+      token: code,
+      type: 'email',
+    })
+    setRecoverCodeLoading(false)
+    if (error) {
+      setRecoverCodeError('Código incorrecto o caducado')
+      return
+    }
+    window.location.reload()
   }
 
   async function handlePlay() {
@@ -502,13 +526,27 @@ export default function Home() {
             {recoverSent ? (
               <>
                 <p style={styles.modalTitle}>📧 Revisa tu email</p>
-                <p style={styles.modalText}>Te hemos enviado un magic link a <strong style={{color:'#fff'}}>{recoverEmail}</strong>. Haz clic en él para acceder a tu cuenta.</p>
-                <button style={styles.btnCancelDelete} onClick={() => { setShowRecover(false); setRecoverSent(false); setRecoverEmail('') }}>Cerrar</button>
+                <p style={styles.modalText}>Te hemos enviado un código de 6 dígitos a <strong style={{color:'#fff'}}>{recoverEmail}</strong>. Introdúcelo aquí para acceder.</p>
+                <input
+                  style={{...styles.input, marginBottom:'0.75rem', textAlign:'center', fontSize:'1.3rem', letterSpacing:'4px'}}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  placeholder="000000"
+                  value={recoverCode}
+                  onChange={e => setRecoverCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  onKeyDown={e => e.key === 'Enter' && handleVerifyCode()}
+                />
+                {recoverCodeError && <p style={{fontSize:'0.8rem', color:'#ff4444', margin:'0 0 0.5rem'}}>{recoverCodeError}</p>}
+                <button style={styles.btnPrimary} onClick={handleVerifyCode} disabled={recoverCodeLoading}>
+                  {recoverCodeLoading ? 'Verificando...' : 'Acceder'}
+                </button>
+                <button style={styles.btnCancelDelete} onClick={() => { setShowRecover(false); setRecoverSent(false); setRecoverEmail(''); setRecoverCode(''); setRecoverCodeError('') }}>Cerrar</button>
               </>
             ) : (
               <>
                 <p style={styles.modalTitle}>🔑 Recuperar cuenta</p>
-                <p style={styles.modalText}>Introduce el email con el que protegiste tu cuenta. Te enviaremos un link para acceder.</p>
+                <p style={styles.modalText}>Introduce el email con el que protegiste tu cuenta. Te enviaremos un código de 6 dígitos.</p>
                 <input
                   style={{...styles.input, marginBottom:'0.75rem'}}
                   type="email"
@@ -521,7 +559,7 @@ export default function Home() {
                 />
                 {recoverError && <p style={{fontSize:'0.8rem', color:'#ff4444', margin:0}}>{recoverError}</p>}
                 <button style={styles.btnPrimary} onClick={handleRecover} disabled={recoverLoading}>
-                  {recoverLoading ? 'Enviando...' : 'Enviar magic link'}
+                  {recoverLoading ? 'Enviando...' : 'Enviar código'}
                 </button>
                 <button style={styles.btnCancelDelete} onClick={() => { setShowRecover(false); setRecoverEmail(''); setRecoverError('') }}>Cancelar</button>
               </>
