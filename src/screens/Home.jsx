@@ -209,8 +209,19 @@ export default function Home() {
 
       {showFieldIntro && (
         <div style={{ position:'fixed', inset:0, zIndex:50, background:'#0a120e', pointerEvents:'none', animation:'fieldIntroFadeOut 2s ease forwards' }}>
-          <svg viewBox="0 0 400 800" style={{ width:'100%', height:'100%', overflow:'visible' }}>
-            <g style={{ filter:'drop-shadow(0 0 10px #fff) drop-shadow(0 0 30px #fff) drop-shadow(0 0 60px #d4ffe9) drop-shadow(0 0 100px #aaffd6)' }}>
+          <svg viewBox="0 0 400 800" style={{ width:'100%', height:'100%' }}>
+            <defs>
+              <filter id="neonGlow" x="-200%" y="-200%" width="500%" height="500%">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur1" />
+                <feGaussianBlur in="SourceGraphic" stdDeviation="18" result="blur2" />
+                <feMerge>
+                  <feMergeNode in="blur2" />
+                  <feMergeNode in="blur1" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+            <g filter="url(#neonGlow)">
               <line x1="0" y1="400" x2="400" y2="400"
                 stroke="#ffffff" strokeWidth="4"
                 strokeDasharray="400" style={{ animation:'fieldIntroDrawLine 1.1s ease forwards' }} />
