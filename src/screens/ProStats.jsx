@@ -12,54 +12,34 @@ export default function ProStats() {
 
   async function load() {
     setLoading(true)
+    const { data, error } = await supabase.rpc('get_pro_stats')
+    if (error || !data) { setLoading(false); return }
 
-    const { data: players } = await supabase
-      .from('players')
-      .select('id, username, matches_played')
-      .gte('matches_played', 25)
+    const results = data.map(r => ({
+      username: r.username,
+      gdGoals: r.gd_goals, gdTotal: r.gd_total,
+      faltaGoals: r.falta_goals, faltaTotal: r.falta_total,
+      penGoals: r.pen_goals, penTotal: r.pen_total,
+      cornerGoals: r.corner_goals, cornerTotal: r.corner_total,
+      gdPct: r.gd_total ? (r.gd_goals / r.gd_total) * 100 : null,
+      faltaPct: r.falta_total ? (r.falta_goals / r.falta_total) * 100 : null,
+      penPct: r.pen_total ? (r.pen_goals / r.pen_total) * 100 : null,
+      cornerPct: r.corner_total ? (r.corner_goals / r.corner_total) * 100 : null,
+    }))
 
-    if (!players) { setLoading(false); return }
-
-    const results = []
-    for (const p of players) {
-      const { data: plays } = await supabase
-        .from('plays')
-        .select('result')
-        .eq('player_id', p.id)
-
-      if (!plays) continue
-
-      const count = (arr) => plays.filter(pl => arr.includes(pl.result)).length
-
-      const gdGoals = count(['GOL_DIRECTO'])
-      const gdTotal = count(['GOL_DIRECTO','NADA','AL_PALO','GOL_PROPIO','ROJA'])
-      const faltaGoals = count(['GOL_FALTA'])
-      const faltaTotal = count(['GOL_FALTA','FALTA_FALLO'])
-      const penGoals = count(['GOL_PENALTY'])
-      const penTotal = count(['GOL_PENALTY','PENALTY_FALLO'])
-      const cornerGoals = count(['GOL_CORNER'])
-      const cornerTotal = count(['GOL_CORNER','CORNER_FALLO'])
-
-      results.push({
-        username: p.username,
-        gdGoals, gdTotal,
-        faltaGoals, faltaTotal,
-        penGoals, penTotal,
-        cornerGoals, cornerTotal,
-        gdPct: gdTotal ? (gdGoals / gdTotal) * 100 : null,
-        faltaPct: faltaTotal ? (faltaGoals / faltaTotal) * 100 : null,
-        penPct: penTotal ? (penGoals / penTotal) * 100 : null,
-        cornerPct: cornerTotal ? (cornerGoals / cornerTotal) * 100 : null,
-      })
-    }
-
-    results.sort((a, b) => (b.gdPct ?? -1) - (a.gdPct ?? -1))
     setRows(results)
     setLoading(false)
   }
 
   function fmtPct(v) {
     return v === null ? '—' : `${v.toFixed(0)}%`
+  }
+
+  function medal(i) {
+    if (i === 0) return { bg: 'rgba(255,180,0,0.15)', color: '#ffb400', label: '1' }
+    if (i === 1) return { bg: 'rgba(180,180,180,0.1)', color: 'rgba(255,255,255,0.5)', label: '2' }
+    if (i === 2) return { bg: 'rgba(180,100,50,0.1)', color: 'rgba(200,130,80,0.8)', label: '3' }
+    return { bg: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.2)', label: String(i+1) }
   }
 
   return (
@@ -70,7 +50,7 @@ export default function ProStats() {
           <h1 style={styles.title}>Estadísticas PRO</h1>
           <div style={styles.titleLine} />
         </div>
-        <p style={styles.subtitle}>Mínimo 25 partidos jugados</p>
+        <p style={styles.subtitle}>Estadísticas totales históricas — solo jugadores con más de 25 partidos disputados</p>
       </div>
 
       <div style={styles.toggleRow}>
@@ -91,6 +71,7 @@ export default function ProStats() {
           <table style={styles.table}>
             <thead>
               <tr>
+                <th style={styles.thPos}>#</th>
                 <th style={styles.thName}>Jugador</th>
                 <th style={styles.th}>⚽ Directo</th>
                 <th style={styles.th}>🧤 Falta</th>
@@ -99,8 +80,13 @@ export default function ProStats() {
               </tr>
             </thead>
             <tbody>
-              {rows.map((r, i) => (
+              {rows.map((r, i) => {
+                const m = medal(i)
+                return (
                 <tr key={i} style={styles.tr}>
+                  <td style={styles.tdPos}>
+                    <span style={{ ...styles.posBadge, background: m.bg, color: m.color }}>{m.label}</span>
+                  </td>
                   <td style={styles.tdName}>{r.username}</td>
                   <td style={styles.td}>
                     {mode === 'pct' ? fmtPct(r.gdPct) : `${r.gdGoals}/${r.gdTotal}`}
@@ -115,7 +101,7 @@ export default function ProStats() {
                     {mode === 'pct' ? fmtPct(r.cornerPct) : `${r.cornerGoals}/${r.cornerTotal}`}
                   </td>
                 </tr>
-              ))}
+              )})}
             </tbody>
           </table>
           {rows.length === 0 && (
@@ -142,9 +128,12 @@ const styles = {
   emptyText: { color: 'rgba(255,255,255,0.3)', textAlign: 'center', padding: '2rem', fontSize: '0.85rem' },
   tableWrap: { flex: 1, overflow: 'auto', padding: '0 1.25rem 2rem' },
   table: { width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' },
+  thPos: { textAlign: 'center', padding: '0.5rem 0.4rem', color: 'rgba(255,255,255,0.3)', fontWeight: '700', fontSize: '0.7rem', width: '32px' },
   thName: { textAlign: 'left', padding: '0.5rem 0.75rem', color: 'rgba(255,255,255,0.3)', fontWeight: '700', fontSize: '0.7rem', letterSpacing: '0.5px', position: 'sticky', left: 0, background: '#141414' },
   th: { textAlign: 'center', padding: '0.5rem 0.6rem', color: 'rgba(255,255,255,0.3)', fontWeight: '700', fontSize: '0.7rem', whiteSpace: 'nowrap' },
   tr: { borderBottom: '1px solid rgba(255,255,255,0.05)' },
+  tdPos: { textAlign: 'center', padding: '0.4rem' },
+  posBadge: { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '24px', height: '24px', borderRadius: '50%', fontSize: '0.7rem', fontWeight: '900' },
   tdName: { padding: '0.65rem 0.75rem', color: '#fff', fontWeight: '700', position: 'sticky', left: 0, background: '#141414' },
   td: { textAlign: 'center', padding: '0.65rem 0.6rem', color: 'rgba(255,255,255,0.7)', fontWeight: '600', fontVariantNumeric: 'tabular-nums' },
 }
