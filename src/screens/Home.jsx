@@ -213,12 +213,12 @@ export default function Home() {
             <g style={{ filter:'drop-shadow(0 0 10px #fff) drop-shadow(0 0 30px #fff) drop-shadow(0 0 60px #d4ffe9) drop-shadow(0 0 100px #aaffd6)' }}>
               <line x1="0" y1="400" x2="400" y2="400"
                 stroke="#ffffff" strokeWidth="4"
-                strokeDasharray="400" style={{ animation:'fieldIntroDraw 1.1s ease forwards', '--dash-len':'400' }} />
+                strokeDasharray="400" style={{ animation:'fieldIntroDrawLine 1.1s ease forwards' }} />
               <circle cx="200" cy="400" r="70" fill="none"
                 stroke="#ffffff" strokeWidth="4"
-                strokeDasharray="440" style={{ animation:'fieldIntroDraw 1.1s 0.3s ease forwards', '--dash-len':'440' }} />
+                strokeDasharray="440" style={{ animation:'fieldIntroDrawCircle 1.1s 0.3s ease forwards' }} />
               <circle cx="200" cy="400" r="4" fill="#ffffff"
-                style={{ opacity:0, animation:'fieldIntroDraw 0.4s 1.2s ease forwards' }} />
+                style={{ opacity:0, animation:'fieldIntroDot 0.4s 1.2s ease forwards' }} />
             </g>
           </svg>
         </div>

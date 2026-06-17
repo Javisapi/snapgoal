@@ -25,12 +25,25 @@ html, body, #root {
   50% { filter: drop-shadow(0 0 6px rgba(255,100,40,0.7)) saturate(1.4); transform: scale(1.15); }
 }
 
-@keyframes fieldIntroDraw {
-  0% { stroke-dashoffset: var(--dash-len); opacity: 0; }
+@keyframes fieldIntroDrawLine {
+  0% { stroke-dashoffset: 400; opacity: 0; }
   15% { opacity: 1; }
   60% { stroke-dashoffset: 0; opacity: 1; }
   85% { opacity: 1; }
   100% { opacity: 0; }
+}
+
+@keyframes fieldIntroDrawCircle {
+  0% { stroke-dashoffset: 440; opacity: 0; }
+  15% { opacity: 1; }
+  60% { stroke-dashoffset: 0; opacity: 1; }
+  85% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes fieldIntroDot {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
 }
 
 @keyframes fieldIntroFadeOut {
