@@ -13,7 +13,7 @@ if (sessionStorage.getItem('cache_version') !== CACHE_VERSION) {
 
 registerPushSW()
 
-// Detectar nuevo SW y recargar automáticamente
+// Recargar cuando el usuario acepta la actualización desde el banner
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.addEventListener('controllerchange', () => {
     window.location.reload()

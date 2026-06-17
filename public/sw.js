@@ -2,7 +2,7 @@ const CACHE = 'snapgoal-v2'
 const ASSETS = ['/', '/index.html']
 
 self.addEventListener('install', e => {
-  self.skipWaiting()
+  // No skipWaiting automático — esperamos confirmación del usuario vía banner
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)))
 })
 

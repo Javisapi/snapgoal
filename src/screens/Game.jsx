@@ -122,7 +122,6 @@ export default function Game() {
   const [showProShooterPopup, setShowProShooterPopup] = useState(false)
   const proShooterPopupShownRef = useRef(false)
   const [showHandOfGodPopup, setShowHandOfGodPopup] = useState(false)
-  const [showHandOfGodFlash, setShowHandOfGodFlash] = useState(false)
   const handOfGodTimerRef = useRef(null)
   const handOfGodPendingCentsRef = useRef(null)
   const handOfGodFlashShownRef = useRef(false)
@@ -798,30 +797,34 @@ export default function Game() {
       return
     }
 
-    // Descontar stock
     const p = playerRef.current
+    const last2orig = originalTotal % 100
+    const newTotal = last2orig === 1 ? originalTotal - 1 : originalTotal + 1
+    const last2new = newTotal % 100
+
+    // Descontar stock
     await supabase.from('player_items').update({ stock: handOfGodStock - 1 })
       .eq('player_id', p.id).eq('item_type', 'hand_of_god')
     setHandOfGodStock(s => s - 1)
 
-    // Calcular nuevo total: sumar o restar 1
-    const last2 = originalTotal % 100
-    const newTotal = last2 === 1 ? originalTotal - 1 : originalTotal + 1
     offsetRef.current = newTotal
     setCentesimas(newTotal)
 
-    // Notificar al rival
+    // Animación rápida no bloqueante — igual que GOL/PALO/TARJETA
+    triggerFlash('hog', '🙏 MANO DE DIOSSS')
+
+    // Mensaje informativo para ambos jugadores (vía last_event normal)
+    const label = `🙏 ${p.username} usó la Mano de Dios: :${String(last2orig).padStart(2,'0')} → :${String(last2new).padStart(2,'0')}`
+    setLastPlay({ emoji: '🙏', label })
+
+    // Guardar hand_of_god_state solo como dato informativo (sin disparar overlay separado)
     await supabase.from('matches').update({
       hand_of_god_state: { used: true, player: p.username, from: last2orig, to: last2new },
       elapsed_centesimas: newTotal,
+      last_event: JSON.stringify({ emoji: '🙏', label }),
     }).eq('id', matchId)
 
-    // Mostrar texto informativo de lo que pasó
-    const last2orig = originalTotal % 100
-    const last2new = newTotal % 100
-    setLastPlay({ emoji: '🙏', label: `🙏 ${p.username} usó la Mano de Dios: :${String(last2orig).padStart(2,'0')} → :${String(last2new).padStart(2,'0')}` })
-
-    // Continuar con el nuevo total
+    // Continuar el flujo normal de la jugada con la nueva centésima — sin rama especial
     await continueAfterHog(newTotal, true)
   }
 
@@ -1272,7 +1275,7 @@ export default function Game() {
           {/* Overlay de color */}
           <div style={{
             position:'absolute', inset:0,
-            background: flashEvent.type === 'goal' || flashEvent.type === 'owngoal' ? 'rgba(255,180,0,0.12)' : flashEvent.type === 'red' ? 'rgba(255,68,68,0.15)' : 'rgba(255,200,0,0.1)',
+            background: flashEvent.type === 'goal' || flashEvent.type === 'owngoal' ? 'rgba(255,180,0,0.12)' : flashEvent.type === 'red' ? 'rgba(255,68,68,0.15)' : flashEvent.type === 'hog' ? 'rgba(100,180,255,0.15)' : 'rgba(255,200,0,0.1)',
             animation: 'flashOverlayGold 0.5s ease forwards',
           }}/>
           {/* Anillo expansivo para gol */}
@@ -1290,9 +1293,9 @@ export default function Game() {
             fontSize: flashEvent.type === 'goal' ? '3.5rem' : '2.5rem',
             fontWeight:'900',
             letterSpacing:'-1px',
-            color: flashEvent.type === 'goal' ? '#ffb400' : flashEvent.type === 'owngoal' ? '#ff8800' : flashEvent.type === 'red' ? '#ff4444' : flashEvent.type === 'palo' ? '#ffffff' : '#ffc800',
+            color: flashEvent.type === 'goal' ? '#ffb400' : flashEvent.type === 'owngoal' ? '#ff8800' : flashEvent.type === 'red' ? '#ff4444' : flashEvent.type === 'palo' ? '#ffffff' : flashEvent.type === 'hog' ? '#7dd3fc' : '#ffc800',
             animation: flashEvent.type === 'red' || flashEvent.type === 'yellow' ? 'cardShake 0.4s ease, eventFlash 0.5s ease forwards' : flashEvent.type === 'palo' ? 'paloShake 0.4s ease, eventFlash 0.6s ease forwards' : 'eventFlash 0.5s ease forwards',
-            textShadow: flashEvent.type === 'goal' ? '0 0 40px rgba(255,180,0,0.5)' : 'none',
+            textShadow: flashEvent.type === 'goal' ? '0 0 40px rgba(255,180,0,0.5)' : flashEvent.type === 'hog' ? '0 0 40px rgba(100,180,255,0.7)' : 'none',
             textAlign:'center',
             lineHeight:1,
           }}>
@@ -1511,19 +1514,6 @@ export default function Game() {
             <button style={{background:'linear-gradient(135deg,rgba(100,180,255,0.2),rgba(200,230,255,0.1))',border:'2px solid rgba(100,180,255,0.6)',borderRadius:'14px',padding:'1.1rem',fontSize:'1.1rem',fontWeight:'900',color:'#e0f0ff',cursor:'pointer',boxShadow:'0 0 20px rgba(100,180,255,0.4)'}} onClick={() => activateHandOfGod(true)}>🙏 Usar la Mano de Dios</button>
             <button style={{background:'rgba(255,40,40,0.15)',border:'1.5px solid rgba(255,68,68,0.4)',borderRadius:'14px',padding:'1rem',color:'#ff6b6b',fontSize:'1rem',fontWeight:'800',cursor:'pointer'}} onClick={() => activateHandOfGod(false)}>✕ No usar</button>
           </div>
-        </div>
-      )}
-
-      {/* Flash Mano de Dios — ambos jugadores */}
-      {showHandOfGodFlash && (
-        <div style={{position:'absolute',inset:0,background:'linear-gradient(135deg,rgba(0,20,80,0.97),rgba(0,40,120,0.95))',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',zIndex:70,gap:'1.5rem',animation:'hogFlash 3s ease forwards',pointerEvents:'none'}}>
-          <div style={{position:'relative',display:'flex',alignItems:'center',justifyContent:'center'}}>
-            <div style={{position:'absolute',width:'200px',height:'200px',borderRadius:'50%',background:'conic-gradient(rgba(100,180,255,0.5),rgba(255,255,255,0.1),rgba(100,180,255,0.5))',animation:'hogRays 2s linear infinite'}}/>
-            <div style={{position:'absolute',width:'240px',height:'240px',borderRadius:'50%',border:'2px solid rgba(100,180,255,0.3)',animation:'hogRays 4s linear infinite reverse'}}/>
-            <span style={{fontSize:'7rem',lineHeight:1,position:'relative',zIndex:1}}>🙏</span>
-          </div>
-          <h1 style={{fontSize:'2.5rem',fontWeight:'900',color:'#e0f0ff',margin:0,textAlign:'center',letterSpacing:'-1px',textShadow:'0 0 40px rgba(100,180,255,1),0 0 80px rgba(200,230,255,0.5)'}}>MANO DE DIOS</h1>
-          <p style={{fontSize:'1rem',color:'rgba(200,230,255,0.7)',margin:0,fontStyle:'italic',textAlign:'center'}}>«La mano de Dios»<br/>— Diego Armando Maradona, 1986</p>
         </div>
       )}
 
