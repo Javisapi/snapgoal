@@ -121,10 +121,17 @@ export function useBotPlayer({ match, matchId, isBotMatch, myTurn }) {
       const choice = Math.random() < 0.5 ? 'par' : 'impar'
       setTimeout(async () => {
         const event = { emoji: '🥅', label: `🥅 Cerverai eligió ${choice.toUpperCase()} — tira de nuevo` }
+
+        // Verificar si el humano tiene Iron Fist disponible
+        const humanId = match.player1_id === CERVERAI_ID ? match.player2_id : match.player1_id
+        const { data: humanItem } = await supabase
+          .from('player_items').select('stock').eq('player_id', humanId).eq('item_type', 'golden_glove').single()
+        const humanHasGlove = humanItem && humanItem.stock > 0
+
         await supabase.from('matches').update({
           penalty_choice: choice,
           last_event: JSON.stringify(event),
-          golden_glove_state: { waiting: false, choice: null, used: false },
+          golden_glove_state: humanHasGlove ? { waiting: true, choice: null, used: false } : { waiting: false, choice: null, used: false },
         }).eq('id', matchId)
         processingRef.current = false
       }, randomDelay())
@@ -141,6 +148,8 @@ export function useBotPlayer({ match, matchId, isBotMatch, myTurn }) {
 
     if (!needsShot) return
     if (match.timer_running) return
+    // Esperar a que el humano resuelva el Iron Fist antes de tirar
+    if (match.golden_glove_state?.waiting) return
 
     processingRef.current = true
 
@@ -170,7 +179,7 @@ export function useBotPlayer({ match, matchId, isBotMatch, myTurn }) {
 
       await botProcessPlay(total, matchId, match, processingRef)
     }, randomDelay())
-  }, [match?.current_turn, match?.pending_type, match?.barrier_range, match?.penalty_choice, match?.timer_running, match?.turn_sequence])
+  }, [match?.current_turn, match?.pending_type, match?.barrier_range, match?.penalty_choice, match?.timer_running, match?.turn_sequence, match?.golden_glove_state?.waiting])
 }
 
 async function botProcessPlay(total, matchId, match, processingRef) {
