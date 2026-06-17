@@ -32,7 +32,7 @@ export default function ProStats() {
   }
 
   function fmtPct(v) {
-    return v === null ? '—' : `${v.toFixed(0)}%`
+    return v === null ? '—' : `${v.toFixed(1)}%`
   }
 
   function medal(i) {
