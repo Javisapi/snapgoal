@@ -27,6 +27,17 @@ export default function Home() {
   const { player, loading, registerPlayer, refreshPlayer } = useAuth()
   const [username, setUsername] = useState('')
   const [streak, setStreak] = useState(0)
+  const [parallax, setParallax] = useState({ x: 0, y: 0 })
+
+  useEffect(() => {
+    function handleOrientation(e) {
+      const x = Math.max(-10, Math.min(10, (e.gamma || 0) * 0.4))
+      const y = Math.max(-6, Math.min(6, (e.beta ? e.beta - 45 : 0) * 0.2))
+      setParallax({ x, y })
+    }
+    window.addEventListener('deviceorientation', handleOrientation)
+    return () => window.removeEventListener('deviceorientation', handleOrientation)
+  }, [])
   const [skills, setSkills] = useState({ sniper: 0, glove: 0, hog: 0 })
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
@@ -183,6 +194,12 @@ export default function Home() {
 
   if (player) return (
     <div style={styles.container}>
+      <div style={{
+        position:'absolute', inset:'-20px', pointerEvents:'none', zIndex:0,
+        background:'radial-gradient(ellipse 140% 70% at 50% -10%, rgba(94,196,140,0.16), transparent 55%)',
+        transform:`translate(${parallax.x}px, ${parallax.y}px)`,
+        transition:'transform 0.3s ease-out',
+      }} />
       {showDeleteConfirm && (
         <div style={styles.overlay}>
           <div style={styles.modal}>
@@ -335,7 +352,7 @@ export default function Home() {
         <button style={styles.missionsBtn} onClick={() => navigate('/missions')}>
           <span style={{fontSize:'1.1rem'}}>🏟️</span>
           <span style={styles.missionsBtnLabel}>Vestuario</span>
-          {streak > 0 && <span style={{fontSize:'0.7rem',color:'#ffb400',fontWeight:'800'}}>🔥{streak}</span>}
+          {streak > 0 && <span style={{fontSize:'0.7rem',color:'#ffb400',fontWeight:'800',display:'inline-flex',alignItems:'center',gap:'2px'}}><span style={{display:'inline-block',animation:'flamePulse 1.6s ease-in-out infinite'}}>🔥</span>{streak}</span>}
         </button>
       </div>
 
@@ -500,7 +517,7 @@ const styles = {
   error: { fontSize:'0.85rem', color:'#ff4444', margin:0 },
   actions: { display:'flex', flexDirection:'column', gap:'0.75rem' },
   mainCards: { display:'flex', gap:'0.75rem', width:'100%' },
-  cardPlay: { flex:1, background:'linear-gradient(145deg, #ffb400 0%, #e07800 100%)', border:'none', borderRadius:'20px', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', cursor:'pointer', padding:'1.25rem 0.75rem', minHeight:'130px', boxShadow:'0 8px 32px rgba(255,180,0,0.25)' },
+  cardPlay: { flex:1, background:'linear-gradient(145deg, #ffb400 0%, #e07800 100%)', border:'none', borderRadius:'20px', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', cursor:'pointer', padding:'1.25rem 0.75rem', minHeight:'130px', boxShadow:'0 8px 32px rgba(255,180,0,0.25)', animation:'ctaGlowPulse 2.4s ease-in-out infinite' },
   cardPlayLabel: { fontSize:'0.95rem', fontWeight:'800', color:'#141414', letterSpacing:'0.2px', margin:0 },
   cardLeague: { flex:1, background:'rgba(255,180,0,0.07)', border:'1.5px solid rgba(255,180,0,0.2)', borderRadius:'20px', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', cursor:'pointer', padding:'1.25rem 0.75rem', minHeight:'130px' },
   cardLeagueLabel: { fontSize:'0.95rem', fontWeight:'800', color:'rgba(255,180,0,0.9)', letterSpacing:'0.2px', margin:0 },
