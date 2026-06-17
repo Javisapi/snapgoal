@@ -64,15 +64,17 @@ export default function Ranking() {
   return (
     <div style={styles.container}>
       <div style={styles.header}>
-        <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start'}}>
-          <button style={styles.backBtn} onClick={() => navigate('/')}>← volver</button>
-          <button style={styles.proStatsBtn} onClick={() => navigate('/pro-stats')}>🏅 Estadísticas PRO</button>
-        </div>
+        <button style={styles.backBtn} onClick={() => navigate('/')}>← volver</button>
         <div style={styles.headerTitle}>
           <h1 style={styles.title}>Ranking</h1>
           <div style={styles.titleLine} />
         </div>
         {myRank && <p style={styles.myRank}>Tu posición — #{myRank}</p>}
+      </div>
+
+      <div style={{display:'flex', gap:'0.6rem', padding:'0 1.75rem 1rem'}}>
+        <button style={styles.proStatsBtn} onClick={() => navigate('/pro-stats')}>🏅 Estadísticas PRO</button>
+        <button style={styles.matchRecordBtn} onClick={() => navigate('/match-record')}>🗒️ Match Record</button>
       </div>
 
       <div style={styles.list}>
@@ -172,7 +174,8 @@ const styles = {
   container: { height:'100%', display:'flex', flexDirection:'column', background:'#141414', overflow:'hidden' },
   header: { padding:'2.5rem 1.75rem 1rem', flexShrink:0 },
   backBtn: { background:'transparent', border:'none', color:'rgba(255,255,255,0.25)', fontSize:'0.8rem', cursor:'pointer', padding:0, marginBottom:'1rem', letterSpacing:'0.5px' },
-  proStatsBtn: { background:'linear-gradient(135deg, rgba(255,180,0,0.18), rgba(255,140,0,0.1))', border:'1.5px solid rgba(255,180,0,0.4)', borderRadius:'14px', color:'#ffb400', fontSize:'0.85rem', fontWeight:'800', cursor:'pointer', padding:'10px 16px', boxShadow:'0 0 16px rgba(255,180,0,0.15)', letterSpacing:'0.3px' },
+  proStatsBtn: { flex:1, background:'linear-gradient(135deg, rgba(255,180,0,0.18), rgba(255,140,0,0.1))', border:'1.5px solid rgba(255,180,0,0.4)', borderRadius:'14px', color:'#ffb400', fontSize:'0.85rem', fontWeight:'800', cursor:'pointer', padding:'10px 12px', boxShadow:'0 0 16px rgba(255,180,0,0.15)', letterSpacing:'0.3px' },
+  matchRecordBtn: { flex:1, background:'linear-gradient(135deg, rgba(96,165,250,0.18), rgba(59,130,246,0.1))', border:'1.5px solid rgba(147,197,253,0.4)', borderRadius:'14px', color:'#93c5fd', fontSize:'0.85rem', fontWeight:'800', cursor:'pointer', padding:'10px 12px', boxShadow:'0 0 16px rgba(147,197,253,0.15)', letterSpacing:'0.3px' },
   headerTitle: { display:'flex', flexDirection:'column', gap:'0.5rem', marginBottom:'0.5rem' },
   title: { fontSize:'2.5rem', fontWeight:'900', color:'#fff', letterSpacing:'-2px', margin:0, lineHeight:1 },
   titleLine: { height:'3px', width:'36px', background:'#ffb400', borderRadius:'2px' },
