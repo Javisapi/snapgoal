@@ -424,7 +424,10 @@ export default function Game() {
           stopInactivityTimer()
           clearInterval(heartbeatRef.current)
           clearInterval(intervalRef.current)
-          if (mountedRef.current) navigate('/result/' + matchId)
+          // El jugador rival (que no hizo la última jugada) también debe procesar sus propias misiones
+          updateStats(updated.score_p1, updated.score_p2, updated, playerRef.current).finally(() => {
+            if (mountedRef.current) navigate('/result/' + matchId)
+          })
           return
         }
       })
@@ -1221,15 +1224,11 @@ export default function Game() {
       await supabase.from('matches').update({ xp_result: xpRes.data }).eq('id', matchId)
     }
 
-    // Racha diaria y misiones — guard atómico anti-duplicado (evita carrera con useBotPlayer.js)
-    const { data: claimResult } = await supabase
-      .from('matches')
-      .update({ missions_processed: true })
-      .eq('id', matchId)
-      .eq('missions_processed', false)
-      .select('id')
-
-    const wonClaim = claimResult && claimResult.length > 0
+    // Racha diaria y misiones — guard atómico anti-duplicado POR JUGADOR (evita carrera con useBotPlayer.js y permite que ambos jugadores procesen sus propias misiones)
+    const { data: wonClaim } = await supabase.rpc('claim_missions_processing', {
+      p_match_id: matchId,
+      p_player_id: p.id,
+    })
 
     const lastEv = match.last_event ? JSON.parse(match.last_event) : null
     const isAbandon = lastEv?.label?.includes('abandonó') || lastEv?.label?.includes('inactividad') || lastEv?.label?.includes('desconectado')
