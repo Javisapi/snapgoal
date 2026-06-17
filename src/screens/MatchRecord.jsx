@@ -13,8 +13,29 @@ export default function MatchRecord() {
   const navigate = useNavigate()
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
+  const [selectedOpponent, setSelectedOpponent] = useState(null)
 
   useEffect(() => { load() }, [])
+
+  const opponentNames = [...new Set(rows.map(r => r.opponent_username))]
+  const suggestions = search && !selectedOpponent
+    ? opponentNames.filter(n => n.toLowerCase().startsWith(search.toLowerCase()))
+    : []
+
+  const filteredRows = selectedOpponent
+    ? rows.filter(r => r.opponent_username === selectedOpponent)
+    : rows
+
+  function selectOpponent(name) {
+    setSelectedOpponent(name)
+    setSearch(name)
+  }
+
+  function clearFilter() {
+    setSelectedOpponent(null)
+    setSearch('')
+  }
 
   async function load() {
     setLoading(true)
@@ -28,7 +49,7 @@ export default function MatchRecord() {
 
   function fmtDate(d) {
     const date = new Date(d + 'Z')
-    return date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', timeZone: 'Europe/Madrid' }) + ' ' +
+    return date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Europe/Madrid' }) + ' ' +
       date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Madrid' })
   }
 
@@ -51,11 +72,37 @@ export default function MatchRecord() {
         <p style={styles.subtitle}>Tu historial completo de partidos</p>
       </div>
 
+      <div style={styles.searchWrap}>
+        <input
+          style={styles.searchInput}
+          placeholder="Buscar rival..."
+          value={search}
+          onChange={e => { setSearch(e.target.value); setSelectedOpponent(null) }}
+        />
+        {selectedOpponent && (
+          <button style={styles.clearBtn} onClick={clearFilter}>✕</button>
+        )}
+        {suggestions.length > 0 && (
+          <div style={styles.suggestionsBox}>
+            {suggestions.map((name, i) => (
+              <button key={i} style={styles.suggestionItem} onClick={() => selectOpponent(name)}>{name}</button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div style={styles.legend}>
+        <span style={styles.legendItem}>⚽ Directo</span>
+        <span style={styles.legendItem}>🚩 Córner</span>
+        <span style={styles.legendItem}>🧤 Falta</span>
+        <span style={styles.legendItem}>🥅 Penalty</span>
+      </div>
+
       {loading ? (
         <p style={styles.loadingText}>Cargando...</p>
       ) : (
         <div style={styles.list}>
-          {rows.map((r, i) => (
+          {filteredRows.map((r, i) => (
             <div key={i} style={{ ...styles.row, borderLeftColor: r.won ? '#22c55e' : '#ff4444' }}>
               <div style={styles.rowTop}>
                 <span style={styles.opponent}>{r.opponent_username}</span>
@@ -72,8 +119,8 @@ export default function MatchRecord() {
               </div>
             </div>
           ))}
-          {rows.length === 0 && (
-            <p style={styles.emptyText}>Todavía no has jugado ningún partido.</p>
+          {filteredRows.length === 0 && (
+            <p style={styles.emptyText}>{selectedOpponent ? `Sin partidos contra ${selectedOpponent}` : 'Todavía no has jugado ningún partido.'}</p>
           )}
         </div>
       )}
@@ -89,6 +136,13 @@ const styles = {
   title: { fontSize: '1.8rem', fontWeight: '900', color: '#fff', margin: 0, letterSpacing: '-0.5px' },
   titleLine: { height: '3px', width: '40px', background: '#ffb400', borderRadius: '2px' },
   subtitle: { fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)', margin: 0 },
+  searchWrap: { position: 'relative', padding: '0 1.75rem 0.75rem' },
+  searchInput: { width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '12px', padding: '0.7rem 0.9rem', color: '#fff', fontSize: '0.85rem', outline: 'none' },
+  clearBtn: { position: 'absolute', right: '2.1rem', top: '0.55rem', background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: '0.9rem', cursor: 'pointer' },
+  suggestionsBox: { position: 'absolute', top: '100%', left: '1.75rem', right: '1.75rem', background: '#1c1c1c', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '10px', marginTop: '4px', overflow: 'hidden', zIndex: 10 },
+  suggestionItem: { display: 'block', width: '100%', textAlign: 'left', background: 'none', border: 'none', color: '#fff', padding: '0.6rem 0.9rem', fontSize: '0.82rem', cursor: 'pointer' },
+  legend: { display: 'flex', gap: '0.9rem', padding: '0 1.75rem 0.75rem', flexWrap: 'wrap' },
+  legendItem: { fontSize: '0.68rem', color: 'rgba(255,255,255,0.35)', fontWeight: '600' },
   loadingText: { color: 'rgba(255,255,255,0.3)', textAlign: 'center', marginTop: '2rem' },
   emptyText: { color: 'rgba(255,255,255,0.3)', textAlign: 'center', padding: '2rem', fontSize: '0.85rem' },
   list: { flex: 1, overflow: 'auto', padding: '0 1.25rem 2rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' },
