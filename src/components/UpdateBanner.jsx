@@ -3,8 +3,11 @@ import { useEffect, useState } from 'react'
 export default function UpdateBanner() {
   const [show, setShow] = useState(false)
   const [waitingWorker, setWaitingWorker] = useState(null)
+  const [forceReload, setForceReload] = useState(false)
 
   useEffect(() => {
+    checkVersion()
+
     if (!('serviceWorker' in navigator)) return
 
     navigator.serviceWorker.getRegistration().then(reg => {
@@ -28,7 +31,34 @@ export default function UpdateBanner() {
     })
   }, [])
 
+  async function checkVersion() {
+    try {
+      const res = await fetch('/version.json', { cache: 'no-store' })
+      const data = await res.json()
+      const stored = localStorage.getItem('app_version')
+      if (stored && stored !== data.version) {
+        setForceReload(true)
+        setShow(true)
+      }
+      if (!stored) {
+        localStorage.setItem('app_version', data.version)
+      }
+    } catch (e) {
+      // si falla la comprobación, no bloqueamos al usuario
+    }
+  }
+
   function handleAccept() {
+    if (forceReload) {
+      fetch('/version.json', { cache: 'no-store' })
+        .then(res => res.json())
+        .then(data => {
+          localStorage.setItem('app_version', data.version)
+          window.location.reload()
+        })
+        .catch(() => window.location.reload())
+      return
+    }
     if (!waitingWorker) {
       window.location.reload()
       return
