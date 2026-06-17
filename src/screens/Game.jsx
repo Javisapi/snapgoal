@@ -1458,7 +1458,7 @@ export default function Game() {
       {showPenaltyPopup && myTurn && (
         <div style={styles.barrierBox}>
           <p style={styles.barrierTitle}>🥅 Penalty — elige par o impar</p>
-          <p style={styles.barrierSub}>Si paras en una centésima de ese tipo, GOL</p>
+          <p style={styles.barrierSub}>Si paras en una centésima de ese tipo y entre :30-:70, GOL</p>
           <div style={styles.barrierBtns}>
             <button style={styles.barrierBtn} onClick={() => selectPenaltyChoice('par')}>PAR</button>
             <button style={styles.barrierBtn} onClick={() => selectPenaltyChoice('impar')}>IMPAR</button>
