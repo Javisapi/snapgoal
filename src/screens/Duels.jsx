@@ -70,14 +70,6 @@ export default function Duels() {
   async function loadDuels(playerId) {
     const { data } = await supabase.rpc('get_my_duels', { p_player_id: playerId })
     setDuels(data || [])
-
-    // Si algún duelo ya tiene match_id y yo ya confirmé "Jugar", el partido ya existe — navegar directamente
-    const readyMatch = (data || []).find(d =>
-      d.status === 'accepted' && d.match_id && (d.ready_players || []).includes(playerId)
-    )
-    if (readyMatch) {
-      navigate('/announce/' + readyMatch.match_id)
-    }
   }
 
   async function respond(duel, accept, confirmedWager = null) {
@@ -207,19 +199,27 @@ export default function Duels() {
                     <span style={styles.duelName}>{d.other_username}</span>
                     <span style={styles.duelWager}>Apuesta: {formatWager(d.final_wager || d.wager)}</span>
                   </div>
-                  {opponentReady && !iAmReady && (
-                    <p style={{ fontSize: '0.78rem', color: '#ffb400', margin: 0 }}>🔥 {d.other_username} ya está listo. ¡Pulsa Jugar antes de que pase el turno! ({secondsLeft}s)</p>
+                  {d.match_id ? (
+                    <button style={styles.acceptBtn} onClick={() => navigate('/announce/' + d.match_id)}>
+                      ▶️ Entrar al partido
+                    </button>
+                  ) : (
+                    <>
+                      {opponentReady && !iAmReady && (
+                        <p style={{ fontSize: '0.78rem', color: '#ffb400', margin: 0 }}>🔥 {d.other_username} ya está listo. ¡Pulsa Jugar antes de que pase el turno! ({secondsLeft}s)</p>
+                      )}
+                      {iAmReady && !opponentReady && (
+                        <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)', margin: 0 }}>⏳ Esperando a que {d.other_username} confirme... ({secondsLeft}s)</p>
+                      )}
+                      <button
+                        style={{ ...styles.acceptBtn, opacity: iAmReady ? 0.5 : 1 }}
+                        disabled={busyId === d.id || iAmReady}
+                        onClick={() => markReady(d)}
+                      >
+                        {busyId === d.id ? '...' : iAmReady ? 'Esperando...' : '▶️ Jugar'}
+                      </button>
+                    </>
                   )}
-                  {iAmReady && !opponentReady && (
-                    <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)', margin: 0 }}>⏳ Esperando a que {d.other_username} confirme... ({secondsLeft}s)</p>
-                  )}
-                  <button
-                    style={{ ...styles.acceptBtn, opacity: iAmReady ? 0.5 : 1 }}
-                    disabled={busyId === d.id || iAmReady}
-                    onClick={() => markReady(d)}
-                  >
-                    {busyId === d.id ? '...' : iAmReady ? 'Esperando...' : '▶️ Jugar'}
-                  </button>
                 </div>
               )
             })}
