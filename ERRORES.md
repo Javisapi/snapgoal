@@ -147,3 +147,55 @@
 **Causa:** El valor de opacidad se copió del patrón usado en otros popups informativos (Sniper, Mano de Dios) sin considerar que, a diferencia de esos casos, el Iron Fist depende estructuralmente de que el jugador que decide NO pueda ver ninguna pista del estado del rival
 **Solución:** Cambiar el fondo a un color sólido `#000000` sin transparencia
 **Regla:** Cualquier overlay/popup cuyo propósito sea ocultar información estratégica de un jugador frente al otro (decisiones simultáneas, elecciones secretas) debe usar un fondo 100% opaco sin excepción — la transparencia parcial es aceptable solo en popups puramente informativos donde no hay nada que ocultar
+
+## Error 20 — FOUND vs IS NOT NULL en PL/pgSQL tras SELECT INTO
+**Fecha:** 2026-06-18
+**Síntoma:** Ninguna apuesta de duelo se resolvía nunca al terminar un partido; no había error visible
+**Causa:** En `finalize_match_stats`, se declaró `v_duel record` y se comprobó `IF v_duel IS NOT NULL` tras un `SELECT INTO` — en Postgres esta condición es poco fiable y se evaluaba como falsa aunque la fila existiera
+**Solución:** Usar `IF FOUND THEN` (variable especial que Postgres actualiza tras cualquier SELECT INTO)
+**Regla:** En PL/pgSQL, nunca usar `IS NOT NULL` sobre una variable `record` para comprobar si un SELECT INTO encontró fila — usar siempre `IF FOUND`
+
+---
+
+## Error 21 — close_abandoned_matches usaba started_at en vez de turn_started_at
+**Fecha:** 2026-06-18
+**Síntoma:** Partidos de Reto se cerraban con marcador 0-5 antes de que se jugara ninguna tirada, porque el flujo Mis Retos→confirmar→Announce→Game acumula más tiempo del normal
+**Causa:** La función usaba `started_at` (momento de creación del registro) para medir inactividad de 5 minutos, en vez de `turn_started_at` (momento real de última actividad)
+**Solución:** Cambiar a `turn_started_at IS NOT NULL AND turn_started_at < now() - interval '5 minutes'`, igual que ya hacía `close_zombie_matches`
+**Regla:** La inactividad siempre debe medirse desde la última actividad real del partido (`turn_started_at`), nunca desde su creación (`started_at`)
+
+---
+
+## Error 22 — Return temprano en Result.jsx saltaba carga de opponent y updatedPlayer
+**Fecha:** 2026-06-18
+**Síntoma:** Pantalla de resultado se quedaba en "Cargando..." infinito cuando el ganador no tenía ningún gol registrado en `plays` (partido cerrado por inactividad o abandono sin jugadas reales)
+**Causa:** El código hacía `return` antes de llegar a `setOpponent(opp)` y `setUpdatedPlayer(updP)`. Result.jsx exige `match && opponent && player && updatedPlayer` para salir del estado "Cargando..."
+**Solución:** Mover la carga de opponent y updatedPlayer ANTES del return temprano del camino `lastGoalIdx < 0`
+**Regla:** Cualquier dato que sea condición necesaria para que un componente salga de su estado de carga debe cargarse antes de cualquier return temprano, independientemente del camino de ejecución
+
+---
+
+## Error 23 — Variable de estado usada en useEffect antes de ser declarada
+**Fecha:** 2026-06-18
+**Síntoma:** Pantalla de resultado completamente negra con `Uncaught ReferenceError: Cannot access 'A' before initialization`
+**Causa:** Se añadió un `useEffect` que referenciaba `showReplay` y `showMissionBanner`, pero `showReplay` estaba declarada más abajo en el mismo componente — con `const`/`let` esto lanza ReferenceError en tiempo de ejecución, no en compilación
+**Solución:** Mover la declaración de `showReplay` por encima del `useEffect` que la referencia
+**Regla:** Al añadir un `useEffect` con dependencias, verificar que TODAS las variables del array de dependencias y del cuerpo estén declaradas antes del `useEffect` en el orden del archivo — React/Vite no siempre detecta esto en tiempo de build
+
+---
+
+## Error 24 — duel_challenges no tiene columna winner_id
+**Fecha:** 2026-06-18
+**Síntoma:** El banner de recompensa de reto nunca aparecía al ganador aunque el reto estuviera `completed`
+**Causa:** El código accedía a `duelData.winner_id` pero la tabla `duel_challenges` no tiene esa columna — el valor era siempre `undefined`, por lo que la condición `duelData.winner_id === p.id` nunca se cumplía
+**Solución:** Usar `m.winner_id` (del objeto `match` ya cargado desde la tabla `matches`) en vez de `duelData.winner_id`
+**Regla:** Antes de acceder a una columna de una tabla, verificar que existe en el esquema real — no asumir que existe por analogía con otras tablas relacionadas
+
+---
+
+## Error 25 — Timer del rival sigue corriendo durante decisión de Mano de Dios
+**Fecha:** 2026-06-18
+**Síntoma:** Mientras el tirador decidía si usar la Mano de Dios (ventana de 5s), el cronómetro del rival seguía avanzando. Al confirmar la decisión, el cronómetro volvía al valor donde se paró
+**Causa:** Cuando se activa el popup de Mano de Dios, el tirador para el timer localmente pero nunca actualiza `timer_running: false` en Supabase. El rival sigue recibiendo el estado `timer_running: true` vía Realtime y su cronómetro local sigue corriendo
+**Solución:** Añadir un UPDATE a Supabase con `timer_running: false` y `elapsed_centesimas: total` antes de mostrar el popup, para que el rival reciba el estado correcto vía Realtime
+**Regla:** Cualquier pausa o interrupción del cronómetro que ocurra en el cliente del tirador debe propagarse inmediatamente a Supabase para que el cliente del rival sincronice — nunca asumir que el estado local y el remoto están sincronizados sin un UPDATE explícito

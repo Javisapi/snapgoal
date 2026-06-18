@@ -27,6 +27,9 @@ Web app de fútbol multijugador en tiempo real. Dos jugadores compiten parando u
 - `/pro-stats` — Estadísticas PRO: % de acierto en gol directo/falta/penalty/corner por jugador (mínimo 25 partidos), toggle Abs/%, posición con medallas oro/plata/bronce
 - `/match-record` — Match Record: historial completo de partidos del jugador logueado, con filtro de búsqueda de rival (autocompletado), desglose de goles por tipo, resultado de shootout entre paréntesis, fila verde/roja según V/D
 - `/rules` — Reglas del juego
+- `/duels` — Mis Retos (historial y pendientes)
+- `/duel/new` — Crear reto
+- `/duel/new/:leagueId` — Crear reto dentro de una liga
 
 ### Base de datos (Supabase)
 
@@ -36,12 +39,20 @@ Web app de fútbol multijugador en tiempo real. Dos jugadores compiten parando u
 | `matchmaking_queue` | Cola de emparejamiento con expiración y `league_id` |
 | `matches` | Partidos con estado, cronómetro, scores, `is_bot_match` y `bot_name` |
 | `plays` | Registro de cada tirada |
+| `duel_challenges` | Retos 1v1 con apuesta de skills |
 
 ### Funciones SQL clave
 - `do_matchmaking(player_id)` — Emparejamiento atómico sin race conditions
 - `do_league_matchmaking(player_id, league_id)` — Emparejamiento atómico dentro de una liga (filtrado por `league_id` en cola)
 - `finalize_match_stats(...)` — Actualización atómica de estadísticas con lock; actualiza stats de liga si el partido tiene `league_id`
 - `close_abandoned_matches(player_id)` — Limpieza de partidos zombie
+- `create_duel_challenge(challenger, opponent, league, wager)` — Crea un reto validando stock
+- `respond_duel_challenge(challenge_id, player_id, accept, confirmed_wager)` — Acepta o rechaza un reto
+- `mark_duel_ready(challenge_id, player_id)` — Confirma "Jugar"; con 2 listos crea el partido
+- `cancel_duel_challenge(challenge_id, player_id)` — Cancela un reto pendiente/accepted
+- `dismiss_duel_challenge(challenge_id, player_id)` — Elimina un reto cancelado del historial
+- `get_duelable_players(exclude_id)` — Jugadores con ≥1 skill disponible
+- `get_my_duels(player_id)` — Todos los retos del jugador con winner_id del partido
 
 ---
 
@@ -178,6 +189,34 @@ Durante un partido de liga aparece un botón 💬 en la barra inferior. Los juga
 
 ---
 
+## Sistema de Retos (Duelos)
+
+### Concepto
+Duelos 1v1 con apuesta de skills (Sniper 🎯, Iron Fist 🧤, Mano de Dios 🙏). El ganador se queda con las skills apostadas por el perdedor. El partido de reto es un partido normal — cuenta para XP, misiones y estadísticas.
+
+### Flujo
+1. **Crear reto** — seleccionar rival (con ≥1 skill), elegir apuesta por tipo
+2. **El rival tiene 24h** para aceptar o rechazar
+3. **Al aceptar** — ambos deben pulsar "Jugar" en una ventana de 30s
+4. **Si la ventana expira** — no se cancela, se puede reintentar hasta las 24h
+5. **Partido** — partido normal con los iconos de apuesta visibles encima del badge de turno
+6. **Resultado** — banner de recompensa al ganador con las skills ganadas
+
+### Tablas de base de datos
+- `duel_challenges` — retos con estado, apuesta, match_id, ready_players, dismissed_by
+
+### Pantalla Mis Retos (`/duels`)
+- Pestaña **Pendientes**: ENVIADOS + RECIBIDOS + LISTOS PARA JUGAR. Botón "Cancelar reto" en todas las tarjetas
+- Pestaña **Historial**: franja de color (verde=ganado, rojo=perdido, gris=cancelado/rechazado). Indicador ▲/▼. Botón "Eliminar" solo en cancelados
+- Actualización automática: polling 5s + burst 1s×5 al volver a la pestaña
+
+### Restricciones
+- Solo se puede retar a jugadores con ≥1 skill total
+- La apuesta no puede superar el mínimo entre tu stock y el del rival
+- Los límites se revalidan al aceptar Y al confirmar Jugar
+- Cerverai no puede ser retado
+- RLS desactivado en `duel_challenges` — operaciones protegidas por SECURITY DEFINER
+
 ## Skills
 
 ### Iron Fist (🧤) — rediseñado en v2.1
@@ -209,6 +248,24 @@ Se activa si el jugador para el cronómetro en `:96`, `:97`, `:98`, `:99` o `:01
 
 ## Versiones estables
 
+### v2.3-stable — Sistema de Retos completo
+
+#### Sistema de Retos (Duelos)
+- Duelos 1v1 con apuesta de skills entre jugadores
+- Flujo completo: crear → aceptar → confirmar Jugar (ventana 30s, reintentos ilimitados) → partido → recompensa
+- Pantalla Mis Retos con pestañas Pendientes/Historial, colores por resultado, cancelar y eliminar
+- Iconos de apuesta visibles en Game durante el partido de reto
+- Banner de recompensa en Result con polling de reintento
+- Notificaciones push para cada evento del reto
+
+#### Fixes incluidos
+- FOUND vs IS NOT NULL en finalize_match_stats (las apuestas nunca se resolvían)
+- close_abandoned_matches usaba started_at en vez de turn_started_at (cerraba partidos de reto prematuramente)
+- Return temprano en Result.jsx saltaba carga de opponent/updatedPlayer (Cargando infinito tras abandono)
+- Timer del rival sigue corriendo durante decisión de Mano de Dios — congelado vía UPDATE antes del popup
+- winner_id leído de matches en vez de duel_challenges (banner de recompensa nunca aparecía)
+- ReferenceError por showReplay usado antes de declararse en Result.jsx
+
 ### v2.2-stable — Fixes de XP, misiones, seguridad de Iron Fist y dificultad de córner
 
 #### XP no se repartía en partidos contra bot
@@ -220,7 +277,35 @@ Se activa si el jugador para el cronómetro en `:96`, `:97`, `:98`, `:99` o `:01
 - Fix: ambas funciones ahora asignan marcador (0-5, pierde quien tenía `current_turn` en el momento del cierre) y llaman a `finalize_match_stats` directamente desde SQL
 - Decisión de producto: no se repara el histórico de partidos ya afectados, solo aplica a partidos nuevos
 
-#### Skills de verificación de email otorgadas repetidamente
+#### Sistema de Retos (Duelos)
+
+### Concepto
+Duelos 1v1 con apuesta de skills (Sniper 🎯, Iron Fist 🧤, Mano de Dios 🙏). El ganador se queda con las skills apostadas por el perdedor. El partido de reto es un partido normal — cuenta para XP, misiones y estadísticas.
+
+### Flujo
+1. **Crear reto** — seleccionar rival (con ≥1 skill), elegir apuesta por tipo
+2. **El rival tiene 24h** para aceptar o rechazar
+3. **Al aceptar** — ambos deben pulsar "Jugar" en una ventana de 30s
+4. **Si la ventana expira** — no se cancela, se puede reintentar hasta las 24h
+5. **Partido** — partido normal con los iconos de apuesta visibles encima del badge de turno
+6. **Resultado** — banner de recompensa al ganador con las skills ganadas
+
+### Tablas de base de datos
+- `duel_challenges` — retos con estado, apuesta, match_id, ready_players, dismissed_by
+
+### Pantalla Mis Retos (`/duels`)
+- Pestaña **Pendientes**: ENVIADOS + RECIBIDOS + LISTOS PARA JUGAR. Botón "Cancelar reto" en todas las tarjetas
+- Pestaña **Historial**: franja de color (verde=ganado, rojo=perdido, gris=cancelado/rechazado). Indicador ▲/▼. Botón "Eliminar" solo en cancelados
+- Actualización automática: polling 5s + burst 1s×5 al volver a la pestaña
+
+### Restricciones
+- Solo se puede retar a jugadores con ≥1 skill total
+- La apuesta no puede superar el mínimo entre tu stock y el del rival
+- Los límites se revalidan al aceptar Y al confirmar Jugar
+- Cerverai no puede ser retado
+- RLS desactivado en `duel_challenges` — operaciones protegidas por SECURITY DEFINER
+
+## Skills de verificación de email otorgadas repetidamente
 - `grant_verification_skills` no comprobaba si el jugador ya estaba verificado, y `Verify.jsx` la llamaba cada vez que se reprocesaba el flujo de verificación (ej. al reabrir un enlace tras reinstalar la PWA), sumando +5/+5 cada vez
 - Fix: guard en SQL (comprueba `email_verified` antes de otorgar) + guard en cliente (comprueba `player.email_verified` antes de llamar al RPC)
 
