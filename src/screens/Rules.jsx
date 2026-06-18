@@ -49,7 +49,7 @@ const SECTIONS = [
     color: 'rgba(255,255,255,0.7)',
     rules: [
       'El tirador vuelve a tirar.',
-      'Si para en un múltiplo de 10 → GOL. Si no → fallo, turno cambia.',
+      'Si para en un múltiplo de 10 entre 20 y 80 → GOL. Si no → fallo, turno cambia.',
     ]
   },
   {

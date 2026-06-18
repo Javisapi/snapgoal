@@ -910,7 +910,7 @@ export default function Game() {
     }
 
     if (ev.result === 'CORNER' && !isEmpateAlTiempo) {
-      const event = { emoji: '🚩', label: `🚩 CÓRNER de ${p.username} — para en múltiplo de 10 para GOL` }
+      const event = { emoji: '🚩', label: `🚩 CÓRNER de ${p.username} — para en múltiplo de 10 entre 20-80 para GOL` }
       setLastPlay(event)
       setPendingType('CORNER')
       await supabase.from('matches').update({
@@ -982,7 +982,7 @@ export default function Game() {
       if (gol) { if (p1) sp1 += 1; else sp2 += 1 }
     } else if (pending === 'CORNER') {
       const last2 = total % 100
-      gol = last2 % 10 === 0
+      gol = last2 % 10 === 0 && last2 >= 20 && last2 <= 80
       label = gol
         ? `⚽ Gol de córner de ${p.username} (${last2})`
         : `🚩 Córner fallado por ${p.username} (${last2})`

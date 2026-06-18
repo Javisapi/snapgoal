@@ -319,7 +319,7 @@ function SlideCorner() {
     <div style={S.slide}>
       <span style={{fontSize:'3.5rem',lineHeight:1}}>🚩</span>
       <h2 style={S.title}><span style={{color:'#ffb400'}}>Córner</span></h2>
-      <p style={S.desc}>Paraste en :97. Tira de nuevo.<br/>Para en múltiplo de 10 → GOL.</p>
+      <p style={S.desc}>Paraste en :97. Tira de nuevo.<br/>Para en múltiplo de 10 entre 20 y 80 → GOL.</p>
       <div style={{...S.timerBox, borderColor: gol ? '#ffb400' : running ? 'rgba(255,180,0,0.4)' : 'rgba(255,255,255,0.1)', boxShadow: gol ? '0 0 30px rgba(255,180,0,0.4)' : 'none', transition:'all 0.3s'}}>
         <span style={{fontSize:'0.65rem',color:'rgba(255,255,255,0.3)',letterSpacing:'3px',marginBottom:'4px'}}>SEG : CEN</span>
         <div style={{display:'flex',alignItems:'center',gap:'4px'}}>
@@ -333,7 +333,7 @@ function SlideCorner() {
             <span style={{fontSize:'2rem',fontWeight:'900',color:'#ffb400'}}>⚽ ¡GOL de córner!</span>
             <p style={{fontSize:'0.8rem',color:'rgba(255,255,255,0.5)',margin:0}}>:30 es múltiplo de 10 ✓</p>
           </div>
-        : <p style={{fontSize:'0.8rem',color:'rgba(255,255,255,0.3)'}}>Múltiplos de 10: :10 · :20 · :30 · :40 · :50 · :60 · :70 · :80 · :90 · :00</p>
+        : <p style={{fontSize:'0.8rem',color:'rgba(255,255,255,0.3)'}}>Múltiplos de 10 entre 20-80: :20 · :30 · :40 · :50 · :60 · :70 · :80</p>
       }
     </div>
   )
