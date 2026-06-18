@@ -147,6 +147,7 @@ export default function Game() {
   const startPerfRef = useRef(null)
   const iAmTheShooterRef = useRef(false)
   const timerVersionRef = useRef(0)
+  const oppStockQueryVersionRef = useRef(0)
   const lastTapRef = useRef(0)
   const preShootOffsetRef = useRef(0)
 
@@ -317,9 +318,12 @@ export default function Game() {
 
         setMyTurn(isMyTurn)
 
-        // Actualizar stock del rival
+        // Actualizar stock del rival — versión de consulta evita pisar datos con respuestas fuera de orden
         const oppId = updated.player1_id === playerRef.current?.id ? updated.player2_id : updated.player1_id
+        oppStockQueryVersionRef.current += 1
+        const oppStockQueryVersion = oppStockQueryVersionRef.current
         supabase.from('player_items').select('item_type,stock').eq('player_id', oppId).then(({ data }) => {
+          if (oppStockQueryVersion !== oppStockQueryVersionRef.current) return
           if (data) {
             const gg = data.find(i => i.item_type === 'golden_glove')
             const ps = data.find(i => i.item_type === 'pro_shooter')
