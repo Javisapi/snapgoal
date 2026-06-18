@@ -66,6 +66,8 @@ export default function Result() {
   const [showMissionBanner, setShowMissionBanner] = useState(false)
   const [duelReward, setDuelReward] = useState(null)
   const [showDuelBanner, setShowDuelBanner] = useState(false)
+  const [currentMissionIdx, setCurrentMissionIdx] = useState(0)
+  const [showReplay, setShowReplay] = useState(true)
 
   // Mostrar banner de reto en cuanto duelReward esté disponible y no haya misiones pendientes
   useEffect(() => {
@@ -73,8 +75,6 @@ export default function Result() {
       setShowDuelBanner(true)
     }
   }, [duelReward, showMissionBanner, showReplay])
-  const [currentMissionIdx, setCurrentMissionIdx] = useState(0)
-  const [showReplay, setShowReplay] = useState(true)
   const [replayCents, setReplayCents] = useState(null)
   const [replayResult, setReplayResult] = useState(null)
   const [replayGoalCents, setReplayGoalCents] = useState(null)
