@@ -258,6 +258,9 @@ export default function League() {
                     </div>
                     <span style={styles.memberWDL}>Desde {new Date(m.joined_at).toLocaleDateString('es-ES')}</span>
                   </div>
+                  {!isMe && (
+                    <button style={styles.duelBtn} onClick={() => navigate('/duel/new/' + leagueId, { state: { preselectedOpponentId: m.players.id, preselectedOpponentName: m.players.username } })}>⚔️ Retar</button>
+                  )}
                   {canKick && (
                     <button style={styles.kickBtn} onClick={() => setShowKick(m)}>Expulsar</button>
                   )}
@@ -357,6 +360,7 @@ const styles = {
   memberPts: { fontSize: '1.2rem', fontWeight: '900', color: '#fff', lineHeight: 1 },
   memberPtsLabel: { fontSize: '0.6rem', color: 'rgba(255,255,255,0.25)' },
   kickBtn: { background: 'rgba(255,68,68,0.1)', border: '1px solid rgba(255,68,68,0.2)', borderRadius: '8px', color: '#ff4444', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer', padding: '4px 10px' },
+  duelBtn: { background: 'rgba(255,180,0,0.1)', border: '1px solid rgba(255,180,0,0.25)', borderRadius: '8px', color: '#ffb400', fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer', padding: '4px 10px', marginRight: '6px' },
   leaveBtn: { background: 'transparent', border: '1px solid rgba(255,68,68,0.2)', borderRadius: '10px', color: 'rgba(255,68,68,0.5)', fontSize: '0.85rem', cursor: 'pointer', padding: '0.75rem', marginTop: '0.5rem' },
   btnAlert: { width: '100%', background: 'rgba(255,60,60,0.08)', border: '1px solid rgba(255,60,60,0.3)', borderRadius: '12px', color: 'rgba(255,80,80,0.9)', fontSize: '0.9rem', fontWeight: '700', cursor: 'pointer', padding: '1.1rem', marginTop: '0.5rem', boxShadow: '0 0 12px rgba(255,60,60,0.2)' },
   deleteLeagueBtn: { background: 'rgba(255,68,68,0.08)', border: '1px solid rgba(255,68,68,0.2)', borderRadius: '10px', color: '#ff4444', fontSize: '0.85rem', cursor: 'pointer', padding: '0.75rem', marginTop: '0.5rem', fontWeight: '700' },

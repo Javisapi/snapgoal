@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
 async function getPlayer() {
@@ -19,6 +19,8 @@ const ITEM_ICONS = { pro_shooter: '🎯', golden_glove: '🧤', hand_of_god: '�
 export default function DuelCreate() {
   const { leagueId } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
+  const preselected = location.state?.preselectedOpponentId
   const [player, setPlayer] = useState(null)
   const [myStock, setMyStock] = useState({})
   const [candidates, setCandidates] = useState([])
@@ -43,6 +45,12 @@ export default function DuelCreate() {
 
     const { data: candidateData } = await supabase.rpc('get_duelable_players', { p_exclude_player_id: p.id })
     setCandidates(candidateData || [])
+
+    if (preselected) {
+      const match = candidateData?.find(c => c.player_id === preselected)
+      if (match) setSelectedOpponent(match)
+    }
+
     setLoading(false)
   }
 
