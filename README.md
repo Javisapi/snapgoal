@@ -68,7 +68,7 @@ El tirador elige par o impar → tira de nuevo → si la centésima coincide = G
 El rival elige la barrera (20-25, 30-35, 40-45) → el tirador debe parar dentro del rango = GOL
 
 ### Córner (`:97`)
-Tira de nuevo → si para en múltiplo de 10 = GOL
+Tira de nuevo → si para en múltiplo de 10 Y dentro del rango :20-:80 = GOL (dificultad aumentada en v2.2 — antes cualquier múltiplo de 10 sin restricción de rango)
 
 ### Tarjetas
 - **+2s sin parar** → Tarjeta amarilla
@@ -208,6 +208,34 @@ Se activa si el jugador para el cronómetro en `:96`, `:97`, `:98`, `:99` o `:01
 ---
 
 ## Versiones estables
+
+### v2.2-stable — Fixes de XP, misiones, seguridad de Iron Fist y dificultad de córner
+
+#### XP no se repartía en partidos contra bot
+- `finalize_match_stats` usaba un guard `stats_updated` a nivel de partido: el primer jugador en llamar a la función calculaba el XP correctamente, pero el segundo jugador en llamar recibía `{xp: null}` y el cliente sobreescribía el `xp_result` correcto con ese null
+- Fix: cuando el guard detecta que el partido ya fue procesado, la función ahora devuelve el `xp_result` ya guardado en vez de null; el cliente además solo escribe `xp_result` si `xp !== null`
+
+#### XP no se repartía en partidos cerrados por inactividad/zombie
+- `close_zombie_matches` y `close_abandoned_matches` cambiaban `status` a `finished` directamente en SQL sin asignar `winner_id`/marcador ni llamar a `finalize_match_stats` — dependían de que un cliente conectado detectara el cambio vía Realtime, pero estos partidos por definición ya no tienen ningún cliente escuchando
+- Fix: ambas funciones ahora asignan marcador (0-5, pierde quien tenía `current_turn` en el momento del cierre) y llaman a `finalize_match_stats` directamente desde SQL
+- Decisión de producto: no se repara el histórico de partidos ya afectados, solo aplica a partidos nuevos
+
+#### Skills de verificación de email otorgadas repetidamente
+- `grant_verification_skills` no comprobaba si el jugador ya estaba verificado, y `Verify.jsx` la llamaba cada vez que se reprocesaba el flujo de verificación (ej. al reabrir un enlace tras reinstalar la PWA), sumando +5/+5 cada vez
+- Fix: guard en SQL (comprueba `email_verified` antes de otorgar) + guard en cliente (comprueba `player.email_verified` antes de llamar al RPC)
+
+#### Filtración de información en el popup de Iron Fist
+- El fondo del popup donde el defensor elige Portero PAR/IMPAR tenía `background: rgba(0,0,0,0.93)` — un 7% de transparencia permitía que se filtrara visualmente la elección par/impar del lanzador a través del overlay, rompiendo la mecánica de información oculta del penalty
+- Fix: fondo cambiado a `#000000` totalmente opaco
+
+#### Banners de misión completada se perdían (sobreescritura entre jugadores)
+- `update_daily_missions` devolvía `completed_missions` al cliente, que hacía `update({missions_result: ...})` directamente sobre `matches` — si ambos jugadores humanos completaban una misión distinta en el mismo partido, el segundo en escribir sobreescribía por completo el resultado del primero, perdiendo su banner sin ningún error visible
+- Fix: `update_daily_missions` ahora escribe `matches.missions_result` directamente en SQL con `jsonb_set` sobre una clave `by_player[player_id]`, de forma atómica, sin pisar lo que el otro jugador ya escribió. El cliente ya no escribe esa columna
+- Fix adicional: `Result.jsx` ahora filtra `missions_result.by_player[player.id]` (antes leía un array compartido `completed_missions` que mezclaba a ambos jugadores) y añade polling de reintento (igual que ya existía para XP) por si el dato tarda en propagarse
+
+#### Dificultad de córner aumentada
+- Antes: cualquier múltiplo de 10 (00 a 90) hacía gol
+- Ahora: debe ser múltiplo de 10 Y estar en el rango :20-:80 inclusive (7 valores válidos: 20,30,40,50,60,70,80)
 
 ### v2.1-stable — Fix de misiones, Iron Fist rediseñado, Estadísticas avanzadas
 
