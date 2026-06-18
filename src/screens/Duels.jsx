@@ -39,21 +39,34 @@ export default function Duels() {
 
   useEffect(() => {
     if (!player?.id) return
-    const ch = supabase.channel('duel-ready-' + player.id)
+    function handleDuelUpdate(payload) {
+      const updated = payload.new
+      if (updated.match_id && (updated.ready_players || []).includes(player.id)) {
+        navigate('/announce/' + updated.match_id)
+      } else {
+        loadDuels(player.id)
+      }
+    }
+
+    const ch1 = supabase.channel('duel-challenger-' + player.id)
       .on('postgres_changes', {
         event: 'UPDATE', schema: 'public', table: 'duel_challenges',
-      }, (payload) => {
-        const updated = payload.new
-        const isMine = updated.challenger_id === player.id || updated.opponent_id === player.id
-        if (!isMine) return
-        if (updated.match_id && (updated.ready_players || []).includes(player.id)) {
-          navigate('/announce/' + updated.match_id)
-        } else {
-          loadDuels(player.id)
-        }
-      })
+        filter: `challenger_id=eq.${player.id}`,
+      }, handleDuelUpdate)
       .subscribe()
-    return () => supabase.removeChannel(ch)
+
+    const ch2 = supabase.channel('duel-opponent-' + player.id)
+      .on('postgres_changes', {
+        event: 'UPDATE', schema: 'public', table: 'duel_challenges',
+        filter: `opponent_id=eq.${player.id}`,
+      }, handleDuelUpdate)
+      .on('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'duel_challenges',
+        filter: `opponent_id=eq.${player.id}`,
+      }, () => loadDuels(player.id))
+      .subscribe()
+
+    return () => { supabase.removeChannel(ch1); supabase.removeChannel(ch2) }
   }, [player?.id])
 
   // Tick cada segundo para recalcular si la ventana de 30s de algún duelo ya expiró
