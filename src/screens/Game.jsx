@@ -1185,6 +1185,7 @@ export default function Game() {
       barrier_range: null,
       penalty_choice: null,
       hand_of_god_state: null,
+      pro_shooter_active: false,
       last_event: event ? JSON.stringify(event) : null,
       status: finished ? 'finished' : 'playing',
       winner_id: winnerId,
