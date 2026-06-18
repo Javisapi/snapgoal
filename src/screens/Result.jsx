@@ -66,6 +66,13 @@ export default function Result() {
   const [showMissionBanner, setShowMissionBanner] = useState(false)
   const [duelReward, setDuelReward] = useState(null)
   const [showDuelBanner, setShowDuelBanner] = useState(false)
+
+  // Mostrar banner de reto en cuanto duelReward esté disponible y no haya misiones pendientes
+  useEffect(() => {
+    if (duelReward && !showMissionBanner && !showReplay) {
+      setShowDuelBanner(true)
+    }
+  }, [duelReward, showMissionBanner, showReplay])
   const [currentMissionIdx, setCurrentMissionIdx] = useState(0)
   const [showReplay, setShowReplay] = useState(true)
   const [replayCents, setReplayCents] = useState(null)
@@ -117,15 +124,28 @@ export default function Result() {
 
     setMatch(m)
 
-    // Cargar recompensa de reto si aplica
-    const { data: duelData } = await supabase
-      .from('duel_challenges')
-      .select('final_wager, wager, winner_id')
-      .eq('match_id', matchId)
-      .eq('status', 'completed')
-      .single()
-    if (duelData && m.winner_id === p.id) {
-      setDuelReward(duelData.final_wager || duelData.wager)
+    // Cargar recompensa de reto si aplica — con polling por si finalize_match_stats no ha corrido aún
+    const loadDuelReward = async (match, player) => {
+      const { data: duelData } = await supabase
+        .from('duel_challenges')
+        .select('final_wager, wager')
+        .eq('match_id', matchId)
+        .eq('status', 'completed')
+        .single()
+      if (duelData && match.winner_id === player.id) {
+        setDuelReward(duelData.final_wager || duelData.wager)
+        return true
+      }
+      return false
+    }
+    const duelFound = await loadDuelReward(m, p)
+    if (!duelFound) {
+      let duelAttempts = 0
+      const pollDuel = setInterval(async () => {
+        duelAttempts++
+        const found = await loadDuelReward(m, p)
+        if (found || duelAttempts >= 6) clearInterval(pollDuel)
+      }, 1500)
     }
 
     // Misiones completadas en este partido — solo las propias del jugador (estructura separada por player_id)
@@ -195,7 +215,7 @@ export default function Result() {
     if (lastGoalIdx < 0 || !lastPlay) {
       setShowReplay(false)
       if (completedMissionsData.length > 0) setShowMissionBanner(true)
-      else if (duelData && duelData.winner_id === p.id) setShowDuelBanner(true)
+      // duelBanner se mostrará vía useEffect cuando duelReward se cargue
       return
     }
 
@@ -211,7 +231,7 @@ export default function Result() {
         setTimeout(() => {
           setShowReplay(false)
           if (completedMissionsData.length > 0) setShowMissionBanner(true)
-          else if (duelData && duelData.winner_id === p.id) setShowDuelBanner(true)
+          // duelBanner se mostrará vía useEffect cuando duelReward se cargue
         }, 1000)
       }
     }, frameDuration)
