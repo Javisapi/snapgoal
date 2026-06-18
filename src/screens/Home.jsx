@@ -235,10 +235,12 @@ export default function Home() {
         <div style={{ position:'fixed', inset:0, zIndex:50, background:'#0a120e', pointerEvents:'none', animation:'fieldIntroFadeOut 2s ease forwards' }}>
           <svg viewBox="0 0 400 800" style={{ width:'100%', height:'100%' }}>
             <defs>
-              <filter id="neonGlow" x="-200%" y="-200%" width="500%" height="500%">
-                <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur1" />
-                <feGaussianBlur in="SourceGraphic" stdDeviation="18" result="blur2" />
+              <filter id="neonGlow" x="-300%" y="-300%" width="700%" height="700%">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="14" result="blur1" />
+                <feGaussianBlur in="SourceGraphic" stdDeviation="30" result="blur2" />
+                <feGaussianBlur in="SourceGraphic" stdDeviation="50" result="blur3" />
                 <feMerge>
+                  <feMergeNode in="blur3" />
                   <feMergeNode in="blur2" />
                   <feMergeNode in="blur1" />
                   <feMergeNode in="SourceGraphic" />

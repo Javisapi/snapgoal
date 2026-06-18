@@ -47,6 +47,6 @@ html, body, #root {
 }
 
 @keyframes fieldIntroFadeOut {
-  0%, 75% { opacity: 1; }
+  0%, 65% { opacity: 1; }
   100% { opacity: 0; }
 }
