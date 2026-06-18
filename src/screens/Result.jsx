@@ -124,7 +124,7 @@ export default function Result() {
       .eq('match_id', matchId)
       .eq('status', 'completed')
       .single()
-    if (duelData && duelData.winner_id === p.id) {
+    if (duelData && m.winner_id === p.id) {
       setDuelReward(duelData.final_wager || duelData.wager)
     }
 

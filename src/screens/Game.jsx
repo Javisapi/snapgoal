@@ -770,6 +770,11 @@ export default function Game() {
     const hogTrigger = [96, 97, 98, 99, 1].includes(last2)
     if (!forced && hogTrigger && handOfGodStock > 0) {
       handOfGodPendingCentsRef.current = total
+      // Congelar timer para el rival mientras se decide
+      await supabase.from('matches').update({
+        timer_running: false,
+        elapsed_centesimas: total,
+      }).eq('id', matchId)
       setShowHandOfGodPopup(true)
       processingRef.current = false
       // Auto-dismiss en 5 segundos
