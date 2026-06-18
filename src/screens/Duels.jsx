@@ -52,6 +52,13 @@ export default function Duels() {
     return () => supabase.removeChannel(ch)
   }, [player?.id])
 
+  // Tick cada segundo para recalcular si la ventana de 30s de algún duelo ya expiró
+  const [, setTick] = useState(0)
+  useEffect(() => {
+    const t = setInterval(() => setTick(n => n + 1), 1000)
+    return () => clearInterval(t)
+  }, [])
+
   async function init() {
     const p = await getPlayer()
     if (!p) { navigate('/'); return }
@@ -169,7 +176,7 @@ export default function Duels() {
               <div key={d.id} style={styles.duelCard}>
                 <div style={styles.duelRow}>
                   <span style={styles.duelName}>{d.other_username}</span>
-                  <span style={styles.duelWager}>{formatWager(d.wager)}</span>
+                  <span style={styles.duelWager}>Apuesta: {formatWager(d.wager)}</span>
                 </div>
                 <div style={styles.duelActions}>
                   <button style={styles.acceptBtn} disabled={busyId === d.id} onClick={() => respond(d, true)}>
@@ -188,19 +195,23 @@ export default function Duels() {
           <>
             <p style={styles.sectionTitle}>LISTOS PARA JUGAR</p>
             {readyToPlay.map(d => {
-              const iAmReady = (d.ready_players || []).includes(player.id)
-              const opponentReady = (d.ready_players || []).includes(d.other_player_id)
+              const windowExpired = d.ready_started_at && (Date.now() - new Date(d.ready_started_at).getTime()) > 30000
+              const iAmReady = !windowExpired && (d.ready_players || []).includes(player.id)
+              const opponentReady = !windowExpired && (d.ready_players || []).includes(d.other_player_id)
+              const secondsLeft = d.ready_started_at && !windowExpired
+                ? Math.max(0, 30 - Math.floor((Date.now() - new Date(d.ready_started_at).getTime()) / 1000))
+                : null
               return (
                 <div key={d.id} style={styles.duelCard}>
                   <div style={styles.duelRow}>
                     <span style={styles.duelName}>{d.other_username}</span>
-                    <span style={styles.duelWager}>{formatWager(d.final_wager || d.wager)}</span>
+                    <span style={styles.duelWager}>Apuesta: {formatWager(d.final_wager || d.wager)}</span>
                   </div>
                   {opponentReady && !iAmReady && (
-                    <p style={{ fontSize: '0.78rem', color: '#ffb400', margin: 0 }}>🔥 {d.other_username} ya está listo. ¡Pulsa Jugar antes de que pase el turno!</p>
+                    <p style={{ fontSize: '0.78rem', color: '#ffb400', margin: 0 }}>🔥 {d.other_username} ya está listo. ¡Pulsa Jugar antes de que pase el turno! ({secondsLeft}s)</p>
                   )}
                   {iAmReady && !opponentReady && (
-                    <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)', margin: 0 }}>⏳ Esperando a que {d.other_username} confirme...</p>
+                    <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)', margin: 0 }}>⏳ Esperando a que {d.other_username} confirme... ({secondsLeft}s)</p>
                   )}
                   <button
                     style={{ ...styles.acceptBtn, opacity: iAmReady ? 0.5 : 1 }}
@@ -224,7 +235,7 @@ export default function Duels() {
                   <span style={styles.duelName}>
                     {d.role === 'sent' ? `Tú → ${d.other_username}` : `${d.other_username} → Tú`}
                   </span>
-                  <span style={styles.duelWager}>{formatWager(d.final_wager || d.wager)}</span>
+                  <span style={styles.duelWager}>Apuesta: {formatWager(d.final_wager || d.wager)}</span>
                 </div>
                 <span style={{ ...styles.statusBadge, color: d.status === 'completed' ? '#22c55e' : d.status === 'rejected' || d.status === 'expired' ? '#ff4444' : '#ffb400' }}>
                   {STATUS_LABELS[d.status] || d.status}
