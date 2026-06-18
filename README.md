@@ -23,7 +23,9 @@ Web app de fútbol multijugador en tiempo real. Dos jugadores compiten parando u
 - `/announce/:matchId` — Pantalla de confirmación antes del partido
 - `/game/:matchId` — Partido en curso
 - `/result/:matchId` — Resultado final
-- `/ranking` — Clasificación global
+- `/ranking` — Clasificación global (con botones a Estadísticas PRO y Match Record en línea horizontal)
+- `/pro-stats` — Estadísticas PRO: % de acierto en gol directo/falta/penalty/corner por jugador (mínimo 25 partidos), toggle Abs/%, posición con medallas oro/plata/bronce
+- `/match-record` — Match Record: historial completo de partidos del jugador logueado, con filtro de búsqueda de rival (autocompletado), desglose de goles por tipo, resultado de shootout entre paréntesis, fila verde/roja según V/D
 - `/rules` — Reglas del juego
 
 ### Base de datos (Supabase)
@@ -107,7 +109,8 @@ Cerverai es un jugador de IA que garantiza que ningún jugador humano se quede s
   - 20% de probabilidad de caer en 0-69
 - **Falta (`:98` de Cerverai):** el jugador humano elige la barrera libremente (igual que contra un humano)
 - **Falta (`:98` del humano):** se asigna automáticamente la barrera 30-35; Cerverai apunta a la ventana elegida con 60% de probabilidad de acertar
-- **Penalty (`:99` de Cerverai):** Cerverai elige siempre `impar` automáticamente y tira
+- **Penalty (`:99` de Cerverai):** Cerverai elige siempre `impar` automáticamente y tira; respeta el rango :30-:70 igual que un humano
+- **Penalty (`:99` del humano):** Cerverai consulta si el humano tiene Iron Fist disponible y, si es así, activa `golden_glove_state.waiting` y espera la resolución antes de tirar (fix v2.1 — antes nunca verificaba esto)
 - **Penalty (`:99` del humano):** el humano elige par o impar normalmente; Cerverai no usa Iron Fist
 - **Córner (`:97`):** Cerverai tira de nuevo automáticamente con la misma distribución sesgada
 - **Shootout (penaltis de desempate):** Cerverai elige siempre `impar` y tira automáticamente; 50% de probabilidad de gol
@@ -177,14 +180,21 @@ Durante un partido de liga aparece un botón 💬 en la barra inferior. Los juga
 
 ## Skills
 
-### Iron Fist (🧤)
-Habilidad defensiva en penalties. El defensor elige derecha (bloquea 50-99) o izquierda (bloquea 00-49). Si el tirador para en el rango bloqueado, el penalty es parado.
+### Iron Fist (🧤) — rediseñado en v2.1
+Habilidad defensiva en penalties. El defensor elige **Portero PAR** o **Portero IMPAR** (ya no rangos de centésima izquierda/derecha). Si la elección del portero coincide con la elección par/impar del tirador → el penalty falla siempre, sin importar dónde pare el cronómetro. Si no coincide → se aplica la regla normal del penalty (ver abajo). El rival no sabe qué portero elegiste hasta después de tirar. Cerverai también respeta el Iron Fist del humano (consulta `player_items` antes de tirar y espera resolución).
+
+### Penalty — regla de rango (nuevo en v2.1)
+Además de acertar par/impar, la centésima debe estar comprendida entre **:30 y :70**. Fuera de ese rango, el penalty falla siempre aunque el par/impar sea correcto. Aplica tanto a humanos como a Cerverai.
 
 ### Sniper (🎯)
 Habilidad ofensiva en faltas. Amplía la ventana de gol de 5 a 10 centésimas (desde el mínimo de la barrera).
 
-### Adquisición
-- Cada 100 XP por encima de 1500 → +3 Iron Fists y +3 Snipers (trigger SQL automático)
+### Mano de Dios (🙏) — nueva super skill v2.1
+Se activa si el jugador para el cronómetro en `:96`, `:97`, `:98`, `:99` o `:01` y tiene stock disponible. Aparece un badge con 5 segundos para decidir si usarla. Efecto: desplaza la centésima ±1 para forzar un resultado favorable (`:99→:00` GOL, `:01→:00` GOL, `:98→:99` Penalty, `:97→:98` Falta, `:96→:97` Corner). Solo se consigue completando las 6 misiones diarias del Vestuario en un mismo día (incluida la secreta) — el stock inicial es 0. Visible en Home, marcador de partido, Vestuario y Skills. Campo `hand_of_god_state` (jsonb) en `matches`, se limpia en cada jugada y al entrar a shootout. Usa el mismo `triggerFlash` no bloqueante (~600ms) que GOL/PALO/TARJETA, sin overlay separado.
+
+### Adquisición (actualizado en v2.1 — ya no se otorgan skills por XP)
+- Las skills (Iron Fist 🧤 y Sniper 🎯) se obtienen **exclusivamente** completando misiones diarias del Vestuario — el antiguo trigger de "+3 cada 100 XP" ha sido retirado
+- Completar las 6 misiones diarias del Vestuario en un mismo día → 1 Mano de Dios 🙏
 
 ---
 
@@ -199,6 +209,39 @@ Habilidad ofensiva en faltas. Amplía la ventana de gol de 5 a 10 centésimas (d
 
 ## Versiones estables
 
+### v2.1-stable — Fix de misiones, Iron Fist rediseñado, Estadísticas avanzadas
+
+#### Fix crítico — condición de carrera en conteo de misiones
+- **Causa raíz 1:** cuando Cerverai hacía la última jugada del partido, `useBotPlayer.js` y `Game.jsx` competían por procesar las mismas misiones del humano con datos parciales de `plays`
+- **Causa raíz 2 (más grave):** el guard booleano único `missions_processed` bloqueaba a AMBOS jugadores en partidas humano-vs-humano — solo quien hacía la última jugada procesaba sus misiones; el rival (observador) nunca llamaba a `updateStats`
+- **Fix definitivo:** columna `missions_processed_players` (jsonb array) + función SQL `claim_missions_processing(p_match_id, p_player_id)` que reclama el guard por jugador individual, no por partido. El listener de Realtime en `Game.jsx` ahora también llama `updateStats` para el jugador observador antes de navegar al resultado
+
+#### Iron Fist rediseñado
+- El defensor elige "Portero PAR" o "Portero IMPAR" en vez de rangos de centésima izquierda/derecha
+- Si la elección coincide con la del tirador → falla siempre; si no coincide → se aplica la regla normal
+- Cerverai ahora respeta el Iron Fist del humano en penalties (antes nunca lo verificaba)
+
+#### Penalty — nueva regla de rango
+- Requiere par/impar correcto **y** centésima entre :30 y :70 (antes solo par/impar)
+- Aplicado tanto a humanos como a Cerverai
+
+#### Mano de Dios (🙏) — nueva super skill
+- Se activa parando en :96, :97, :98, :99 o :01 con stock > 0
+- Efecto ±1 centésima para forzar resultado favorable
+- Solo se obtiene completando las 6 misiones diarias del Vestuario en un mismo día
+
+#### Vestuario — dificultad aumentada
+- 6 misiones diarias en vez de 5 (Beast Mode 30 goles, Sniper de Élite 15 goles de falta, Maratoniano 25 partidos)
+- Las skills (Iron Fist y Sniper) ya **no** se otorgan por hitos de XP — exclusivamente vía misiones
+
+#### Nuevas pantallas de estadísticas
+- `/pro-stats` — % de acierto por tipo de gol, mínimo 25 partidos, función SQL `get_pro_stats()`
+- `/match-record` — historial completo de partidos con filtro de rival, función SQL `get_match_record()`
+
+#### Autenticación y PWA
+- Recuperación de cuenta vía código OTP de 8 dígitos en vez de magic link (soluciona el problema de sesión aislada entre navegador y PWA instalada en iOS)
+- Banner de actualización con doble capa: Service Worker + comprobación activa de versión vía `public/version.json` (más fiable en iOS)
+
 ### v1.9-stable — Vestuario, Misiones Diarias y Robustez
 
 #### Bot Cerverai
@@ -212,13 +255,14 @@ Habilidad ofensiva en faltas. Amplía la ventana de gol de 5 a 10 centésimas (d
 - **Racha diaria** con círculos visuales (5 círculos por ciclo) y premio cada 5 días consecutivos
   - 5 días: 2 🎯 + 2 🧤 · 10 días: 3 🎯 + 3 🧤 · y así sucesivamente
   - Timezone ajustado a Europe/Madrid
-- **5 misiones diarias** con nombres épicos, reinicio a medianoche:
-  - 🏆 Hat-Trick de Victorias — gana 3 seguidas (1 🎯 + 1 🧤)
-  - 💥 Beast Mode — 20 goles en un día (2 🎯 + 2 🧤)
-  - 🛡️ Muralla Infranqueable — gana sin recibir goles (1 🎯 + 1 🧤)
-  - ⚡ Sniper de Élite — 10 goles de falta (2 🎯 + 2 🧤)
-  - 🎮 Maratoniano — juega 10 partidos hoy (2 🎯 + 2 🧤)
-- **Misión secreta 🔒** — se desbloquea al completar 2 misiones; requiere meter un gol en propia
+- **6 misiones diarias** con nombres épicos, reinicio a medianoche Europe/Madrid (cálculo en frontend vía `toLocaleDateString('sv-SE', {timeZone: 'Europe/Madrid'})` para evitar bug de UTC):
+  - 🏆 Hat-Trick de Victorias — 3 victorias seguidas (1 🎯 + 1 🧤)
+  - 💥 Beast Mode — **30 goles/día** (1 🎯 + 1 🧤)
+  - 🛡️ Muralla Infranqueable — ganar sin recibir gol (1 🎯 + 1 🧤)
+  - ⚡ Sniper de Élite — **15 goles de falta** (1 🎯 + 1 🧤)
+  - 🎮 Maratoniano — **25 partidos completados** (1 🎯 + 1 🧤)
+  - 🔒 Secreta — rota por día, desbloquea al completar 2 misiones (2 🎯 + 2 🧤)
+- **Completar las 6 misiones del día** → 1 Mano de Dios 🙏 (flag `hand_of_god_granted` en `daily_missions` como control diario)
 - **Banner de misión completada** entre replay y resultado — botón "✓ ¡Recibido!" para cada misión
 - **Contador total** de misiones completadas en la pantalla del Vestuario
 - Racha visible en el botón del Vestuario en Home (🔥 N días)
@@ -385,3 +429,51 @@ Flujo: permiso → suscripción guardada → cualquier miembro convoca → notif
 - Dot verde (idle), ámbar (jugando), rojo (offline)
 - `useTrackPresence` en Home y Game
 - `usePresenceMap` en Ranking, League y Home
+
+---
+
+## Recuperación de cuenta (código OTP)
+
+Las cuentas protegidas con email se recuperan mediante **código de 8 dígitos** introducido directamente dentro de la app, en vez de depender de un magic link abierto en el navegador. Esto es necesario porque en PWAs instaladas (especialmente iOS), un magic link abierto desde el cliente de email se abre en el navegador del sistema, no en la PWA — son contextos de almacenamiento distintos y la sesión nunca llega a la app instalada.
+
+### Flujo
+1. El usuario introduce su email en el modal "🔑 Recuperar cuenta" en Home
+2. `supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: false } })` envía el email
+3. El usuario introduce el código de 8 dígitos directamente en la app
+4. `supabase.auth.verifyOtp({ email, token: code, type: 'email' })` valida y crea la sesión sin salir nunca de la PWA
+
+### Configuración de Supabase necesaria
+- **Authentication → Email Templates → Magic Link** debe incluir `{{ .Token }}` visible en el HTML, además de `{{ .ConfirmationURL }}`
+- Al editar el template, el dashboard de Supabase requiere a veces **resetear y volver a cargar** el template (no basta con editar y guardar) para que el cambio surta efecto realmente al usuario final
+- Si se usa SMTP personalizado (ej. Brevo vía `smtp-relay.brevo.com`), Supabase sigue generando el HTML completo y solo usa el SMTP como transporte — no hay sustitución de plantilla salvo que se use la API de plantillas del proveedor en vez de SMTP puro
+- La longitud del código OTP debe coincidir entre la configuración de Supabase y el frontend (`Home.jsx`, función `handleVerifyCode`, validación `code.length !== 8`)
+
+---
+
+## Banner de actualización (PWA)
+
+Las PWAs cachean agresivamente vía Service Worker, especialmente en iOS, donde el ciclo de vida de actualización del SW es poco fiable para apps instaladas en pantalla de inicio. Se implementó un sistema de doble capa:
+
+### Capa 1 — Service Worker (`public/sw.js`)
+- No hace `skipWaiting()` automático en `install` — espera confirmación del usuario
+- `src/components/UpdateBanner.jsx` detecta `reg.waiting` o `updatefound`→`installed` y muestra un modal "Actualización disponible"
+- Al pulsar "Aceptar", se envía `postMessage('skipWaiting')` al SW en espera, lo que dispara `controllerchange` → reload automático
+
+### Capa 2 — Comprobación activa de versión (más fiable en iOS)
+- `public/version.json` contiene `{ "version": "N" }`, se sube manualmente en cada deploy que requiera forzar actualización visible
+- Al montar, `UpdateBanner.jsx` hace `fetch('/version.json', { cache: 'no-store' })` y compara contra `localStorage.getItem('app_version')`
+- Si no hay nada en localStorage, se trata como versión `'0'` (no se salta el chequeo silenciosamente)
+- Si hay diferencia, se muestra el banner; al aceptar, se actualiza localStorage y se hace `window.location.reload()`
+
+### Importante para futuros deploys
+**Para que un cambio se vea reflejado en dispositivos con la PWA ya instalada, hay que subir manualmente el número en `public/version.json` antes de cada deploy relevante.** Sin este paso, el Service Worker (especialmente en iOS) puede tardar mucho en detectar la actualización o no detectarla en absoluto.
+
+---
+
+## Estadísticas avanzadas
+
+### Estadísticas PRO (`/pro-stats`)
+Tabla con toggle Abs/% mostrando % de acierto en gol directo, falta, penalty y corner por jugador (mínimo 25 partidos jugados, histórico completo sin filtro de fecha). Calculada vía función SQL agregada `get_pro_stats()` (no se debe calcular esto con un bucle N+1 desde el cliente — es ineficiente y propenso a bugs de timing). Cerverai puede incluirse o excluirse según decisión de producto — actualmente incluido, pero su % de falta/penalty/corner siempre será 0/0 porque el bot nunca inserta filas `GOL_FALTA`/`FALTA_FALLO`/etc en `plays`, solo el evento que originó el pending (`FALTA`/`PENALTY`/`CORNER`).
+
+### Match Record (`/match-record`)
+Historial completo de partidos del jugador logueado vía función SQL `get_match_record(p_player_id)`. Incluye fecha (DD/MM/YYYY), rival, marcador con shootout entre paréntesis (ej. `3(5):3(4)`), desglose de goles por tipo, fila verde/roja según resultado. Filtro de búsqueda de rival con autocompletado por prefijo (case-insensitive, se actualiza dinámicamente conforme se escribe).

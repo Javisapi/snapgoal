@@ -90,3 +90,45 @@
 **Solución:** Usar `proShooterStockRef.current` (ref siempre actualizada) en el listener, y hacer query directa a player_items en el momento de mostrar el popup
 **Regla:** En listeners Realtime, nunca leer estado React directamente — usar siempre refs sincronizadas o queries directas a Supabase
 
+
+## Error 12 — Variable usada antes de su declaración (ReferenceError silencioso)
+**Fecha:** 2026-06-17
+**Síntoma:** La Mano de Dios dejaba el partido en estado inconsistente, sin mensaje de error claro para el usuario
+**Causa:** En `activateHandOfGod`, el código usaba `last2orig` y `last2new` dentro del `UPDATE` de `matches` (para construir el mensaje) ANTES de que esas constantes estuvieran declaradas más abajo en la función — un error de scope/hoisting con `const` que lanza `ReferenceError` en tiempo de ejecución, interrumpiendo silenciosamente el resto de la función sin guardar el estado correctamente
+**Solución:** Reordenar las declaraciones de `last2orig`/`last2new` al principio de la función, antes de cualquier uso
+**Regla:** Al escribir funciones largas con múltiples pasos async, declarar TODAS las constantes derivadas al principio de la función, antes del primer `await`, para evitar errores de orden de declaración que con `const`/`let` no se detectan en tiempo de escritura sino de ejecución
+
+## Error 13 — Guard de "ya procesado" a nivel de partido en vez de a nivel de jugador
+**Fecha:** 2026-06-17
+**Síntoma:** En partidas humano-vs-humano, solo el jugador que hacía la última jugada veía sus misiones diarias actualizadas; el rival que solo observaba el fin de partido nunca actualizaba las suyas
+**Causa:** El guard anti-duplicado `missions_processed` (booleano único en `matches`) se diseñó pensando solo en el caso "humano vs bot" (mismo navegador, dos código-fuentes compitiendo por el mismo evento) — al aplicarlo también a partidas humano-vs-humano, bloqueaba al segundo jugador que intentara reclamar el procesamiento de SUS PROPIAS misiones, no solo evitaba duplicados del mismo jugador
+**Solución:** Cambiar a `missions_processed_players` (jsonb array) + función SQL `claim_missions_processing(match_id, player_id)` que verifica/reclama por combinación partido+jugador, no solo por partido. Además, el listener de Realtime que detecta `status: 'finished'` para el jugador observador ahora también invoca `updateStats` antes de navegar, en vez de solo navegar
+**Regla:** Cuando se diseña un guard anti-duplicado/anti-race-condition que debe aplicarse independientemente a "N actores" sobre el mismo recurso compartido (aquí: 2 jugadores sobre 1 partido), el guard debe llevar la identidad del actor en su clave, no ser un booleano único global al recurso
+
+## Error 14 — Bug estructural: el bot nunca registra la resolución de eventos especiales como filas separadas
+**Fecha:** 2026-06-17
+**Síntoma:** Las Estadísticas PRO mostraban 0% de acierto en falta/penalty/corner para Cerverai, a pesar de que el bot sí mete goles de ese tipo en partidas reales
+**Causa:** Cerverai (`useBotPlayer.js`) inserta solo UNA fila en `plays` por el evento que origina un pending (`FALTA`, `PENALTY`, `CORNER`), pero nunca inserta una segunda fila con el resultado de la resolución (`GOL_FALTA`/`FALTA_FALLO`, etc.) como sí hace el código para jugadores humanos en `Game.jsx`. El gol/fallo del bot solo se refleja en el cambio de `score_p1`/`score_p2`, no en `plays`
+**Solución:** Decisión de producto: excluir a Cerverai de cálculos que dependan de esos sub-tipos de resultado en `plays`, en vez de parchear retroactivamente la inserción de filas históricas. Si se necesita en el futuro, habría que añadir el INSERT faltante en cada rama de resolución de `useBotPlayer.js` análogo al de `Game.jsx`
+**Regla:** Cuando se implementa un "jugador IA" que debe parecerse a un jugador humano en cuanto a la estructura de datos que genera, verificar explícitamente que inserta exactamente las mismas filas/eventos en las mismas tablas que el código del jugador humano — no asumir paridad solo porque el resultado visual final (marcador) es correcto
+
+## Error 15 — Cálculo de estadísticas agregadas con bucle N+1 desde el cliente
+**Fecha:** 2026-06-17
+**Síntoma:** La tabla de Estadísticas PRO daba resultados incorrectos (ceros falsos, conteos mal hechos) para algunos jugadores
+**Causa:** La implementación inicial hacía un `for...of` sobre la lista de jugadores con una query separada a `plays` por cada uno (`N+1 queries`) y filtraba/contaba en JavaScript. Esto era ineficiente y, en este caso concreto, también incorrecto para casos límite
+**Solución:** Reemplazado por una función SQL agregada `get_pro_stats()` usando `COUNT(*) FILTER(...)` en una sola query con JOIN — mucho más eficiente y correcto, verificado manualmente contra los datos reales de cada jugador antes de confiar en el resultado
+**Regla:** Cualquier estadística agregada por jugador sobre una tabla grande (`plays`, `matches`) debe calcularse con una función SQL agregada en una sola pasada, nunca con un bucle de queries individuales desde el cliente — además de ser más rápido, evita errores sutiles de sincronización/timing entre llamadas
+
+## Error 16 — viewport-fit=cover sin compensar con safe-area-inset rompe el layout en iOS
+**Fecha:** 2026-06-18
+**Síntoma:** Al añadir `viewport-fit=cover` al meta viewport (para extender el fondo decorativo detrás del notch/cámara del iPhone), todo el contenido de la Home quedó desplazado hacia arriba y apareció una franja negra brusca en la parte inferior de la pantalla
+**Causa:** `viewport-fit=cover` le dice al navegador que use toda el área física de la pantalla, pero sin aplicar `padding: env(safe-area-inset-*)` correctamente calibrado en los elementos de contenido (no en el contenedor raíz completo), el layout se descalibra — los cambios adicionales para compensar esto (`100dvh`, cambiar `justifyContent` de `space-between` a `center`, degradados extendidos) introdujeron más problemas en cascada en vez de resolverlo
+**Solución temporal:** Revertir `viewport-fit=cover` por completo, volviendo al meta viewport original sin esa propiedad. La extensión del fondo tras el notch queda como tarea pendiente para una sesión dedicada, implementando el padding de safe-area de forma más quirúrgica (solo en el contenido interactivo, nunca en el contenedor que define el `height`/`justifyContent` del layout general)
+**Regla:** Cambios de viewport/safe-area en iOS deben probarse de forma aislada (un solo cambio por commit) y revertirse inmediatamente si rompen el layout general, en vez de seguir apilando fixes sobre un layout ya roto — apilar fixes sin revertir primero al estado bueno conocido hace mucho más difícil identificar la causa raíz real
+
+## Error 17 — Editar un template de email en el dashboard de Supabase no siempre aplica el cambio con solo "guardar"
+**Fecha:** 2026-06-18
+**Síntoma:** Tras editar el HTML del template "Magic Link" en Supabase (Authentication → Email Templates) y pulsar guardar, el email real recibido seguía mostrando el contenido antiguo
+**Causa:** No completamente clara, pero el dashboard de Supabase en este caso requirió **resetear el template y volver a cargarlo** (no solo editar el HTML existente y guardar) para que el cambio se propagara correctamente al envío real de emails
+**Solución:** Resetear el template a su valor por defecto y volver a pegar el HTML deseado desde cero, en vez de editar incrementalmente el contenido existente
+**Regla:** Si un cambio en un template de email de Supabase no se refleja tras guardar, probar resetear el template por completo antes de asumir que el problema está en SMTP, en el código del cliente, o en un caché de proveedor externo — verificar primero la causa más simple
