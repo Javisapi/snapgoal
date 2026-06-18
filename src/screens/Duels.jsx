@@ -348,7 +348,7 @@ const styles = {
   modalCancelBtn: { background: 'transparent', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '0.9rem', fontSize: '0.9rem', cursor: 'pointer' },
   tabs: { display: 'flex', gap: '0.5rem', marginTop: '1rem' },
   tab: { flex: 1, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '0.5rem', fontSize: '0.8rem', fontWeight: '700', color: 'rgba(255,255,255,0.4)', cursor: 'pointer' },
-  tabActive: { background: 'rgba(255,180,0,0.12)', border: '1px solid rgba(255,180,0,0.4)', color: '#ffb400' },
+  tabActive: { background: 'rgba(99,179,237,0.12)', border: '1px solid rgba(99,179,237,0.4)', color: '#63b3ed' },
   cancelDuelBtn: { background: 'transparent', color: 'rgba(255,100,100,0.6)', border: '1px solid rgba(255,100,100,0.2)', borderRadius: '10px', padding: '0.5rem', fontSize: '0.78rem', cursor: 'pointer', width: '100%' },
   dismissBtn: { background: 'transparent', color: 'rgba(255,255,255,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '0.3rem 0.7rem', fontSize: '0.75rem', cursor: 'pointer' },
 }
