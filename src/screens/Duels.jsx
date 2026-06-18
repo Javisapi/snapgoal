@@ -329,7 +329,7 @@ const styles = {
   sectionTitle: { fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', letterSpacing: '2px', margin: '0.75rem 0 0.25rem' },
   duelCard: { background: 'rgba(255,180,0,0.06)', border: '1px solid rgba(255,180,0,0.2)', borderRadius: '16px', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem' },
   duelCardSmall: { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '14px', padding: '1.1rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  duelRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+  duelRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' },
   duelName: { fontSize: '0.9rem', fontWeight: '700', color: '#fff' },
   duelWager: { fontSize: '1rem', color: '#ffb400', fontWeight: '800', textAlign: 'right' },
   duelActions: { display: 'flex', gap: '0.5rem' },
