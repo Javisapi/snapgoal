@@ -167,6 +167,17 @@ export default function Result() {
     setReplayResult(lastPlayResult)
     setReplayGoalCents(goalCents)
 
+    // Cargar oponente y stats actualizadas SIEMPRE, antes de cualquier return temprano,
+    // ya que Result.jsx exige match && opponent && player && updatedPlayer para dejar de mostrar "Cargando..."
+    const oppId = m.player1_id === p.id ? m.player2_id : m.player1_id
+    const { data: opp } = await supabase.from('players').select('*').eq('id', oppId).single()
+    setOpponent(opp)
+
+    const { data: updP } = await supabase.from('players').select('*').eq('id', p.id).single()
+    setUpdatedPlayer(updP)
+    // Actualizar caché para que Announce muestre stats correctas
+    if (updP) sessionStorage.setItem('player_' + p.auth_id, JSON.stringify(updP))
+
     // Si no hay replay válido (no se encontró gol del ganador), saltar replay y mostrar banner
     if (lastGoalIdx < 0 || !lastPlay) {
       setShowReplay(false)
@@ -189,15 +200,6 @@ export default function Result() {
         }, 1000)
       }
     }, frameDuration)
-
-    const oppId = m.player1_id === p.id ? m.player2_id : m.player1_id
-    const { data: opp } = await supabase.from('players').select('*').eq('id', oppId).single()
-    setOpponent(opp)
-
-    const { data: updP } = await supabase.from('players').select('*').eq('id', p.id).single()
-    setUpdatedPlayer(updP)
-    // Actualizar caché para que Announce muestre stats correctas
-    if (updP) sessionStorage.setItem('player_' + p.auth_id, JSON.stringify(updP))
 
     const isP1 = m.player1_id === p.id
     const myScore = isP1 ? m.score_p1 : m.score_p2
