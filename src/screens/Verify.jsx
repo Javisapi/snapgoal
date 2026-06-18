@@ -54,9 +54,12 @@ export default function Verify() {
         }
 
         if (player) {
+          const alreadyVerified = player.email_verified === true
           await supabase.from('players').update({ email_verified: true, email: session.user.email }).eq('id', player.id)
-          // Dar 5 skills por verificar la cuenta
-          await supabase.rpc('grant_verification_skills', { p_player_id: player.id })
+          // Dar 5 skills por verificar la cuenta — solo la primera vez
+          if (!alreadyVerified) {
+            await supabase.rpc('grant_verification_skills', { p_player_id: player.id })
+          }
           const key = 'player_' + session.user.id
           const cached = JSON.parse(sessionStorage.getItem(key) || '{}')
           sessionStorage.setItem(key, JSON.stringify({ ...cached, email_verified: true, email: session.user.email }))
