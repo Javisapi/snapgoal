@@ -78,6 +78,7 @@ function EmailVerificationHandler() {
   return null
 }
 import Home from './screens/Home'
+import DuelCreate from './screens/DuelCreate'
 import Queue from './screens/Queue'
 import Game from './screens/Game'
 import Result from './screens/Result'
@@ -106,6 +107,8 @@ function App() {
       <EmailVerificationHandler />
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/duel/new" element={<DuelCreate />} />
+        <Route path="/duel/new/:leagueId" element={<DuelCreate />} />
         <Route path="/queue" element={<Queue />} />
         <Route path="/game/:matchId" element={<Game />} />
         <Route path="/result/:matchId" element={<Result />} />
