@@ -119,6 +119,22 @@ export default function Result() {
     const completedMissionsData = m.missions_result?.by_player?.[p.id] || []
     if (completedMissionsData.length > 0) {
       setCompletedMissions(completedMissionsData)
+    } else {
+      // missions_result puede no estar listo aún — reintentar hasta 5 veces.
+      // Si llega tarde, fuerza el banner aunque el replay ya haya decidido lo contrario.
+      let missionAttempts = 0
+      const pollMissions = setInterval(async () => {
+        missionAttempts++
+        const { data: mRetry } = await supabase.from('matches').select('missions_result').eq('id', matchId).single()
+        const retryData = mRetry?.missions_result?.by_player?.[p.id] || []
+        if (retryData.length > 0) {
+          setCompletedMissions(retryData)
+          setCurrentMissionIdx(0)
+          setShowMissionBanner(true)
+          clearInterval(pollMissions)
+        }
+        if (missionAttempts >= 5) clearInterval(pollMissions)
+      }, 1000)
     }
 
     // Replay del último gol — obtener todas las jugadas ordenadas globalmente
