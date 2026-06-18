@@ -265,26 +265,38 @@ export default function Duels() {
 
         {tab === 'history' && (
           <>
-            {others.length > 0 ? others.map(d => (
-              <div key={d.id} style={{ ...styles.duelCardSmall, flexDirection: 'column', alignItems: 'flex-start', gap: '0.75rem' }}>
-                <div style={styles.duelRow}>
-                  <span style={styles.duelName}>
-                    {d.role === 'sent' ? `Tú → ${d.other_username}` : `${d.other_username} → Tú`}
-                  </span>
-                  <span style={styles.duelWager}>Apuesta: {formatWager(d.final_wager || d.wager)}</span>
+            {others.length > 0 ? others.map(d => {
+              const isCompleted = d.status === 'completed'
+              const isCancelledOrRejected = d.status === 'cancelled' || d.status === 'rejected' || d.status === 'expired'
+              const iWon = isCompleted && d.winner_id === player.id
+              const stripeColor = isCompleted ? '#22c55e' : isCancelledOrRejected ? '#ff4444' : 'rgba(255,255,255,0.1)'
+              const statusColor = isCompleted ? '#22c55e' : isCancelledOrRejected ? '#ff4444' : '#ffb400'
+              return (
+                <div key={d.id} style={{ ...styles.historyCard, borderLeft: `4px solid ${stripeColor}` }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                      <span style={styles.duelName}>
+                        {d.role === 'sent' ? `Tú → ${d.other_username}` : `${d.other_username} → Tú`}
+                      </span>
+                      <span style={styles.historyWager}>{formatWager(d.final_wager || d.wager)}</span>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.4rem' }}>
+                      <span style={{ ...styles.statusBadge, color: statusColor }}>{STATUS_LABELS[d.status] || d.status}</span>
+                      {isCompleted && (
+                        <span style={{ fontSize: '0.78rem', fontWeight: '800', color: iWon ? '#22c55e' : '#ff4444' }}>
+                          {iWon ? '▲ Ganado' : '▼ Perdido'}
+                        </span>
+                      )}
+                      {d.status === 'cancelled' && (
+                        <button style={styles.dismissBtn} disabled={busyId === d.id} onClick={() => dismissDuel(d)}>
+                          Eliminar
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                  <span style={{ ...styles.statusBadge, color: d.status === 'completed' ? '#22c55e' : d.status === 'cancelled' ? '#ff4444' : d.status === 'rejected' || d.status === 'expired' ? '#ff4444' : '#ffb400' }}>
-                    {STATUS_LABELS[d.status] || d.status}
-                  </span>
-                  {d.status === 'cancelled' && (
-                    <button style={styles.dismissBtn} disabled={busyId === d.id} onClick={() => dismissDuel(d)}>
-                      Eliminar
-                    </button>
-                  )}
-                </div>
-              </div>
-            )) : (
+              )
+            }) : (
               <p style={{ color: 'rgba(255,255,255,0.3)', textAlign: 'center', fontSize: '0.85rem', marginTop: '2rem' }}>
                 No hay historial todavía.
               </p>
@@ -351,4 +363,6 @@ const styles = {
   tabActive: { background: 'rgba(99,179,237,0.12)', border: '1px solid rgba(99,179,237,0.4)', color: '#63b3ed' },
   cancelDuelBtn: { background: 'transparent', color: 'rgba(255,100,100,0.6)', border: '1px solid rgba(255,100,100,0.2)', borderRadius: '10px', padding: '0.5rem', fontSize: '0.78rem', cursor: 'pointer', width: '100%' },
   dismissBtn: { background: 'transparent', color: 'rgba(255,255,255,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '0.3rem 0.7rem', fontSize: '0.75rem', cursor: 'pointer' },
+  historyCard: { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '14px', padding: '1rem 1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'flex-start' },
+  historyWager: { fontSize: '0.85rem', color: 'rgba(255,255,255,0.4)', fontWeight: '600' },
 }
