@@ -76,6 +76,13 @@ export default function Duels() {
     return () => clearInterval(t)
   }, [])
 
+  // Polling cada 5s como fallback al Realtime
+  useEffect(() => {
+    if (!player?.id) return
+    const t = setInterval(() => loadDuels(player.id), 5000)
+    return () => clearInterval(t)
+  }, [player?.id])
+
   async function init() {
     const p = await getPlayer()
     if (!p) { navigate('/'); return }
