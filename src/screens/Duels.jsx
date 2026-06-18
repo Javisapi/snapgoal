@@ -365,4 +365,6 @@ const styles = {
   dismissBtn: { background: 'transparent', color: 'rgba(255,255,255,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '0.3rem 0.7rem', fontSize: '0.75rem', cursor: 'pointer' },
   historyCard: { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '14px', padding: '1rem 1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'flex-start' },
   historyWager: { fontSize: '0.85rem', color: 'rgba(255,255,255,0.4)', fontWeight: '600' },
+  historyCard: { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '14px', padding: '1rem 1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'flex-start' },
+  historyWager: { fontSize: '0.85rem', color: 'rgba(255,255,255,0.4)', fontWeight: '600' },
 }
