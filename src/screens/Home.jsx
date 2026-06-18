@@ -389,18 +389,24 @@ export default function Home() {
           <span style={styles.cardPlayLabel}>Buscar Partido</span>
           <span style={styles.cardSub}>Jugar ahora</span>
         </button>
-        <button style={styles.cardLeague} onClick={() => navigate('/leagues')}>
-          <svg viewBox="0 0 36 36" fill="none" style={{width:'36px',height:'36px',marginBottom:'10px'}}>
-            <path d="M10 3h16v9c0 6-3.5 10-8 11C13.5 22 10 18 10 12V3z" fill="rgba(255,180,0,0.2)" stroke="rgba(255,180,0,0.9)" strokeWidth="1.4" strokeLinejoin="round"/>
-            <path d="M10 5.5H6.5S5 13 10 16" stroke="rgba(255,180,0,0.9)" strokeWidth="1.4" strokeLinecap="round"/>
-            <path d="M26 5.5h3.5S31 13 26 16" stroke="rgba(255,180,0,0.9)" strokeWidth="1.4" strokeLinecap="round"/>
-            <path d="M18 23v5" stroke="rgba(255,180,0,0.9)" strokeWidth="1.4" strokeLinecap="round"/>
-            <path d="M13.5 28h9" stroke="rgba(255,180,0,0.9)" strokeWidth="1.4" strokeLinecap="round"/>
-            <ellipse cx="18" cy="31.5" rx="6" ry="1.8" fill="rgba(255,180,0,0.15)" stroke="rgba(255,180,0,0.7)" strokeWidth="1.2"/>
-          </svg>
-          <span style={styles.cardLeagueLabel}>Mis Ligas</span>
-          <span style={styles.cardSubLight}>Competir</span>
-        </button>
+        <div style={styles.cardStack}>
+          <button style={styles.cardLeagueSmall} onClick={() => navigate('/leagues')}>
+            <svg viewBox="0 0 36 36" fill="none" style={{width:'22px',height:'22px'}}>
+              <path d="M10 3h16v9c0 6-3.5 10-8 11C13.5 22 10 18 10 12V3z" fill="rgba(255,180,0,0.2)" stroke="rgba(255,180,0,0.9)" strokeWidth="1.4" strokeLinejoin="round"/>
+              <path d="M10 5.5H6.5S5 13 10 16" stroke="rgba(255,180,0,0.9)" strokeWidth="1.4" strokeLinecap="round"/>
+              <path d="M26 5.5h3.5S31 13 26 16" stroke="rgba(255,180,0,0.9)" strokeWidth="1.4" strokeLinecap="round"/>
+              <path d="M18 23v5" stroke="rgba(255,180,0,0.9)" strokeWidth="1.4" strokeLinecap="round"/>
+              <path d="M13.5 28h9" stroke="rgba(255,180,0,0.9)" strokeWidth="1.4" strokeLinecap="round"/>
+              <ellipse cx="18" cy="31.5" rx="6" ry="1.8" fill="rgba(255,180,0,0.15)" stroke="rgba(255,180,0,0.7)" strokeWidth="1.2"/>
+            </svg>
+            <span style={styles.cardLeagueLabel}>Mis Ligas</span>
+          </button>
+          <button style={{...styles.cardLeagueSmall, position:'relative'}} onClick={() => navigate('/duels')}>
+            <span style={{fontSize:'1.3rem'}}>⚔️</span>
+            <span style={styles.cardLeagueLabel}>Mis Retos</span>
+            {pendingDuels > 0 && <span style={{position:'absolute',top:'6px',right:'10px',background:'#ff4444',color:'#fff',borderRadius:'50%',width:'16px',height:'16px',fontSize:'0.6rem',fontWeight:'800',display:'flex',alignItems:'center',justifyContent:'center'}}>{pendingDuels}</span>}
+          </button>
+        </div>
       </div>
       <div style={{display:'flex',gap:'0.5rem',width:'100%'}}>
         <button style={styles.academyBtn} onClick={() => navigate('/academy')}>
@@ -419,11 +425,6 @@ export default function Home() {
           <span style={{fontSize:'1.1rem'}}>🏟️</span>
           <span style={styles.missionsBtnLabel}>Vestuario</span>
           {streak > 0 && <span style={{fontSize:'0.7rem',color:'#ffb400',fontWeight:'800',display:'inline-flex',alignItems:'center',gap:'2px'}}><span style={{display:'inline-block',animation:'flamePulse 1.6s ease-in-out infinite'}}>🔥</span>{streak}</span>}
-        </button>
-        <button style={{...styles.missionsBtn, position:'relative'}} onClick={() => navigate('/duels')}>
-          <span style={{fontSize:'1.1rem'}}>⚔️</span>
-          <span style={styles.missionsBtnLabel}>Retos</span>
-          {pendingDuels > 0 && <span style={{position:'absolute',top:'-4px',right:'-4px',background:'#ff4444',color:'#fff',borderRadius:'50%',width:'18px',height:'18px',fontSize:'0.65rem',fontWeight:'800',display:'flex',alignItems:'center',justifyContent:'center'}}>{pendingDuels}</span>}
         </button>
       </div>
 
@@ -605,6 +606,8 @@ const styles = {
   cardPlay: { flex:1, background:'linear-gradient(145deg, #ffb400 0%, #e07800 100%)', border:'none', borderRadius:'20px', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', cursor:'pointer', padding:'1.25rem 0.75rem', minHeight:'130px', boxShadow:'0 8px 32px rgba(255,180,0,0.25)', animation:'ctaGlowPulse 2.4s ease-in-out infinite' },
   cardPlayLabel: { fontSize:'0.95rem', fontWeight:'800', color:'#141414', letterSpacing:'0.2px', margin:0 },
   cardLeague: { flex:1, background:'rgba(255,180,0,0.07)', border:'1.5px solid rgba(255,180,0,0.2)', borderRadius:'20px', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', cursor:'pointer', padding:'1.25rem 0.75rem', minHeight:'130px' },
+  cardStack: { flex:1, display:'flex', flexDirection:'column', gap:'0.5rem', minHeight:'130px' },
+  cardLeagueSmall: { flex:1, background:'rgba(255,180,0,0.07)', border:'1.5px solid rgba(255,180,0,0.2)', borderRadius:'16px', display:'flex', flexDirection:'row', alignItems:'center', justifyContent:'center', gap:'0.5rem', cursor:'pointer', padding:'0.5rem' },
   cardLeagueLabel: { fontSize:'0.95rem', fontWeight:'800', color:'rgba(255,180,0,0.9)', letterSpacing:'0.2px', margin:0 },
   cardSub: { fontSize:'0.7rem', color:'rgba(0,0,0,0.35)', marginTop:'2px', fontWeight:'500' },
   cardSubLight: { fontSize:'0.7rem', color:'rgba(255,180,0,0.4)', marginTop:'2px', fontWeight:'500' },
