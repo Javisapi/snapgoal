@@ -289,8 +289,7 @@ export default function Game() {
           handOfGodFlashShownRef.current = true
           const hog = updated.hand_of_god_state
           setLastPlay({ emoji: '🙏', label: `🙏 ${hog.player} usó la Mano de Dios: :${String(hog.from).padStart(2,'0')} → :${String(hog.to).padStart(2,'0')}` })
-          setShowHandOfGodFlash(true)
-          setTimeout(() => { setShowHandOfGodFlash(false) }, 1500)
+          triggerFlash('hog', '🙏 MANO DE DIOSSS')
         }
 
         // Detectar estado del Iron Fist
@@ -316,7 +315,6 @@ export default function Game() {
           }
         }
 
-        else setPenaltyChoice(null)
         setMyTurn(isMyTurn)
 
         // Actualizar stock del rival
