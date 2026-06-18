@@ -63,6 +63,14 @@ export default function Duels() {
   async function loadDuels(playerId) {
     const { data } = await supabase.rpc('get_my_duels', { p_player_id: playerId })
     setDuels(data || [])
+
+    // Si algún duelo ya tiene match_id y yo ya confirmé "Jugar", el partido ya existe — navegar directamente
+    const readyMatch = (data || []).find(d =>
+      d.status === 'accepted' && d.match_id && (d.ready_players || []).includes(playerId)
+    )
+    if (readyMatch) {
+      navigate('/announce/' + readyMatch.match_id)
+    }
   }
 
   async function respond(duel, accept, confirmedWager = null) {
