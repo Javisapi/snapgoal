@@ -1,0 +1,194 @@
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
+
+async function getPlayer() {
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) return null
+  const key = 'player_' + session.user.id
+  const cached = sessionStorage.getItem(key)
+  if (cached) return JSON.parse(cached)
+  const { data } = await supabase.from('players').select('*').eq('auth_id', session.user.id).single()
+  if (data) sessionStorage.setItem(key, JSON.stringify(data))
+  return data
+}
+
+const ITEM_LABELS = { pro_shooter: 'Sniper', golden_glove: 'Iron Fist', hand_of_god: 'Mano de Dios' }
+const ITEM_ICONS = { pro_shooter: '🎯', golden_glove: '🧤', hand_of_god: '🙏' }
+const STATUS_LABELS = { pending: 'Pendiente', accepted: 'Aceptado', rejected: 'Rechazado', expired: 'Expirado', completed: 'Completado' }
+
+function formatWager(wager) {
+  if (!wager) return ''
+  return Object.entries(wager)
+    .filter(([, v]) => v > 0)
+    .map(([k, v]) => `${ITEM_ICONS[k] || ''}${v}`)
+    .join(' ')
+}
+
+export default function Duels() {
+  const navigate = useNavigate()
+  const [player, setPlayer] = useState(null)
+  const [duels, setDuels] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [confirmModal, setConfirmModal] = useState(null)
+  const [busyId, setBusyId] = useState(null)
+
+  useEffect(() => { init() }, [])
+
+  async function init() {
+    const p = await getPlayer()
+    if (!p) { navigate('/'); return }
+    setPlayer(p)
+    await loadDuels(p.id)
+    setLoading(false)
+  }
+
+  async function loadDuels(playerId) {
+    const { data } = await supabase.rpc('get_my_duels', { p_player_id: playerId })
+    setDuels(data || [])
+  }
+
+  async function respond(duel, accept, confirmedWager = null) {
+    setBusyId(duel.id)
+    const { data: result } = await supabase.rpc('respond_duel_challenge', {
+      p_challenge_id: duel.id,
+      p_player_id: player.id,
+      p_accept: accept,
+      p_confirmed_wager: confirmedWager,
+    })
+
+    if (result?.needs_confirmation) {
+      setConfirmModal({ duel, maxWager: result.max_wager, originalWager: result.original_wager })
+      setBusyId(null)
+      return
+    }
+
+    if (result?.success && result.status === 'accepted' && result.match_id) {
+      navigate('/announce/' + result.match_id)
+      return
+    }
+
+    await loadDuels(player.id)
+    setBusyId(null)
+    setConfirmModal(null)
+  }
+
+  if (loading || !player) return (
+    <div style={styles.container}>
+      <p style={{ color: 'rgba(255,255,255,0.3)', textAlign: 'center', fontSize: '0.9rem' }}>Cargando...</p>
+    </div>
+  )
+
+  const received = duels.filter(d => d.role === 'received' && d.status === 'pending')
+  const others = duels.filter(d => !(d.role === 'received' && d.status === 'pending'))
+
+  return (
+    <div style={styles.container}>
+      <div style={styles.header}>
+        <button style={styles.backBtn} onClick={() => navigate('/')}>← volver</button>
+        <h1 style={styles.title}>⚔️ Mis Retos</h1>
+      </div>
+
+      <div style={styles.list}>
+        {received.length > 0 && (
+          <>
+            <p style={styles.sectionTitle}>RECIBIDOS</p>
+            {received.map(d => (
+              <div key={d.id} style={styles.duelCard}>
+                <div style={styles.duelRow}>
+                  <span style={styles.duelName}>{d.other_username}</span>
+                  <span style={styles.duelWager}>{formatWager(d.wager)}</span>
+                </div>
+                <div style={styles.duelActions}>
+                  <button style={styles.acceptBtn} disabled={busyId === d.id} onClick={() => respond(d, true)}>
+                    {busyId === d.id ? '...' : 'Aceptar'}
+                  </button>
+                  <button style={styles.rejectBtn} disabled={busyId === d.id} onClick={() => respond(d, false)}>
+                    Rechazar
+                  </button>
+                </div>
+              </div>
+            ))}
+          </>
+        )}
+
+        {others.length > 0 && (
+          <>
+            <p style={styles.sectionTitle}>HISTORIAL</p>
+            {others.map(d => (
+              <div key={d.id} style={styles.duelCardSmall}>
+                <div style={styles.duelRow}>
+                  <span style={styles.duelName}>
+                    {d.role === 'sent' ? `Tú → ${d.other_username}` : `${d.other_username} → Tú`}
+                  </span>
+                  <span style={styles.duelWager}>{formatWager(d.final_wager || d.wager)}</span>
+                </div>
+                <span style={{ ...styles.statusBadge, color: d.status === 'completed' ? '#22c55e' : d.status === 'rejected' || d.status === 'expired' ? '#ff4444' : '#ffb400' }}>
+                  {STATUS_LABELS[d.status] || d.status}
+                </span>
+              </div>
+            ))}
+          </>
+        )}
+
+        {duels.length === 0 && (
+          <p style={{ color: 'rgba(255,255,255,0.3)', textAlign: 'center', fontSize: '0.85rem', marginTop: '2rem' }}>
+            No tienes retos todavía.
+          </p>
+        )}
+      </div>
+
+      <button style={styles.newDuelBtn} onClick={() => navigate('/duel/new')}>⚔️ Retar a alguien</button>
+
+      {confirmModal && (
+        <div style={styles.modalOverlay}>
+          <div style={styles.modalCard}>
+            <p style={styles.modalTitle}>El stock ha cambiado</p>
+            <p style={styles.modalDesc}>
+              Algunas skills ya no están disponibles en la cantidad original. La apuesta se ajustará a:
+            </p>
+            <div style={styles.modalWagerList}>
+              {Object.entries(confirmModal.maxWager).filter(([, v]) => v > 0).map(([k, v]) => (
+                <span key={k} style={styles.modalWagerItem}>{ITEM_ICONS[k]} {v} {ITEM_LABELS[k]}</span>
+              ))}
+            </div>
+            <div style={styles.modalBtns}>
+              <button style={styles.modalConfirmBtn} onClick={() => respond(confirmModal.duel, true, confirmModal.maxWager)}>
+                Confirmar y jugar
+              </button>
+              <button style={styles.modalCancelBtn} onClick={() => setConfirmModal(null)}>Cancelar</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+const styles = {
+  container: { height: '100%', display: 'flex', flexDirection: 'column', background: '#141414', overflow: 'hidden', position: 'relative' },
+  header: { padding: '2.5rem 1.75rem 1rem', flexShrink: 0 },
+  backBtn: { background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.25)', fontSize: '0.8rem', cursor: 'pointer', padding: 0, marginBottom: '1rem' },
+  title: { fontSize: '1.8rem', fontWeight: '900', color: '#fff', margin: 0, letterSpacing: '-1px' },
+  list: { flex: 1, overflowY: 'auto', padding: '0 1.75rem 6rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' },
+  sectionTitle: { fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', letterSpacing: '2px', margin: '0.75rem 0 0.25rem' },
+  duelCard: { background: 'rgba(255,180,0,0.06)', border: '1px solid rgba(255,180,0,0.2)', borderRadius: '14px', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' },
+  duelCardSmall: { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '12px', padding: '0.8rem 1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+  duelRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+  duelName: { fontSize: '0.9rem', fontWeight: '700', color: '#fff' },
+  duelWager: { fontSize: '0.85rem', color: '#ffb400', fontWeight: '700' },
+  duelActions: { display: 'flex', gap: '0.5rem' },
+  acceptBtn: { flex: 1, background: '#ffb400', color: '#141414', border: 'none', borderRadius: '10px', padding: '0.7rem', fontSize: '0.85rem', fontWeight: '800', cursor: 'pointer' },
+  rejectBtn: { flex: 1, background: 'transparent', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '0.7rem', fontSize: '0.85rem', cursor: 'pointer' },
+  statusBadge: { fontSize: '0.75rem', fontWeight: '700' },
+  newDuelBtn: { position: 'fixed', bottom: '1.5rem', left: '1.5rem', right: '1.5rem', background: '#ffb400', color: '#141414', border: 'none', borderRadius: '14px', padding: '1rem', fontSize: '0.95rem', fontWeight: '900', cursor: 'pointer' },
+  modalOverlay: { position: 'fixed', inset: 0, background: '#000000', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '1.5rem' },
+  modalCard: { background: '#1c1c1c', border: '1px solid rgba(255,180,0,0.25)', borderRadius: '18px', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', maxWidth: '320px', width: '100%' },
+  modalTitle: { fontSize: '1.1rem', fontWeight: '900', color: '#ffb400', margin: 0 },
+  modalDesc: { fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)', margin: 0, lineHeight: 1.5 },
+  modalWagerList: { display: 'flex', gap: '0.75rem', flexWrap: 'wrap' },
+  modalWagerItem: { background: 'rgba(255,180,0,0.1)', borderRadius: '10px', padding: '0.4rem 0.7rem', fontSize: '0.8rem', color: '#ffb400', fontWeight: '700' },
+  modalBtns: { display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' },
+  modalConfirmBtn: { background: '#ffb400', color: '#141414', border: 'none', borderRadius: '12px', padding: '0.9rem', fontSize: '0.95rem', fontWeight: '900', cursor: 'pointer' },
+  modalCancelBtn: { background: 'transparent', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '0.9rem', fontSize: '0.9rem', cursor: 'pointer' },
+}
