@@ -267,10 +267,17 @@ export default function Duels() {
           <>
             {others.length > 0 ? others.map(d => {
               const isCompleted = d.status === 'completed'
-              const isCancelledOrRejected = d.status === 'cancelled' || d.status === 'rejected' || d.status === 'expired'
               const iWon = isCompleted && d.winner_id === player.id
-              const stripeColor = isCompleted ? '#22c55e' : isCancelledOrRejected ? '#ff4444' : 'rgba(255,255,255,0.1)'
-              const statusColor = isCompleted ? '#22c55e' : isCancelledOrRejected ? '#ff4444' : '#ffb400'
+              const stripeColor = isCompleted
+                ? (iWon ? '#22c55e' : '#ff4444')
+                : (d.status === 'cancelled' || d.status === 'rejected' || d.status === 'expired')
+                  ? 'rgba(255,255,255,0.15)'
+                  : '#ffb400'
+              const statusColor = isCompleted
+                ? (iWon ? '#22c55e' : '#ff4444')
+                : (d.status === 'cancelled' || d.status === 'rejected' || d.status === 'expired')
+                  ? 'rgba(255,255,255,0.3)'
+                  : '#ffb400'
               return (
                 <div key={d.id} style={{ ...styles.historyCard, borderLeft: `4px solid ${stripeColor}` }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
