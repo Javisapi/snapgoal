@@ -1221,7 +1221,7 @@ export default function Game() {
       p_cards_p1: match.cards_p1 || { yellow: 0, red: 0 },
       p_cards_p2: match.cards_p2 || { yellow: 0, red: 0 },
     })
-    if (xpRes.data) {
+    if (xpRes.data && xpRes.data.xp !== null) {
       await supabase.from('matches').update({ xp_result: xpRes.data }).eq('id', matchId)
     }
 
