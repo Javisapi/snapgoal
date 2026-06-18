@@ -165,8 +165,9 @@ export default function Duels() {
   )
 
   const received = duels.filter(d => d.role === 'received' && d.status === 'pending')
+  const sent = duels.filter(d => d.role === 'sent' && d.status === 'pending')
   const readyToPlay = duels.filter(d => d.status === 'accepted')
-  const others = duels.filter(d => !(d.role === 'received' && d.status === 'pending') && d.status !== 'accepted')
+  const others = duels.filter(d => d.status !== 'pending' && d.status !== 'accepted')
 
   return (
     <div style={styles.container}>
@@ -184,6 +185,24 @@ export default function Duels() {
 
         {tab === 'pending' && (
           <>
+            {sent.length > 0 && (
+              <>
+                <p style={styles.sectionTitle}>ENVIADOS</p>
+                {sent.map(d => (
+                  <div key={d.id} style={styles.duelCard}>
+                    <div style={styles.duelRow}>
+                      <span style={styles.duelName}>{d.other_username}</span>
+                      <span style={styles.duelWager}>Apuesta: {formatWager(d.wager)}</span>
+                    </div>
+                    <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.35)', margin: 0 }}>⏳ Esperando respuesta...</p>
+                    <button style={styles.cancelDuelBtn} disabled={busyId === d.id} onClick={() => cancelDuel(d)}>
+                      Cancelar reto
+                    </button>
+                  </div>
+                ))}
+              </>
+            )}
+
             {received.length > 0 && (
               <>
                 <p style={styles.sectionTitle}>RECIBIDOS</p>
