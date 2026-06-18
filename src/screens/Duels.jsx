@@ -45,8 +45,11 @@ export default function Duels() {
       }, (payload) => {
         const updated = payload.new
         const isMine = updated.challenger_id === player.id || updated.opponent_id === player.id
-        if (isMine && updated.match_id && (updated.ready_players || []).includes(player.id)) {
+        if (!isMine) return
+        if (updated.match_id && (updated.ready_players || []).includes(player.id)) {
           navigate('/announce/' + updated.match_id)
+        } else {
+          loadDuels(player.id)
         }
       })
       .subscribe()
