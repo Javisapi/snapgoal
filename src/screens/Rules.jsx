@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 const RULES_CSS = `
   @keyframes rulesFadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
@@ -116,6 +116,22 @@ const SECTIONS = [
     ]
   },
   {
+    title: '⚔️ Retos',
+    color: '#f87171',
+    rules: [
+      'Puedes retar a cualquier jugador que tenga al menos 1 skill.',
+      'Al crear el reto eliges cuántas skills apostar (Sniper 🎯, Iron Fist 🧤 o Mano de Dios 🙏). La apuesta no puede superar el mínimo entre tu stock y el del rival.',
+      'El rival tiene 24 horas para aceptar o rechazar el reto.',
+      'Si acepta, ambos jugadores deben pulsar "Jugar" dentro de una ventana de 30 segundos para que empiece el partido.',
+      'Si la ventana de 30s expira sin que ambos confirmen, el reto no se cancela — podéis reintentar indefinidamente hasta las 24h de expiración.',
+      'El partido de reto es un partido normal: cuenta para XP, misiones diarias y estadísticas.',
+      'Al terminar el partido, el ganador recibe las skills apostadas por el perdedor.',
+      'Si el stock del rival cambia entre el momento de aceptar y el de confirmar, la apuesta se reduce automáticamente al nuevo mínimo disponible.',
+      'Puedes cancelar un reto pendiente o aceptado (si el partido aún no ha empezado) desde "Mis Retos".',
+      'Los retos cancelados o completados pueden eliminarse de tu historial.',
+    ]
+  },
+  {
     title: 'Ligas — clasificación y desempate',
     color: '#ffb400',
     rules: [
@@ -132,6 +148,7 @@ const SECTIONS = [
 
 export default function Rules() {
   const navigate = useNavigate()
+  const [open, setOpen] = useState(null)
 
   useEffect(() => {
     const s = document.createElement('style')
@@ -152,20 +169,32 @@ export default function Rules() {
       </div>
 
       <div style={styles.list}>
-        {SECTIONS.map((section, i) => (
-          <div key={i} style={{ ...styles.section, animation: `rulesFadeIn 0.3s ease ${i * 0.05}s both` }}>
-            <p style={{ ...styles.sectionTitle, color: section.color }}>{section.title}</p>
-            <div style={styles.rulesList}>
-              {section.rules.map((rule, j) => (
-                <div key={j} style={styles.ruleRow}>
-                  <div style={styles.ruleDot} />
-                  <p style={styles.ruleText}>{rule}</p>
+        {SECTIONS.map((section, i) => {
+          if (!section) return null
+          const isOpen = open === i
+          return (
+            <div key={i} style={{ ...styles.section, animation: `rulesFadeIn 0.3s ease ${i * 0.05}s both` }}>
+              <button
+                style={{ ...styles.accordionBtn, borderColor: isOpen ? section.color : 'rgba(255,255,255,0.07)' }}
+                onClick={() => setOpen(isOpen ? null : i)}
+              >
+                <span style={{ ...styles.sectionTitle, color: section.color, margin: 0 }}>{section.title}</span>
+                <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)', flexShrink: 0 }}>{isOpen ? '▲' : '▼'}</span>
+              </button>
+              {isOpen && (
+                <div style={styles.rulesList}>
+                  {section.rules.map((rule, j) => (
+                    <div key={j} style={styles.ruleRow}>
+                      <div style={styles.ruleDot} />
+                      <p style={styles.ruleText}>{rule}</p>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
-          </div>
-        ))}
-        <div style={{ height: '2rem' }} />
+          )
+        })}
+        <div style={{ height: '5rem' }} />
       </div>
       <button style={styles.tutorialBtn} onClick={() => navigate('/tutorial')}>📖 Tutorial</button>
     </div>
@@ -182,7 +211,8 @@ const styles = {
   titleLine: { height: '3px', width: '36px', background: '#ffb400', borderRadius: '2px' },
   subtitle: { fontSize: '0.8rem', color: 'rgba(255,255,255,0.2)', margin: 0, letterSpacing: '0.5px' },
   list: { flex: 1, overflowY: 'auto', padding: '1rem 1.75rem 0' },
-  section: { marginBottom: '1.5rem' },
+  section: { marginBottom: '0.5rem' },
+  accordionBtn: { width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.03)', border: '1px solid', borderRadius: '12px', padding: '0.9rem 1rem', cursor: 'pointer', marginBottom: '0.4rem', gap: '0.5rem' },
   sectionTitle: { fontSize: '0.85rem', fontWeight: '800', letterSpacing: '1px', textTransform: 'uppercase', margin: '0 0 0.6rem' },
   rulesList: { display: 'flex', flexDirection: 'column', gap: '0.4rem' },
   ruleRow: { display: 'flex', alignItems: 'flex-start', gap: '0.6rem' },

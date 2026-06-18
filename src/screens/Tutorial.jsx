@@ -497,7 +497,56 @@ function SlideVestuario() {
   )
 }
 
-// Slide 11 — Ligas
+// Slide 11 — Retos
+function SlideRetos() {
+  const [phase, setPhase] = useState(0)
+  useEffect(() => {
+    const timers = [
+      setTimeout(() => setPhase(1), 400),
+      setTimeout(() => setPhase(2), 900),
+      setTimeout(() => setPhase(3), 1400),
+    ]
+    return () => timers.forEach(clearTimeout)
+  }, [])
+  return (
+    <div style={S.slide}>
+      <span style={{fontSize:'3.5rem',lineHeight:1}}>⚔️</span>
+      <h2 style={S.title}>Retos<br/><span style={{color:'#f87171'}}>1 vs 1</span></h2>
+      <p style={S.desc}>Reta a un rival y apuesta tus skills.<br/>El ganador se queda con todo.</p>
+      <div style={{width:'100%',display:'flex',flexDirection:'column',gap:'0.5rem'}}>
+        {phase >= 1 && (
+          <div style={{display:'flex',alignItems:'center',gap:'0.75rem',background:'rgba(248,113,113,0.07)',border:'1px solid rgba(248,113,113,0.2)',borderRadius:'12px',padding:'0.75rem 1rem',animation:'fadeUp 0.3s ease forwards',opacity:0}}>
+            <span style={{fontSize:'1.5rem'}}>🎯🧤🙏</span>
+            <div>
+              <p style={{margin:0,fontSize:'0.88rem',fontWeight:'800',color:'#f87171'}}>Apuesta skills</p>
+              <p style={{margin:0,fontSize:'0.72rem',color:'rgba(255,255,255,0.4)'}}>Sniper, Iron Fist o Mano de Dios</p>
+            </div>
+          </div>
+        )}
+        {phase >= 2 && (
+          <div style={{display:'flex',alignItems:'center',gap:'0.75rem',background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.07)',borderRadius:'12px',padding:'0.75rem 1rem',animation:'fadeUp 0.3s ease forwards',opacity:0}}>
+            <span style={{fontSize:'1.5rem'}}>⚽</span>
+            <div>
+              <p style={{margin:0,fontSize:'0.88rem',fontWeight:'800',color:'#fff'}}>Partido normal</p>
+              <p style={{margin:0,fontSize:'0.72rem',color:'rgba(255,255,255,0.4)'}}>Cuenta para XP y misiones</p>
+            </div>
+          </div>
+        )}
+        {phase >= 3 && (
+          <div style={{display:'flex',alignItems:'center',gap:'0.75rem',background:'rgba(34,197,94,0.07)',border:'1px solid rgba(34,197,94,0.2)',borderRadius:'12px',padding:'0.75rem 1rem',animation:'fadeUp 0.3s ease forwards',opacity:0}}>
+            <span style={{fontSize:'1.5rem'}}>🏆</span>
+            <div>
+              <p style={{margin:0,fontSize:'0.88rem',fontWeight:'800',color:'#22c55e'}}>El ganador se lleva todo</p>
+              <p style={{margin:0,fontSize:'0.72rem',color:'rgba(255,255,255,0.4)'}}>Las skills apostadas cambian de manos</p>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// Slide 12 — Ligas
 function SlideLigas() {
   return (
     <div style={S.slide}>
@@ -541,7 +590,7 @@ function SlideProteger() {
 const SLIDE_COMPONENTS = [
   SlideWelcome, SlideCronometro, SlideEventos, SlidePenalty,
   SlideFalta, SlideCorner, SlideTarjetas, SlideFin,
-  SlideSkills, SlideVestuario, SlideLigas, SlideProteger,
+  SlideSkills, SlideVestuario, SlideRetos, SlideLigas, SlideProteger,
 ]
 
 export default function Tutorial() {
