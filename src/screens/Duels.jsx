@@ -36,6 +36,22 @@ export default function Duels() {
 
   useEffect(() => { init() }, [])
 
+  useEffect(() => {
+    if (!player?.id) return
+    const ch = supabase.channel('duel-ready-' + player.id)
+      .on('postgres_changes', {
+        event: 'UPDATE', schema: 'public', table: 'duel_challenges',
+      }, (payload) => {
+        const updated = payload.new
+        const isMine = updated.challenger_id === player.id || updated.opponent_id === player.id
+        if (isMine && updated.match_id && (updated.ready_players || []).includes(player.id)) {
+          navigate('/announce/' + updated.match_id)
+        }
+      })
+      .subscribe()
+    return () => supabase.removeChannel(ch)
+  }, [player?.id])
+
   async function init() {
     const p = await getPlayer()
     if (!p) { navigate('/'); return }
