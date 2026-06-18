@@ -32,6 +32,7 @@ export default function Duels() {
   const [loading, setLoading] = useState(true)
   const [confirmModal, setConfirmModal] = useState(null)
   const [busyId, setBusyId] = useState(null)
+  const [error, setError] = useState(null)
 
   useEffect(() => { init() }, [])
 
@@ -63,14 +64,59 @@ export default function Duels() {
       return
     }
 
-    if (result?.success && result.status === 'accepted' && result.match_id) {
-      navigate('/announce/' + result.match_id)
-      return
+    if (result?.success) {
+      try {
+        await fetch('/api/notify-duel', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            challenge_id: duel.id,
+            sender_name: player.username,
+            recipient_id: duel.other_player_id,
+            event: accept ? 'challenge_accepted' : 'challenge_rejected',
+          }),
+        })
+      } catch (e) { /* silencioso, no es crítico */ }
     }
 
     await loadDuels(player.id)
     setBusyId(null)
     setConfirmModal(null)
+  }
+
+  async function markReady(duel) {
+    setBusyId(duel.id)
+    const { data: result } = await supabase.rpc('mark_duel_ready', {
+      p_challenge_id: duel.id,
+      p_player_id: player.id,
+    })
+
+    if (result?.status === 'match_created' && result.match_id) {
+      navigate('/announce/' + result.match_id)
+      return
+    }
+
+    if (result?.status === 'waiting') {
+      try {
+        await fetch('/api/notify-duel', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            challenge_id: duel.id,
+            sender_name: player.username,
+            recipient_id: duel.other_player_id,
+            event: 'player_ready',
+          }),
+        })
+      } catch (e) { /* silencioso, no es crítico */ }
+    }
+
+    if (result?.error === 'stock_changed') {
+      setError(`Ya no hay suficiente ${result.item} disponible. Vuelve a intentarlo.`)
+    }
+
+    await loadDuels(player.id)
+    setBusyId(null)
   }
 
   if (loading || !player) return (
@@ -80,7 +126,8 @@ export default function Duels() {
   )
 
   const received = duels.filter(d => d.role === 'received' && d.status === 'pending')
-  const others = duels.filter(d => !(d.role === 'received' && d.status === 'pending'))
+  const readyToPlay = duels.filter(d => d.status === 'accepted')
+  const others = duels.filter(d => !(d.role === 'received' && d.status === 'pending') && d.status !== 'accepted')
 
   return (
     <div style={styles.container}>
@@ -90,6 +137,7 @@ export default function Duels() {
       </div>
 
       <div style={styles.list}>
+        {error && <p style={{ color: '#ff4444', fontSize: '0.85rem', textAlign: 'center', margin: '0 0 0.5rem' }}>{error}</p>}
         {received.length > 0 && (
           <>
             <p style={styles.sectionTitle}>RECIBIDOS</p>
@@ -109,6 +157,37 @@ export default function Duels() {
                 </div>
               </div>
             ))}
+          </>
+        )}
+
+        {readyToPlay.length > 0 && (
+          <>
+            <p style={styles.sectionTitle}>LISTOS PARA JUGAR</p>
+            {readyToPlay.map(d => {
+              const iAmReady = (d.ready_players || []).includes(player.id)
+              const opponentReady = (d.ready_players || []).includes(d.other_player_id)
+              return (
+                <div key={d.id} style={styles.duelCard}>
+                  <div style={styles.duelRow}>
+                    <span style={styles.duelName}>{d.other_username}</span>
+                    <span style={styles.duelWager}>{formatWager(d.final_wager || d.wager)}</span>
+                  </div>
+                  {opponentReady && !iAmReady && (
+                    <p style={{ fontSize: '0.78rem', color: '#ffb400', margin: 0 }}>🔥 {d.other_username} ya está listo. ¡Pulsa Jugar antes de que pase el turno!</p>
+                  )}
+                  {iAmReady && !opponentReady && (
+                    <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)', margin: 0 }}>⏳ Esperando a que {d.other_username} confirme...</p>
+                  )}
+                  <button
+                    style={{ ...styles.acceptBtn, opacity: iAmReady ? 0.5 : 1 }}
+                    disabled={busyId === d.id || iAmReady}
+                    onClick={() => markReady(d)}
+                  >
+                    {busyId === d.id ? '...' : iAmReady ? 'Esperando...' : '▶️ Jugar'}
+                  </button>
+                </div>
+              )
+            })}
           </>
         )}
 

@@ -115,8 +115,9 @@ export default function DuelCreate() {
         body: JSON.stringify({
           challenge_id: result.challenge_id,
           sender_name: player.username,
-          opponent_id: selectedOpponent.player_id,
+          recipient_id: selectedOpponent.player_id,
           wager: wagerPayload,
+          event: 'challenge_received',
         }),
       })
     } catch (e) { /* silencioso, no es crítico */ }
