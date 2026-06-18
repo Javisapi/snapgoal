@@ -173,7 +173,7 @@ export default function Missions() {
         {/* Círculos de racha */}
         <div style={styles.streakCircles}>
           {[1,2,3,4,5].map(i => {
-            const filled = i <= posInCycle || (posInCycle === 0 && currentStreak > 0 && i === 5)
+            const filled = i <= posInCycle || (posInCycle === 0 && currentStreak > 0)
             return (
               <div key={i} style={{
                 ...styles.streakCircle,
