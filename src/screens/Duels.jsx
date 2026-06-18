@@ -15,7 +15,7 @@ async function getPlayer() {
 
 const ITEM_LABELS = { pro_shooter: 'Sniper', golden_glove: 'Iron Fist', hand_of_god: 'Mano de Dios' }
 const ITEM_ICONS = { pro_shooter: '🎯', golden_glove: '🧤', hand_of_god: '🙏' }
-const STATUS_LABELS = { pending: 'Pendiente', accepted: 'Aceptado', rejected: 'Rechazado', expired: 'Expirado', completed: 'Completado' }
+const STATUS_LABELS = { pending: 'Pendiente', accepted: 'Aceptado', rejected: 'Rechazado', expired: 'Expirado', completed: 'Completado', cancelled: 'Cancelado' }
 
 function formatWager(wager) {
   if (!wager) return ''
@@ -33,6 +33,7 @@ export default function Duels() {
   const [confirmModal, setConfirmModal] = useState(null)
   const [busyId, setBusyId] = useState(null)
   const [error, setError] = useState(null)
+  const [tab, setTab] = useState('pending')
 
   useEffect(() => { init() }, [])
 
@@ -142,6 +143,21 @@ export default function Duels() {
     setBusyId(null)
   }
 
+  async function cancelDuel(duel) {
+    setBusyId(duel.id)
+    const { data: result } = await supabase.rpc('cancel_duel_challenge', { p_challenge_id: duel.id, p_player_id: player.id })
+    if (!result?.success) setError('No se pudo cancelar el reto.')
+    await loadDuels(player.id)
+    setBusyId(null)
+  }
+
+  async function dismissDuel(duel) {
+    setBusyId(duel.id)
+    await supabase.rpc('dismiss_duel_challenge', { p_challenge_id: duel.id, p_player_id: player.id })
+    await loadDuels(player.id)
+    setBusyId(null)
+  }
+
   if (loading || !player) return (
     <div style={styles.container}>
       <p style={{ color: 'rgba(255,255,255,0.3)', textAlign: 'center', fontSize: '0.9rem' }}>Cargando...</p>
@@ -157,98 +173,123 @@ export default function Duels() {
       <div style={styles.header}>
         <button style={styles.backBtn} onClick={() => navigate('/')}>← volver</button>
         <h1 style={styles.title}>⚔️ Mis Retos</h1>
+        <div style={styles.tabs}>
+          <button style={{...styles.tab, ...(tab==='pending' ? styles.tabActive : {})}} onClick={() => setTab('pending')}>Pendientes</button>
+          <button style={{...styles.tab, ...(tab==='history' ? styles.tabActive : {})}} onClick={() => setTab('history')}>Historial</button>
+        </div>
       </div>
 
       <div style={styles.list}>
         {error && <p style={{ color: '#ff4444', fontSize: '0.85rem', textAlign: 'center', margin: '0 0 0.5rem' }}>{error}</p>}
-        {received.length > 0 && (
-          <>
-            <p style={styles.sectionTitle}>RECIBIDOS</p>
-            {received.map(d => (
-              <div key={d.id} style={styles.duelCard}>
-                <div style={styles.duelRow}>
-                  <span style={styles.duelName}>{d.other_username}</span>
-                  <span style={styles.duelWager}>Apuesta: {formatWager(d.wager)}</span>
-                </div>
-                <div style={styles.duelActions}>
-                  <button style={styles.acceptBtn} disabled={busyId === d.id} onClick={() => respond(d, true)}>
-                    {busyId === d.id ? '...' : 'Aceptar'}
-                  </button>
-                  <button style={styles.rejectBtn} disabled={busyId === d.id} onClick={() => respond(d, false)}>
-                    Rechazar
-                  </button>
-                </div>
-              </div>
-            ))}
-          </>
-        )}
 
-        {readyToPlay.length > 0 && (
+        {tab === 'pending' && (
           <>
-            <p style={styles.sectionTitle}>LISTOS PARA JUGAR</p>
-            {readyToPlay.map(d => {
-              const windowExpired = d.ready_started_at && (Date.now() - new Date(d.ready_started_at).getTime()) > 30000
-              const iAmReady = !windowExpired && (d.ready_players || []).includes(player.id)
-              const opponentReady = !windowExpired && (d.ready_players || []).includes(d.other_player_id)
-              const secondsLeft = d.ready_started_at && !windowExpired
-                ? Math.max(0, 30 - Math.floor((Date.now() - new Date(d.ready_started_at).getTime()) / 1000))
-                : null
-              return (
-                <div key={d.id} style={styles.duelCard}>
-                  <div style={styles.duelRow}>
-                    <span style={styles.duelName}>{d.other_username}</span>
-                    <span style={styles.duelWager}>Apuesta: {formatWager(d.final_wager || d.wager)}</span>
-                  </div>
-                  {d.match_id ? (
-                    <button style={styles.acceptBtn} onClick={() => navigate('/announce/' + d.match_id)}>
-                      ▶️ Entrar al partido
-                    </button>
-                  ) : (
-                    <>
-                      {opponentReady && !iAmReady && (
-                        <p style={{ fontSize: '0.78rem', color: '#ffb400', margin: 0 }}>🔥 {d.other_username} ya está listo. ¡Pulsa Jugar antes de que pase el turno! ({secondsLeft}s)</p>
-                      )}
-                      {iAmReady && !opponentReady && (
-                        <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)', margin: 0 }}>⏳ Esperando a que {d.other_username} confirme... ({secondsLeft}s)</p>
-                      )}
-                      <button
-                        style={{ ...styles.acceptBtn, opacity: iAmReady ? 0.5 : 1 }}
-                        disabled={busyId === d.id || iAmReady}
-                        onClick={() => markReady(d)}
-                      >
-                        {busyId === d.id ? '...' : iAmReady ? 'Esperando...' : '▶️ Jugar'}
+            {received.length > 0 && (
+              <>
+                <p style={styles.sectionTitle}>RECIBIDOS</p>
+                {received.map(d => (
+                  <div key={d.id} style={styles.duelCard}>
+                    <div style={styles.duelRow}>
+                      <span style={styles.duelName}>{d.other_username}</span>
+                      <span style={styles.duelWager}>Apuesta: {formatWager(d.wager)}</span>
+                    </div>
+                    <div style={styles.duelActions}>
+                      <button style={styles.acceptBtn} disabled={busyId === d.id} onClick={() => respond(d, true)}>
+                        {busyId === d.id ? '...' : 'Aceptar'}
                       </button>
-                    </>
-                  )}
-                </div>
-              )
-            })}
+                      <button style={styles.rejectBtn} disabled={busyId === d.id} onClick={() => respond(d, false)}>
+                        Rechazar
+                      </button>
+                    </div>
+                    <button style={styles.cancelDuelBtn} disabled={busyId === d.id} onClick={() => cancelDuel(d)}>
+                      Cancelar reto
+                    </button>
+                  </div>
+                ))}
+              </>
+            )}
+
+            {readyToPlay.length > 0 && (
+              <>
+                <p style={styles.sectionTitle}>LISTOS PARA JUGAR</p>
+                {readyToPlay.map(d => {
+                  const windowExpired = d.ready_started_at && (Date.now() - new Date(d.ready_started_at).getTime()) > 30000
+                  const iAmReady = !windowExpired && (d.ready_players || []).includes(player.id)
+                  const opponentReady = !windowExpired && (d.ready_players || []).includes(d.other_player_id)
+                  const secondsLeft = d.ready_started_at && !windowExpired
+                    ? Math.max(0, 30 - Math.floor((Date.now() - new Date(d.ready_started_at).getTime()) / 1000))
+                    : null
+                  return (
+                    <div key={d.id} style={styles.duelCard}>
+                      <div style={styles.duelRow}>
+                        <span style={styles.duelName}>{d.other_username}</span>
+                        <span style={styles.duelWager}>Apuesta: {formatWager(d.final_wager || d.wager)}</span>
+                      </div>
+                      {d.match_id ? (
+                        <button style={styles.acceptBtn} onClick={() => navigate('/announce/' + d.match_id)}>
+                          ▶️ Entrar al partido
+                        </button>
+                      ) : (
+                        <>
+                          {opponentReady && !iAmReady && (
+                            <p style={{ fontSize: '0.78rem', color: '#ffb400', margin: 0 }}>🔥 {d.other_username} ya está listo. ¡Pulsa Jugar antes de que pase el turno! ({secondsLeft}s)</p>
+                          )}
+                          {iAmReady && !opponentReady && (
+                            <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)', margin: 0 }}>⏳ Esperando a que {d.other_username} confirme... ({secondsLeft}s)</p>
+                          )}
+                          <button
+                            style={{ ...styles.acceptBtn, opacity: iAmReady ? 0.5 : 1 }}
+                            disabled={busyId === d.id || iAmReady}
+                            onClick={() => markReady(d)}
+                          >
+                            {busyId === d.id ? '...' : iAmReady ? 'Esperando...' : '▶️ Jugar'}
+                          </button>
+                        </>
+                      )}
+                      <button style={styles.cancelDuelBtn} disabled={busyId === d.id} onClick={() => cancelDuel(d)}>
+                        Cancelar reto
+                      </button>
+                    </div>
+                  )
+                })}
+              </>
+            )}
+
+            {received.length === 0 && readyToPlay.length === 0 && (
+              <p style={{ color: 'rgba(255,255,255,0.3)', textAlign: 'center', fontSize: '0.85rem', marginTop: '2rem' }}>
+                No tienes retos pendientes.
+              </p>
+            )}
           </>
         )}
 
-        {others.length > 0 && (
+        {tab === 'history' && (
           <>
-            <p style={styles.sectionTitle}>HISTORIAL</p>
-            {others.map(d => (
-              <div key={d.id} style={styles.duelCardSmall}>
+            {others.length > 0 ? others.map(d => (
+              <div key={d.id} style={{ ...styles.duelCardSmall, flexDirection: 'column', alignItems: 'flex-start', gap: '0.75rem' }}>
                 <div style={styles.duelRow}>
                   <span style={styles.duelName}>
                     {d.role === 'sent' ? `Tú → ${d.other_username}` : `${d.other_username} → Tú`}
                   </span>
                   <span style={styles.duelWager}>Apuesta: {formatWager(d.final_wager || d.wager)}</span>
                 </div>
-                <span style={{ ...styles.statusBadge, color: d.status === 'completed' ? '#22c55e' : d.status === 'rejected' || d.status === 'expired' ? '#ff4444' : '#ffb400' }}>
-                  {STATUS_LABELS[d.status] || d.status}
-                </span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                  <span style={{ ...styles.statusBadge, color: d.status === 'completed' ? '#22c55e' : d.status === 'cancelled' ? '#ff4444' : d.status === 'rejected' || d.status === 'expired' ? '#ff4444' : '#ffb400' }}>
+                    {STATUS_LABELS[d.status] || d.status}
+                  </span>
+                  {d.status === 'cancelled' && (
+                    <button style={styles.dismissBtn} disabled={busyId === d.id} onClick={() => dismissDuel(d)}>
+                      Eliminar
+                    </button>
+                  )}
+                </div>
               </div>
-            ))}
+            )) : (
+              <p style={{ color: 'rgba(255,255,255,0.3)', textAlign: 'center', fontSize: '0.85rem', marginTop: '2rem' }}>
+                No hay historial todavía.
+              </p>
+            )}
           </>
-        )}
-
-        {duels.length === 0 && (
-          <p style={{ color: 'rgba(255,255,255,0.3)', textAlign: 'center', fontSize: '0.85rem', marginTop: '2rem' }}>
-            No tienes retos todavía.
-          </p>
         )}
       </div>
 
@@ -305,4 +346,9 @@ const styles = {
   modalBtns: { display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' },
   modalConfirmBtn: { background: '#ffb400', color: '#141414', border: 'none', borderRadius: '12px', padding: '0.9rem', fontSize: '0.95rem', fontWeight: '900', cursor: 'pointer' },
   modalCancelBtn: { background: 'transparent', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '0.9rem', fontSize: '0.9rem', cursor: 'pointer' },
+  tabs: { display: 'flex', gap: '0.5rem', marginTop: '1rem' },
+  tab: { flex: 1, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '0.5rem', fontSize: '0.8rem', fontWeight: '700', color: 'rgba(255,255,255,0.4)', cursor: 'pointer' },
+  tabActive: { background: 'rgba(255,180,0,0.12)', border: '1px solid rgba(255,180,0,0.4)', color: '#ffb400' },
+  cancelDuelBtn: { background: 'transparent', color: 'rgba(255,100,100,0.6)', border: '1px solid rgba(255,100,100,0.2)', borderRadius: '10px', padding: '0.5rem', fontSize: '0.78rem', cursor: 'pointer', width: '100%' },
+  dismissBtn: { background: 'transparent', color: 'rgba(255,255,255,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '0.3rem 0.7rem', fontSize: '0.75rem', cursor: 'pointer' },
 }
