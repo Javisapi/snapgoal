@@ -27,6 +27,7 @@ export default function Home() {
   const { player, loading, registerPlayer, refreshPlayer } = useAuth()
   const [username, setUsername] = useState('')
   const [streak, setStreak] = useState(0)
+  const [pendingDuels, setPendingDuels] = useState(0)
   const [parallax, setParallax] = useState({ x: 0, y: 0 })
   const [showFieldIntro, setShowFieldIntro] = useState(true)
 
@@ -70,6 +71,10 @@ export default function Home() {
     if (!player?.id) return
     supabase.from('daily_streaks').select('current_streak').eq('player_id', player.id).single()
       .then(({ data }) => { if (data) setStreak(data.current_streak) })
+    supabase.rpc('get_my_duels', { p_player_id: player.id })
+      .then(({ data }) => {
+        if (data) setPendingDuels(data.filter(d => d.role === 'received' && d.status === 'pending').length)
+      })
     supabase.from('player_items').select('item_type,stock').eq('player_id', player.id)
       .then(({ data }) => {
         if (data) {
@@ -414,6 +419,11 @@ export default function Home() {
           <span style={{fontSize:'1.1rem'}}>🏟️</span>
           <span style={styles.missionsBtnLabel}>Vestuario</span>
           {streak > 0 && <span style={{fontSize:'0.7rem',color:'#ffb400',fontWeight:'800',display:'inline-flex',alignItems:'center',gap:'2px'}}><span style={{display:'inline-block',animation:'flamePulse 1.6s ease-in-out infinite'}}>🔥</span>{streak}</span>}
+        </button>
+        <button style={{...styles.missionsBtn, position:'relative'}} onClick={() => navigate('/duels')}>
+          <span style={{fontSize:'1.1rem'}}>⚔️</span>
+          <span style={styles.missionsBtnLabel}>Retos</span>
+          {pendingDuels > 0 && <span style={{position:'absolute',top:'-4px',right:'-4px',background:'#ff4444',color:'#fff',borderRadius:'50%',width:'18px',height:'18px',fontSize:'0.65rem',fontWeight:'800',display:'flex',alignItems:'center',justifyContent:'center'}}>{pendingDuels}</span>}
         </button>
       </div>
 
