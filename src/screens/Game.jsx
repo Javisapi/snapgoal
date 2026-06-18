@@ -1258,9 +1258,7 @@ export default function Game() {
         p_goals_falta: goalsFalta,
         p_clean_sheet: cleanSheet,
       })
-      if (missionsRes.data?.completed_missions?.length > 0) {
-        await supabase.from('matches').update({ missions_result: missionsRes.data }).eq('id', matchId)
-      }
+      // missions_result ya se escribe de forma atómica dentro de update_daily_missions (SQL)
     }
   }
 

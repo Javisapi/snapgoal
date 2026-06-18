@@ -115,8 +115,8 @@ export default function Result() {
 
     setMatch(m)
 
-    // Misiones completadas en este partido
-    const completedMissionsData = m.missions_result?.completed_missions || []
+    // Misiones completadas en este partido — solo las propias del jugador (estructura separada por player_id)
+    const completedMissionsData = m.missions_result?.by_player?.[p.id] || []
     if (completedMissionsData.length > 0) {
       setCompletedMissions(completedMissionsData)
     }
