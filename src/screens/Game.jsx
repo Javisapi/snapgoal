@@ -258,7 +258,7 @@ export default function Game() {
       setBarrierOptions(null)
     }
     if (m.last_event) {
-      try { setLastPlay(JSON.parse(m.last_event)) } catch(e) {}
+      try { setLastPlay(JSON.parse(m.last_event)) } catch(e) { console.error('parse last_event (init):', e, m.last_event) }
     }
 
     const oppId = m.player1_id === p.id ? m.player2_id : m.player1_id
@@ -371,10 +371,7 @@ export default function Game() {
             setBarrierOptions(null)
           }
         } else {
-          setPendingType(null)
-    setProShooterActive(false)
-    setShowProShooterPopup(false)
-    proShooterPopupShownRef.current = false
+          resetPendingUI()
           setBarrierOptions(null)
         }
 
@@ -387,7 +384,7 @@ export default function Game() {
               if (ev.emoji === '⚽') triggerFlash('goal', 'GOL')
               else if (ev.emoji === '💥') triggerFlash('owngoal', 'GOL PROPIO')
             }
-          } catch(e) {}
+          } catch(e) { console.error('parse last_event (realtime):', e, updated.last_event) }
         }
 
         // El rival sigue vivo — reiniciar watcher
@@ -623,6 +620,14 @@ export default function Game() {
     setInactivityWarning(false)
   }
 
+
+  function resetPendingUI() {
+    setPendingType(null)
+    setProShooterActive(false)
+    setShowProShooterPopup(false)
+    proShooterPopupShownRef.current = false
+  }
+
   function triggerFlash(type, text) {
     setFlashEvent({ type, text, key: Date.now() })
     setTimeout(() => setFlashEvent(null), 600)
@@ -849,10 +854,7 @@ export default function Game() {
       setCentesimas(preShootOffsetRef.current)
       const event = { emoji: '🟥', label: `🟥 Roja a ${p.username} — gol para ${opp.username}` }
       setLastPlay(event)
-      setPendingType(null)
-    setProShooterActive(false)
-    setShowProShooterPopup(false)
-    proShooterPopupShownRef.current = false
+      resetPendingUI()
       // 2 rojas = partido terminado 5-0
       if (newRed >= 2) {
         const winnerId = p1 ? m.player2_id : m.player1_id
@@ -1017,11 +1019,7 @@ export default function Game() {
     const event = label ? { emoji, label } : null
     if (event) setLastPlay(event)
     else setLastPlay(null)
-    setPendingType(null)
-    setProShooterActive(false)
-    setShowProShooterPopup(false)
-    proShooterPopupShownRef.current = false
-
+    resetPendingUI()
     // Determinar resultType para plays — refleja si hubo gol y de qué tipo
     const finalResultType = ev.result === 'GOL_PROPIO' ? 'GOL_PROPIO' :
       !gol ? (pending ? pending + '_FALLO' : 'NADA') :
