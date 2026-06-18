@@ -64,6 +64,8 @@ export default function Result() {
   const channelRef = useRef(null)
   const [completedMissions, setCompletedMissions] = useState([])
   const [showMissionBanner, setShowMissionBanner] = useState(false)
+  const [duelReward, setDuelReward] = useState(null)
+  const [showDuelBanner, setShowDuelBanner] = useState(false)
   const [currentMissionIdx, setCurrentMissionIdx] = useState(0)
   const [showReplay, setShowReplay] = useState(true)
   const [replayCents, setReplayCents] = useState(null)
@@ -114,6 +116,17 @@ export default function Result() {
     }
 
     setMatch(m)
+
+    // Cargar recompensa de reto si aplica
+    const { data: duelData } = await supabase
+      .from('duel_challenges')
+      .select('final_wager, wager, winner_id')
+      .eq('match_id', matchId)
+      .eq('status', 'completed')
+      .single()
+    if (duelData && duelData.winner_id === p.id) {
+      setDuelReward(duelData.final_wager || duelData.wager)
+    }
 
     // Misiones completadas en este partido — solo las propias del jugador (estructura separada por player_id)
     const completedMissionsData = m.missions_result?.by_player?.[p.id] || []
@@ -182,6 +195,7 @@ export default function Result() {
     if (lastGoalIdx < 0 || !lastPlay) {
       setShowReplay(false)
       if (completedMissionsData.length > 0) setShowMissionBanner(true)
+      else if (duelData && duelData.winner_id === p.id) setShowDuelBanner(true)
       return
     }
 
@@ -196,7 +210,8 @@ export default function Result() {
         clearInterval(replayIntervalRef.current)
         setTimeout(() => {
           setShowReplay(false)
-          setShowMissionBanner(true)
+          if (completedMissionsData.length > 0) setShowMissionBanner(true)
+          else if (duelData && duelData.winner_id === p.id) setShowDuelBanner(true)
         }, 1000)
       }
     }, frameDuration)
@@ -352,7 +367,45 @@ export default function Result() {
       setCurrentMissionIdx(i => i + 1)
     } else {
       setShowMissionBanner(false)
+      if (duelReward) setShowDuelBanner(true)
     }
+  }
+
+  if (showDuelBanner && duelReward) {
+    const ICONS = { pro_shooter: '🎯', golden_glove: '🧤', hand_of_god: '🙏' }
+    const NAMES = { pro_shooter: 'Sniper', golden_glove: 'Iron Fist', hand_of_god: 'Mano de Dios' }
+    const items = Object.entries(duelReward).filter(([,v]) => v > 0)
+    return (
+      <div style={{ height:'100%', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'space-between', background:'#141414', padding:'3rem 2rem 4rem', animation:'missionBannerIn 0.4s ease forwards' }}>
+        <p style={{ fontSize:'0.65rem', color:'rgba(255,255,255,0.25)', letterSpacing:'3px', textTransform:'uppercase', margin:0 }}>⚔️ RETO GANADO</p>
+
+        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'2rem' }}>
+          <span style={{ fontSize:'5rem', lineHeight:1 }}>🏆</span>
+          <h2 style={{ fontSize:'2.2rem', fontWeight:'900', color:'#ffb400', margin:0, textAlign:'center', letterSpacing:'-0.5px', textShadow:'0 0 30px rgba(255,180,0,0.5)', lineHeight:1.1 }}>
+            ¡Has ganado el reto!
+          </h2>
+          <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'0.75rem', width:'100%' }}>
+            <p style={{ fontSize:'0.75rem', color:'rgba(255,255,255,0.3)', margin:0, letterSpacing:'1px' }}>SKILLS GANADAS</p>
+            <div style={{ display:'flex', gap:'1rem', width:'100%', justifyContent:'center' }}>
+              {items.map(([k, v]) => (
+                <div key={k} style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:'6px', background:'rgba(255,180,0,0.1)', border:'1px solid rgba(255,180,0,0.3)', borderRadius:'14px', padding:'1.25rem 1rem' }}>
+                  <span style={{ fontSize:'2rem' }}>{ICONS[k]}</span>
+                  <span style={{ fontSize:'1.5rem', fontWeight:'900', color:'#ffb400' }}>+{v}</span>
+                  <span style={{ fontSize:'0.7rem', color:'rgba(255,255,255,0.3)' }}>{NAMES[k]}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <button
+          style={{ background:'#ffb400', color:'#141414', border:'none', borderRadius:'12px', padding:'1.25rem', fontSize:'1.1rem', fontWeight:'900', cursor:'pointer', width:'100%', letterSpacing:'0.5px' }}
+          onClick={() => setShowDuelBanner(false)}
+        >
+          💰 Recoger recompensa
+        </button>
+      </div>
+    )
   }
 
   if (showMissionBanner && completedMissions.length > 0) {

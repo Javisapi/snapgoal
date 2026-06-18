@@ -85,6 +85,7 @@ export default function Game() {
   useTrackPresence(player?.id, 'playing')
   const [match, setMatch] = useState(null)
   const [opponent, setOpponent] = useState(null)
+  const [duelWager, setDuelWager] = useState(null)
   const [centesimas, setCentesimas] = useState(0)
   const [running, setRunning] = useState(false)
   const [lastPlay, setLastPlay] = useState(null)
@@ -267,6 +268,14 @@ export default function Game() {
       .from('players').select('*').eq('id', oppId).single()
     setOpponent(opp)
     opponentRef.current = opp
+
+    // Cargar apuesta si es partido de reto
+    const { data: duelData } = await supabase
+      .from('duel_challenges')
+      .select('final_wager, wager')
+      .eq('match_id', matchId)
+      .single()
+    if (duelData) setDuelWager(duelData.final_wager || duelData.wager)
 
     const channel = supabase
       .channel('match-' + matchId)
@@ -1463,6 +1472,15 @@ export default function Game() {
         </div>
       )}
 
+      {duelWager && (
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
+          {Object.entries(duelWager).filter(([,v]) => v > 0).map(([k, v]) => (
+            <span key={k} style={{ fontSize: '0.75rem', background: 'rgba(255,180,0,0.12)', border: '1px solid rgba(255,180,0,0.3)', borderRadius: '20px', padding: '3px 10px', color: '#ffb400', fontWeight: '700' }}>
+              {k === 'pro_shooter' ? '🎯' : k === 'golden_glove' ? '🧤' : '🙏'}{v}
+            </span>
+          ))}
+        </div>
+      )}
       <div style={styles.turnIndicator}>
         <span style={{
           ...styles.turnBadge,
