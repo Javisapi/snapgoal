@@ -1425,7 +1425,7 @@ export default function Game() {
 
       {/* Popup Iron Fist — solo el defensor */}
       {showGlovePopup && (
-        <div style={{position:'absolute',inset:0,background:'rgba(0,0,0,0.93)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:60,flexDirection:'column',gap:'14px',padding:'24px 18px'}}>
+        <div style={{position:'absolute',inset:0,background:'#000000',display:'flex',alignItems:'center',justifyContent:'center',zIndex:60,flexDirection:'column',gap:'14px',padding:'24px 18px'}}>
           <svg width='64' height='64' viewBox='0 0 24 24' fill='none'><path d='M6 8V6a2 2 0 0 1 2-2h1a2 2 0 0 1 2 2v1h1V5a2 2 0 0 1 2-2h1a1 1 0 0 1 1 1v4l1-1a1.5 1.5 0 0 1 2 2l-3 4v3a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3v-5L4 10a1.5 1.5 0 0 1 2-2l0 0z' fill='#ffb400' stroke='#cc8800' strokeWidth='0.5'/></svg>
           <p style={{color:'#fff',fontWeight:'900',fontSize:'1.7rem',letterSpacing:'-0.5px',margin:0}}>Iron Fist</p>
           <p style={{color:'rgba(255,255,255,0.5)',fontSize:'0.95rem',textAlign:'center',lineHeight:1.5,margin:0}}>Bloquea todas las centésimas PAR o IMPAR.<br/>Tu rival no sabrá qué portero elegiste.</p>
