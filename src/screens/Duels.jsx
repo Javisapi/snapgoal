@@ -76,11 +76,18 @@ export default function Duels() {
     return () => clearInterval(t)
   }, [])
 
-  // Polling cada 5s como fallback al Realtime
+  // Polling 8s + recarga al volver a la pestaña
   useEffect(() => {
     if (!player?.id) return
-    const t = setInterval(() => loadDuels(player.id), 5000)
-    return () => clearInterval(t)
+    const t = setInterval(() => loadDuels(player.id), 8000)
+    const onVisible = () => { if (document.visibilityState === 'visible') loadDuels(player.id) }
+    document.addEventListener('visibilitychange', onVisible)
+    window.addEventListener('focus', onVisible)
+    return () => {
+      clearInterval(t)
+      document.removeEventListener('visibilitychange', onVisible)
+      window.removeEventListener('focus', onVisible)
+    }
   }, [player?.id])
 
   async function init() {
