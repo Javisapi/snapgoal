@@ -34,8 +34,8 @@ export default function Home() {
   const [showFieldIntro, setShowFieldIntro] = useState(true)
 
   useEffect(() => {
-    const t = setTimeout(() => setShowFieldIntro(false), 2000)
-    return () => clearTimeout(t)
+    const introTimer = setTimeout(() => setShowFieldIntro(false), 2000)
+    return () => clearTimeout(introTimer)
   }, [])
 
   useEffect(() => {
@@ -129,10 +129,10 @@ export default function Home() {
 
   async function handleRegister() {
     const name = username.trim()
-    if (!name) { setError('Escribe tu nombre de jugador'); return }
-    if (name.length < 3) { setError('Mínimo 3 caracteres'); return }
-    if (name.length > 20) { setError('Máximo 20 caracteres'); return }
-    if (!/^[a-zA-Z0-9_]+$/.test(name)) { setError('Solo letras, números y guión bajo'); return }
+    if (!name) { setError(t('home_err_empty')); return }
+    if (name.length < 3) { setError(t('home_err_min')); return }
+    if (name.length > 20) { setError(t('home_err_max')); return }
+    if (!/^[a-zA-Z0-9_]+$/.test(name)) { setError(t('home_err_chars')); return }
     setSaving(true)
     setError('')
     const { player: newPlayer, error: authError } = await registerPlayer(name)
@@ -167,7 +167,7 @@ export default function Home() {
   async function handleRecover() {
     const trimmed = recoverEmail.trim().toLowerCase()
     if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
-      setRecoverError('Introduce un email válido')
+      setRecoverError(t('home_recover_invalid_email'))
       return
     }
     setRecoverLoading(true)
@@ -178,7 +178,7 @@ export default function Home() {
     })
     setRecoverLoading(false)
     if (error) {
-      setRecoverError('No encontramos una cuenta con ese email. ¿Lo has protegido antes?')
+      setRecoverError(t('home_recover_not_found'))
       return
     }
     setRecoverSent(true)
@@ -187,7 +187,7 @@ export default function Home() {
   async function handleVerifyCode() {
     const code = recoverCode.trim()
     if (code.length !== 8) {
-      setRecoverCodeError('El código debe tener 8 dígitos')
+      setRecoverCodeError(t('home_recover_code_err_length'))
       return
     }
     setRecoverCodeLoading(true)
@@ -199,7 +199,7 @@ export default function Home() {
     })
     setRecoverCodeLoading(false)
     if (error) {
-      setRecoverCodeError('Código incorrecto o caducado')
+      setRecoverCodeError(t('home_recover_code_err_invalid'))
       return
     }
     window.location.reload()
@@ -271,9 +271,9 @@ export default function Home() {
       {showDeleteConfirm && (
         <div style={styles.overlay}>
           <div style={styles.modal}>
-            <p style={styles.modalTitle}>Borrar cuenta</p>
-            <p style={styles.modalText}>Se eliminarán permanentemente tu perfil, historial y estadísticas. Esta acción no se puede deshacer.</p>
-            <p style={styles.modalText}>Escribe tu nombre de usuario para confirmar:</p>
+            <p style={styles.modalTitle}>{t('home_delete_account')}</p>
+            <p style={styles.modalText}>{t('home_delete_warning')}</p>
+            <p style={styles.modalText}>{t('home_delete_confirm_prompt')}</p>
             <input
               style={{...styles.input, marginBottom:'0.75rem'}}
               type="text"
@@ -282,9 +282,9 @@ export default function Home() {
               onChange={e => setDeleteConfirmName(e.target.value.toLowerCase())}
             />
             <button style={{...styles.btnConfirmDelete, opacity: deleteConfirmName === player?.username ? 1 : 0.3}} onClick={handleDeleteAccount} disabled={deleting || deleteConfirmName !== player?.username}>
-              {deleting ? 'Borrando...' : 'Confirmar borrado'}
+              {deleting ? t('home_deleting') : t('home_delete_confirm_btn')}
             </button>
-            <button style={styles.btnCancelDelete} onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmName('') }}>Cancelar</button>
+            <button style={styles.btnCancelDelete} onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmName('') }}>{t('home_cancel')}</button>
           </div>
         </div>
       )}
@@ -292,23 +292,23 @@ export default function Home() {
       {showInstall && (
         <div style={styles.overlay}>
           <div style={styles.modal}>
-            <p style={styles.modalTitle}>Instalar SnapGoal</p>
+            <p style={styles.modalTitle}>{t('home_install_title')}</p>
             {isIOS ? (
               <>
-                <p style={styles.modalText}>En tu iPhone o iPad:</p>
-                <div style={styles.installStep}><span style={styles.installNum}>1</span><p style={styles.installText}>Pulsa el botón de compartir en la barra del navegador</p></div>
-                <div style={styles.installStep}><span style={styles.installNum}>2</span><p style={styles.installText}>Selecciona <strong style={{color:'#fff'}}>"Añadir a pantalla de inicio"</strong></p></div>
-                <div style={styles.installStep}><span style={styles.installNum}>3</span><p style={styles.installText}>Pulsa <strong style={{color:'#fff'}}>"Añadir"</strong> — ya tienes SnapGoal en tu pantalla</p></div>
+                <p style={styles.modalText}>{t('home_install_ios_intro')}</p>
+                <div style={styles.installStep}><span style={styles.installNum}>1</span><p style={styles.installText}>{t('home_install_ios_step1')}</p></div>
+                <div style={styles.installStep}><span style={styles.installNum}>2</span><p style={styles.installText}>{t('home_install_select')} <strong style={{color:'#fff'}}>{t('home_install_add_home')}</strong></p></div>
+                <div style={styles.installStep}><span style={styles.installNum}>3</span><p style={styles.installText}>{t('home_install_tap')} <strong style={{color:'#fff'}}>{t('home_install_add_word')}</strong> {t('home_install_done_suffix')}</p></div>
               </>
             ) : (
               <>
-                <p style={styles.modalText}>En tu Android:</p>
-                <div style={styles.installStep}><span style={styles.installNum}>1</span><p style={styles.installText}>Pulsa los <strong style={{color:'#fff'}}>tres puntos ⋮</strong> en la barra del navegador</p></div>
-                <div style={styles.installStep}><span style={styles.installNum}>2</span><p style={styles.installText}>Selecciona <strong style={{color:'#fff'}}>"Añadir a pantalla de inicio"</strong></p></div>
-                <div style={styles.installStep}><span style={styles.installNum}>3</span><p style={styles.installText}>Confirma — ya tienes SnapGoal en tu pantalla</p></div>
+                <p style={styles.modalText}>{t('home_install_android_intro')}</p>
+                <div style={styles.installStep}><span style={styles.installNum}>1</span><p style={styles.installText}>{t('home_install_tap_the')} <strong style={{color:'#fff'}}>{t('home_install_three_dots')}</strong> {t('home_install_in_browser_bar')}</p></div>
+                <div style={styles.installStep}><span style={styles.installNum}>2</span><p style={styles.installText}>{t('home_install_select')} <strong style={{color:'#fff'}}>{t('home_install_add_home')}</strong></p></div>
+                <div style={styles.installStep}><span style={styles.installNum}>3</span><p style={styles.installText}>{t('home_install_confirm')} {t('home_install_done_suffix')}</p></div>
               </>
             )}
-            <button style={styles.btnCancelDelete} onClick={() => setShowInstall(false)}>Cerrar</button>
+            <button style={styles.btnCancelDelete} onClick={() => setShowInstall(false)}>{t('home_close')}</button>
           </div>
         </div>
       )}
@@ -316,15 +316,15 @@ export default function Home() {
       {showRegisterInfo && (
         <div style={styles.overlay}>
           <div style={styles.modal}>
-            <p style={styles.modalTitle}>Crea tu perfil</p>
-            <p style={styles.modalText}>Solo necesitas elegir un nombre de usuario. Sin email, sin contraseña, sin formularios.</p>
+            <p style={styles.modalTitle}>{t('home_register_info_title')}</p>
+            <p style={styles.modalText}>{t('home_register_info_desc')}</p>
             <div style={styles.registerInfoList}>
-              <div style={styles.registerInfoRow}><span style={styles.registerInfoDot}/><p style={styles.registerInfoText}>Elige un nombre único — ese será tu identidad en SnapGoal</p></div>
-              <div style={styles.registerInfoRow}><span style={styles.registerInfoDot}/><p style={styles.registerInfoText}>Tu perfil se guarda automáticamente en este dispositivo</p></div>
-              <div style={styles.registerInfoRow}><span style={styles.registerInfoDot}/><p style={styles.registerInfoText}>Acumula puntos, sube en el ranking y reta a cualquier jugador del mundo</p></div>
-              <div style={styles.registerInfoRow}><span style={styles.registerInfoDot}/><p style={styles.registerInfoText}>En menos de 10 segundos estás jugando</p></div>
+              <div style={styles.registerInfoRow}><span style={styles.registerInfoDot}/><p style={styles.registerInfoText}>{t('home_register_info_1')}</p></div>
+              <div style={styles.registerInfoRow}><span style={styles.registerInfoDot}/><p style={styles.registerInfoText}>{t('home_register_info_2')}</p></div>
+              <div style={styles.registerInfoRow}><span style={styles.registerInfoDot}/><p style={styles.registerInfoText}>{t('home_register_info_3')}</p></div>
+              <div style={styles.registerInfoRow}><span style={styles.registerInfoDot}/><p style={styles.registerInfoText}>{t('home_register_info_4')}</p></div>
             </div>
-            <button style={styles.btnPrimary} onClick={() => setShowRegisterInfo(false)}>Empezar</button>
+            <button style={styles.btnPrimary} onClick={() => setShowRegisterInfo(false)}>{t('home_start_button')}</button>
           </div>
         </div>
       )}
@@ -340,23 +340,23 @@ export default function Home() {
               {onlineCount > 0 && (
                 <div style={styles.onlineBadge}>
                   <div style={styles.onlineDot} />
-                  <span style={styles.onlineText}>{onlineCount} online</span>
+                  <span style={styles.onlineText}>{onlineCount} {t('home_online')}</span>
                 </div>
               )}
               <button style={styles.topBtn} onClick={toggleLang}>{lang === 'es' ? 'EN' : 'ES'}</button>
             </div>
-            <button style={styles.topBtn} onClick={() => setShowInstall(true)}>Instalar</button>
+            <button style={styles.topBtn} onClick={() => setShowInstall(true)}>{t('home_install')}</button>
           </div>
         </div>
       </div>
 
       <style>{`@keyframes tutorialBtnGlow{0%,100%{box-shadow:0 0 6px rgba(147,197,253,0.2),0 0 12px rgba(147,197,253,0.1)}50%{box-shadow:0 0 14px rgba(147,197,253,0.5),0 0 28px rgba(147,197,253,0.2)}}`}</style>
       <div style={styles.playerSection}>
-        <p style={styles.playerGreeting}>Bienvenido</p>
+        <p style={styles.playerGreeting}>{t('home_welcome')}</p>
         <div style={{display:'flex', alignItems:'center', gap:'0.6rem'}}>
           <p style={styles.playerName}>{player.username}</p>
           {player?.email_verified && <ProtectedBadge />}
-          <button onClick={() => navigate('/tutorial')} style={{background:'rgba(96,165,250,0.15)',border:'1px solid rgba(147,197,253,0.4)',borderRadius:'20px',padding:'3px 10px',fontSize:'0.7rem',fontWeight:'800',color:'#93c5fd',cursor:'pointer',whiteSpace:'nowrap',animation:'tutorialBtnGlow 2s ease-in-out infinite',flexShrink:0}}>✦ Tutorial</button>
+          <button onClick={() => navigate('/tutorial')} style={{background:'rgba(96,165,250,0.15)',border:'1px solid rgba(147,197,253,0.4)',borderRadius:'20px',padding:'3px 10px',fontSize:'0.7rem',fontWeight:'800',color:'#93c5fd',cursor:'pointer',whiteSpace:'nowrap',animation:'tutorialBtnGlow 2s ease-in-out infinite',flexShrink:0}}>✦ {t('home_tutorial')}</button>
         </div>
         {(skills.sniper > 0 || skills.glove > 0 || skills.hog > 0) && (
           <div style={{display:'flex', gap:'0.75rem', alignItems:'center', marginBottom:'0.25rem'}}>
@@ -367,18 +367,18 @@ export default function Home() {
         )}
         <div style={styles.statCardsRow}>
           <div style={styles.statCard}>
-            <p style={styles.statCardLabel}>XP</p>
+            <p style={styles.statCardLabel}>{t('home_xp')}</p>
             <p style={styles.statCardValue}>{player.xp_rating || 1500}</p>
           </div>
           <div style={styles.statCard}>
-            <p style={styles.statCardLabel}>Puntos liga</p>
+            <p style={styles.statCardLabel}>{t('home_league_points')}</p>
             <p style={styles.statCardValue}>{player.total_points}</p>
           </div>
         </div>
         <div style={styles.playerMetaSecondary}>
-          <span style={styles.playerMetaItem}>{player.matches_played} partidos</span>
+          <span style={styles.playerMetaItem}>{player.matches_played} {t('home_matches')}</span>
           <span style={styles.playerMetaDot} />
-          <span style={styles.playerMetaItem}>{player.matches_won}V {player.matches_lost}D</span>
+          <span style={styles.playerMetaItem}>{player.matches_won}{t('home_won_abbr')} {player.matches_lost}{t('home_lost_abbr')}</span>
         </div>
       </div>
 
@@ -396,8 +396,8 @@ export default function Home() {
           <line x1="9" y1="28" x2="31" y2="28" stroke="#14141466" strokeWidth="0.8"/>
           <line x1="6" y1="30" x2="34" y2="30" stroke="#14141488" strokeWidth="1.5"/>
         </svg>
-        <span style={styles.cardPlayLabel}>Buscar Partido</span>
-        <span style={styles.cardSub}>Jugar ahora</span>
+        <span style={styles.cardPlayLabel}>{t('home_play')}</span>
+        <span style={styles.cardSub}>{t('home_play_sub')}</span>
       </button>
 
       <div>
@@ -407,9 +407,9 @@ export default function Home() {
             <rect x="11" y="10" width="5" height="15" rx="1.5" fill="rgba(255,180,0,0.75)"/>
             <rect x="19" y="4" width="5" height="21" rx="1.5" fill="#ffb400"/>
           </svg>
-          <span style={styles.navItemLabelAmber}>Ranking</span>
+          <span style={styles.navItemLabelAmber}>{t('home_ranking')}</span>
         </button>
-        <p style={styles.navSectionLabel}>Más opciones</p>
+        <p style={styles.navSectionLabel}>{t('home_more_options')}</p>
         <div style={styles.navGrid}>
           <button style={styles.navItem} onClick={() => navigate('/leagues')}>
             <svg viewBox="0 0 36 36" fill="none" style={{width:'19px',height:'19px',flexShrink:0}}>
@@ -420,11 +420,11 @@ export default function Home() {
               <path d="M13.5 28h9" stroke="rgba(255,255,255,0.55)" strokeWidth="1.4" strokeLinecap="round"/>
               <ellipse cx="18" cy="31.5" rx="6" ry="1.8" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.4)" strokeWidth="1.2"/>
             </svg>
-            <span style={styles.navItemLabel}>Mis Ligas</span>
+            <span style={styles.navItemLabel}>{t('home_my_leagues')}</span>
           </button>
           <button style={styles.navItem} onClick={() => navigate('/duels')}>
             <span style={{fontSize:'1rem',flexShrink:0}}>⚔️</span>
-            <span style={styles.navItemLabel}>Mis Retos</span>
+            <span style={styles.navItemLabel}>{t('home_my_duels')}</span>
             {pendingDuels > 0 && <span style={styles.navBadge}>{pendingDuels}</span>}
           </button>
           <button style={styles.navItem} onClick={() => navigate('/academy')}>
@@ -437,13 +437,13 @@ export default function Home() {
               <line x1="1" y1="12" x2="4" y2="12" stroke="rgba(255,255,255,0.55)" strokeWidth="1.5" strokeLinecap="round"/>
               <line x1="20" y1="12" x2="23" y2="12" stroke="rgba(255,255,255,0.55)" strokeWidth="1.5" strokeLinecap="round"/>
             </svg>
-            <span style={styles.navItemLabel}>Academy</span>
+            <span style={styles.navItemLabel}>{t('home_academy')}</span>
           </button>
           <button style={styles.navItem} onClick={() => navigate('/missions')}>
             <svg viewBox="0 0 24 24" fill="none" style={{width:'19px',height:'19px',flexShrink:0}}>
               <path d="M8 3 L3 7 L5 9.5 L5 21 L19 21 L19 9.5 L21 7 L16 3 L13 5.5 Q12 6.5 11 5.5 Z" stroke="rgba(255,255,255,0.55)" strokeWidth="1.5" fill="none" strokeLinejoin="round" strokeLinecap="round"/>
             </svg>
-            <span style={styles.navItemLabel}>Vestuario</span>
+            <span style={styles.navItemLabel}>{t('home_locker_room')}</span>
             {streak > 0 && <span style={styles.navStreak}><span style={{display:'inline-block',animation:'flamePulse 1.6s ease-in-out infinite'}}>🔥</span>{streak}</span>}
           </button>
           <button style={styles.navItem} onClick={() => navigate('/rules')}>
@@ -453,7 +453,7 @@ export default function Home() {
               <line x1="9" y1="14" x2="19" y2="14" stroke="rgba(255,255,255,0.55)" strokeWidth="1.5" strokeLinecap="round"/>
               <line x1="9" y1="19" x2="14" y2="19" stroke="rgba(255,255,255,0.55)" strokeWidth="1.5" strokeLinecap="round"/>
             </svg>
-            <span style={styles.navItemLabel}>Reglas</span>
+            <span style={styles.navItemLabel}>{t('home_rules')}</span>
           </button>
           <button style={styles.navItem} onClick={() => navigate('/skills')}>
             <svg viewBox="0 0 28 28" fill="none" style={{width:'19px',height:'19px',flexShrink:0}}>
@@ -465,7 +465,7 @@ export default function Home() {
               <line x1="1" y1="14" x2="4.5" y2="14" stroke="rgba(255,255,255,0.55)" strokeWidth="1.5" strokeLinecap="round"/>
               <line x1="23.5" y1="14" x2="27" y2="14" stroke="rgba(255,255,255,0.55)" strokeWidth="1.5" strokeLinecap="round"/>
             </svg>
-            <span style={styles.navItemLabel}>Skills</span>
+            <span style={styles.navItemLabel}>{t('home_skills')}</span>
           </button>
         </div>
       </div>
@@ -484,12 +484,12 @@ export default function Home() {
       <button style={styles.btnInvite} onClick={() => {
         const text = '⚽ Únete a SnapGoal. Partidos rápidos, Ligas y mucho más. https://snapgoal.vercel.app'
         window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank')
-      }}>🎁 Invita a un amigo</button>
+      }}>{t('home_invite')}</button>
       {!player?.email_verified && <div style={{display:'flex', flexDirection:'column', gap:'0.4rem'}}>
-        <p style={{fontSize:'0.72rem', color:'#ffb400', textAlign:'center', margin:0, fontWeight:'600'}}>🎁 Verifica tu cuenta y recibe 5 🎯 + 5 🧤</p>
-        <button style={styles.btnProtect} onClick={() => setShowProtect(true)}>🔒 Proteger mi cuenta</button>
+        <p style={{fontSize:'0.72rem', color:'#ffb400', textAlign:'center', margin:0, fontWeight:'600'}}>{t('home_protect_banner')}</p>
+        <button style={styles.btnProtect} onClick={() => setShowProtect(true)}>{t('home_protect_account')}</button>
       </div>}
-      <button style={styles.btnGhost} onClick={() => setShowDeleteConfirm(true)}>Borrar cuenta</button>
+      <button style={styles.btnGhost} onClick={() => setShowDeleteConfirm(true)}>{t('home_delete_account')}</button>
     </div>
   )
 
@@ -506,23 +506,23 @@ export default function Home() {
               {onlineCount > 0 && (
                 <div style={styles.onlineBadge}>
                   <div style={styles.onlineDot} />
-                  <span style={styles.onlineText}>{onlineCount} online</span>
+                  <span style={styles.onlineText}>{onlineCount} {t('home_online')}</span>
                 </div>
               )}
               <button style={styles.topBtn} onClick={toggleLang}>{lang === 'es' ? 'EN' : 'ES'}</button>
             </div>
-            <button style={styles.topBtn} onClick={() => setShowInstall(true)}>Instalar</button>
+            <button style={styles.topBtn} onClick={() => setShowInstall(true)}>{t('home_install')}</button>
           </div>
         </div>
         <p style={styles.tagline}>Sin VAR. Sin lesiones. 30 secondi sono molto lunghi.</p>
       </div>
 
       <div style={styles.registerSection}>
-        <p style={styles.registerLabel}>Elige tu nombre</p>
+        <p style={styles.registerLabel}>{t('home_register_label')}</p>
         <input
           style={styles.input}
           type="text"
-          placeholder="ej: Snaplayer00"
+          placeholder={t('home_register_placeholder')}
           value={username}
           onChange={e => setUsername(e.target.value.toLowerCase())}
           onKeyDown={e => e.key === 'Enter' && handleRegister()}
@@ -531,19 +531,19 @@ export default function Home() {
           autoCorrect="off"
           autoComplete="off"
         />
-        <p style={styles.inputHint}>Solo letras, números y guión bajo. No se puede cambiar.</p>
+        <p style={styles.inputHint}>{t('home_register_hint')}</p>
         {error && <p style={styles.error}>{error}</p>}
       </div>
 
       <div style={styles.actions}>
         <button style={styles.btnPrimary} onClick={handleRegister} disabled={saving}>
-          {saving ? 'Creando...' : 'Empezar a jugar'}
+          {saving ? t('home_creating') : t('home_start_playing')}
         </button>
-        <button style={styles.btnSecondary} onClick={() => navigate('/ranking')}>Ranking</button>
-        <button style={styles.btnSecondary} onClick={() => navigate('/leagues')}>🏆 Mis Ligas</button>
-        <button style={styles.btnSecondary} onClick={() => navigate('/rules')}>Reglas</button>
-        <button style={styles.btnGhost} onClick={() => setShowRegisterInfo(true)}>¿Cómo crear mi perfil?</button>
-        <button style={{...styles.btnGhost, color:'rgba(255,180,0,0.5)'}} onClick={() => setShowRecover(true)}>🔑 Ya tengo cuenta — recuperar acceso</button>
+        <button style={styles.btnSecondary} onClick={() => navigate('/ranking')}>{t('home_ranking')}</button>
+        <button style={styles.btnSecondary} onClick={() => navigate('/leagues')}>🏆 {t('home_my_leagues')}</button>
+        <button style={styles.btnSecondary} onClick={() => navigate('/rules')}>{t('home_rules')}</button>
+        <button style={styles.btnGhost} onClick={() => setShowRegisterInfo(true)}>{t('home_create_profile_q')}</button>
+        <button style={{...styles.btnGhost, color:'rgba(255,180,0,0.5)'}} onClick={() => setShowRecover(true)}>{t('home_recover_link')}</button>
       </div>
 
       {showRecover && (
@@ -551,8 +551,8 @@ export default function Home() {
           <div style={styles.modal}>
             {recoverSent ? (
               <>
-                <p style={styles.modalTitle}>📧 Revisa tu email</p>
-                <p style={styles.modalText}>Te hemos enviado un código de 6 dígitos a <strong style={{color:'#fff'}}>{recoverEmail}</strong>. Introdúcelo aquí para acceder.</p>
+                <p style={styles.modalTitle}>{t('home_recover_sent_title')}</p>
+                <p style={styles.modalText}>{t('home_recover_sent_desc_pre')} <strong style={{color:'#fff'}}>{recoverEmail}</strong>{t('home_recover_sent_desc_post')}</p>
                 <input
                   style={{...styles.input, marginBottom:'0.75rem', textAlign:'center', fontSize:'1.3rem', letterSpacing:'4px'}}
                   type="text"
@@ -565,18 +565,18 @@ export default function Home() {
                 />
                 {recoverCodeError && <p style={{fontSize:'0.8rem', color:'#ff4444', margin:'0 0 0.5rem'}}>{recoverCodeError}</p>}
                 <button style={styles.btnPrimary} onClick={handleVerifyCode} disabled={recoverCodeLoading}>
-                  {recoverCodeLoading ? 'Verificando...' : 'Acceder'}
+                  {recoverCodeLoading ? t('home_recover_verifying') : t('home_recover_access')}
                 </button>
-                <button style={styles.btnCancelDelete} onClick={() => { setShowRecover(false); setRecoverSent(false); setRecoverEmail(''); setRecoverCode(''); setRecoverCodeError('') }}>Cerrar</button>
+                <button style={styles.btnCancelDelete} onClick={() => { setShowRecover(false); setRecoverSent(false); setRecoverEmail(''); setRecoverCode(''); setRecoverCodeError('') }}>{t('home_close')}</button>
               </>
             ) : (
               <>
-                <p style={styles.modalTitle}>🔑 Recuperar cuenta</p>
-                <p style={styles.modalText}>Introduce el email con el que protegiste tu cuenta. Te enviaremos un código de 6 dígitos.</p>
+                <p style={styles.modalTitle}>{t('home_recover_title')}</p>
+                <p style={styles.modalText}>{t('home_recover_desc')}</p>
                 <input
                   style={{...styles.input, marginBottom:'0.75rem'}}
                   type="email"
-                  placeholder="tu@email.com"
+                  placeholder={t('home_recover_email_placeholder')}
                   value={recoverEmail}
                   onChange={e => setRecoverEmail(e.target.value.toLowerCase())}
                   onKeyDown={e => e.key === 'Enter' && handleRecover()}
@@ -585,9 +585,9 @@ export default function Home() {
                 />
                 {recoverError && <p style={{fontSize:'0.8rem', color:'#ff4444', margin:0}}>{recoverError}</p>}
                 <button style={styles.btnPrimary} onClick={handleRecover} disabled={recoverLoading}>
-                  {recoverLoading ? 'Enviando...' : 'Enviar código'}
+                  {recoverLoading ? t('home_recover_sending') : t('home_recover_send')}
                 </button>
-                <button style={styles.btnCancelDelete} onClick={() => { setShowRecover(false); setRecoverEmail(''); setRecoverError('') }}>Cancelar</button>
+                <button style={styles.btnCancelDelete} onClick={() => { setShowRecover(false); setRecoverEmail(''); setRecoverError('') }}>{t('home_cancel')}</button>
               </>
             )}
           </div>
