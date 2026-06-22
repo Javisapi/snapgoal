@@ -396,6 +396,14 @@ export default function Home() {
       </button>
 
       <div>
+        <button style={styles.navItemFull} onClick={() => navigate('/ranking')}>
+          <svg viewBox="0 0 28 28" fill="none" style={{width:'19px',height:'19px',flexShrink:0}}>
+            <rect x="3" y="16" width="5" height="9" rx="1.5" fill="rgba(255,255,255,0.35)"/>
+            <rect x="11" y="10" width="5" height="15" rx="1.5" fill="rgba(255,255,255,0.5)"/>
+            <rect x="19" y="4" width="5" height="21" rx="1.5" fill="rgba(255,255,255,0.65)"/>
+          </svg>
+          <span style={styles.navItemLabel}>Ranking</span>
+        </button>
         <p style={styles.navSectionLabel}>Más opciones</p>
         <div style={styles.navGrid}>
           <button style={styles.navItem} onClick={() => navigate('/leagues')}>
@@ -427,17 +435,11 @@ export default function Home() {
             <span style={styles.navItemLabel}>Academy</span>
           </button>
           <button style={styles.navItem} onClick={() => navigate('/missions')}>
-            <span style={{fontSize:'1rem',flexShrink:0}}>🏟️</span>
+            <svg viewBox="0 0 24 24" fill="none" style={{width:'19px',height:'19px',flexShrink:0}}>
+              <path d="M8 3 L3 7 L5 9.5 L5 21 L19 21 L19 9.5 L21 7 L16 3 L13 5.5 Q12 6.5 11 5.5 Z" stroke="rgba(255,255,255,0.55)" strokeWidth="1.5" fill="none" strokeLinejoin="round" strokeLinecap="round"/>
+            </svg>
             <span style={styles.navItemLabel}>Vestuario</span>
             {streak > 0 && <span style={styles.navStreak}><span style={{display:'inline-block',animation:'flamePulse 1.6s ease-in-out infinite'}}>🔥</span>{streak}</span>}
-          </button>
-          <button style={styles.navItem} onClick={() => navigate('/ranking')}>
-            <svg viewBox="0 0 28 28" fill="none" style={{width:'19px',height:'19px',flexShrink:0}}>
-              <rect x="3" y="16" width="5" height="9" rx="1.5" fill="rgba(255,255,255,0.35)"/>
-              <rect x="11" y="10" width="5" height="15" rx="1.5" fill="rgba(255,255,255,0.5)"/>
-              <rect x="19" y="4" width="5" height="21" rx="1.5" fill="rgba(255,255,255,0.65)"/>
-            </svg>
-            <span style={styles.navItemLabel}>Ranking</span>
           </button>
           <button style={styles.navItem} onClick={() => navigate('/rules')}>
             <svg viewBox="0 0 28 28" fill="none" style={{width:'19px',height:'19px',flexShrink:0}}>
@@ -648,6 +650,7 @@ const styles = {
   navSectionLabel: { fontSize:'0.7rem', color:'rgba(255,255,255,0.25)', letterSpacing:'1px', textTransform:'uppercase', margin:'0 0 0.5rem' },
   navGrid: { display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.5rem' },
   navItem: { background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:'14px', display:'flex', alignItems:'center', gap:'0.55rem', cursor:'pointer', padding:'0.7rem 0.8rem' },
+  navItemFull: { width:'100%', background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:'14px', display:'flex', alignItems:'center', gap:'0.55rem', cursor:'pointer', padding:'0.7rem 0.8rem', marginBottom:'0.5rem' },
   navItemLabel: { fontSize:'0.78rem', fontWeight:'700', color:'rgba(255,255,255,0.7)' },
   navBadge: { marginLeft:'auto', background:'#ff4444', color:'#fff', borderRadius:'50%', width:'16px', height:'16px', fontSize:'0.6rem', fontWeight:'800', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 },
   navStreak: { marginLeft:'auto', fontSize:'0.7rem', color:'#ffb400', fontWeight:'800', display:'inline-flex', alignItems:'center', gap:'2px' },
