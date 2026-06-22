@@ -342,62 +342,12 @@ async function botProcessPlay(total, matchId, match, processingRef) {
     pro_shooter_active: false,
   }).eq('id', matchId)
 
-  if (finished) {
-    const xpRes = await supabase.rpc('finalize_match_stats', {
-      p_match_id: matchId,
-      p_player1_id: fresh.player1_id,
-      p_player2_id: fresh.player2_id,
-      p_score1: sp1,
-      p_score2: sp2,
-      p_cards_p1: fresh.cards_p1 || { yellow: 0, red: 0 },
-      p_cards_p2: fresh.cards_p2 || { yellow: 0, red: 0 },
-    })
-    if (xpRes.data) {
-      await supabase.from('matches').update({ xp_result: xpRes.data }).eq('id', matchId)
-    }
-
-    // Racha y misiones del jugador humano — guard atómico anti-duplicado (evita carrera con Game.jsx)
-    const { data: claimResult } = await supabase
-      .from('matches')
-      .update({ missions_processed: true })
-      .eq('id', matchId)
-      .eq('missions_processed', false)
-      .select('id')
-
-    const wonClaim = claimResult && claimResult.length > 0
-
-    if (!wonClaim) {
-      processingRef.current = false
-      return
-    }
-
-    // Pequeña espera de seguridad para asegurar consistencia de lectura de plays
-    await new Promise(r => setTimeout(r, 150))
-
-    const humanId = fresh.player1_id
-    const humanWon = fresh.winner_id === humanId
-    const humanScore = fresh.score_p1
-    const oppScore = fresh.score_p2
-    const cleanSheet = humanWon && oppScore === 0
-
-    const { data: humanPlays } = await supabase
-      .from('plays').select('result').eq('match_id', matchId).eq('player_id', humanId)
-    const goalsScored = humanPlays?.filter(pl => ['GOL_DIRECTO','GOL_FALTA','GOL_PENALTY','GOL_CORNER'].includes(pl.result)).length || 0
-    const goalsFalta = humanPlays?.filter(pl => pl.result === 'GOL_FALTA').length || 0
-
-    await supabase.rpc('update_daily_streak', { p_player_id: humanId })
-    const missionsRes = await supabase.rpc('update_daily_missions', {
-      p_player_id: humanId,
-      p_match_id: matchId,
-      p_won: humanWon,
-      p_goals_scored: goalsScored,
-      p_goals_falta: goalsFalta,
-      p_clean_sheet: cleanSheet,
-    })
-    if (missionsRes.data?.completed_missions?.length > 0) {
-      await supabase.from('matches').update({ missions_result: missionsRes.data }).eq('id', matchId)
-    }
-  }
+  // XP, racha y misiones del jugador humano se procesan exclusivamente desde el listener
+  // Realtime de Game.jsx (status === 'finished'), que ya usa el guard correcto por jugador
+  // (claim_missions_processing) y escribe missions_result atómicamente desde la función SQL.
+  // Este bloque se eliminó porque dependía de la columna 'missions_processed' (ya no existe,
+  // sustituida por 'missions_processed_players'), causando que el claim fallara siempre en
+  // silencio y ningún partido contra Cerverai procesara correctamente sus misiones por esta vía.
 
   processingRef.current = false
 }
