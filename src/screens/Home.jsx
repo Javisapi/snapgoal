@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase'
 import { useSearchParams } from 'react-router-dom'
 import ProtectAccount, { useShouldShowProtect, ProtectedBadge } from '../components/ProtectAccount'
 import { useTrackPresence, usePresenceMap } from '../hooks/usePresence'
+import { useTranslation } from '../contexts/LanguageContext'
 
 async function deleteAccount(playerId) {
   await supabase.from('plays').delete().eq('player_id', playerId)
@@ -25,6 +26,7 @@ const HOME_CSS = `
 
 export default function Home() {
   const { player, loading, registerPlayer, refreshPlayer } = useAuth()
+  const { lang, toggleLang, t } = useTranslation()
   const [username, setUsername] = useState('')
   const [streak, setStreak] = useState(0)
   const [pendingDuels, setPendingDuels] = useState(0)
@@ -334,12 +336,15 @@ export default function Home() {
             <div style={styles.wordmarkLine} />
           </div>
           <div style={styles.topBtns}>
-            {onlineCount > 0 && (
-              <div style={styles.onlineBadge}>
-                <div style={styles.onlineDot} />
-                <span style={styles.onlineText}>{onlineCount} online</span>
-              </div>
-            )}
+            <div style={{display:'flex', gap:'0.4rem'}}>
+              {onlineCount > 0 && (
+                <div style={styles.onlineBadge}>
+                  <div style={styles.onlineDot} />
+                  <span style={styles.onlineText}>{onlineCount} online</span>
+                </div>
+              )}
+              <button style={styles.topBtn} onClick={toggleLang}>{lang === 'es' ? 'EN' : 'ES'}</button>
+            </div>
             <button style={styles.topBtn} onClick={() => setShowInstall(true)}>Instalar</button>
           </div>
         </div>
@@ -398,11 +403,11 @@ export default function Home() {
       <div>
         <button style={styles.navItemFull} onClick={() => navigate('/ranking')}>
           <svg viewBox="0 0 28 28" fill="none" style={{width:'19px',height:'19px',flexShrink:0}}>
-            <rect x="3" y="16" width="5" height="9" rx="1.5" fill="rgba(255,255,255,0.35)"/>
-            <rect x="11" y="10" width="5" height="15" rx="1.5" fill="rgba(255,255,255,0.5)"/>
-            <rect x="19" y="4" width="5" height="21" rx="1.5" fill="rgba(255,255,255,0.65)"/>
+            <rect x="3" y="16" width="5" height="9" rx="1.5" fill="rgba(255,180,0,0.5)"/>
+            <rect x="11" y="10" width="5" height="15" rx="1.5" fill="rgba(255,180,0,0.75)"/>
+            <rect x="19" y="4" width="5" height="21" rx="1.5" fill="#ffb400"/>
           </svg>
-          <span style={styles.navItemLabel}>Ranking</span>
+          <span style={styles.navItemLabelAmber}>Ranking</span>
         </button>
         <p style={styles.navSectionLabel}>Más opciones</p>
         <div style={styles.navGrid}>
@@ -497,12 +502,15 @@ export default function Home() {
             <div style={styles.wordmarkLine} />
           </div>
           <div style={styles.topBtns}>
-            {onlineCount > 0 && (
-              <div style={styles.onlineBadge}>
-                <div style={styles.onlineDot} />
-                <span style={styles.onlineText}>{onlineCount} online</span>
-              </div>
-            )}
+            <div style={{display:'flex', gap:'0.4rem'}}>
+              {onlineCount > 0 && (
+                <div style={styles.onlineBadge}>
+                  <div style={styles.onlineDot} />
+                  <span style={styles.onlineText}>{onlineCount} online</span>
+                </div>
+              )}
+              <button style={styles.topBtn} onClick={toggleLang}>{lang === 'es' ? 'EN' : 'ES'}</button>
+            </div>
             <button style={styles.topBtn} onClick={() => setShowInstall(true)}>Instalar</button>
           </div>
         </div>
@@ -650,7 +658,8 @@ const styles = {
   navSectionLabel: { fontSize:'0.7rem', color:'rgba(255,255,255,0.25)', letterSpacing:'1px', textTransform:'uppercase', margin:'0 0 0.5rem' },
   navGrid: { display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.5rem' },
   navItem: { background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:'14px', display:'flex', alignItems:'center', gap:'0.55rem', cursor:'pointer', padding:'0.7rem 0.8rem' },
-  navItemFull: { width:'100%', background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:'14px', display:'flex', alignItems:'center', gap:'0.55rem', cursor:'pointer', padding:'0.7rem 0.8rem', marginBottom:'0.5rem' },
+  navItemFull: { width:'100%', background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:'14px', display:'flex', alignItems:'center', justifyContent:'center', gap:'0.55rem', cursor:'pointer', padding:'0.7rem 0.8rem', marginBottom:'0.5rem' },
+  navItemLabelAmber: { fontSize:'0.78rem', fontWeight:'800', color:'#ffb400' },
   navItemLabel: { fontSize:'0.78rem', fontWeight:'700', color:'rgba(255,255,255,0.7)' },
   navBadge: { marginLeft:'auto', background:'#ff4444', color:'#fff', borderRadius:'50%', width:'16px', height:'16px', fontSize:'0.6rem', fontWeight:'800', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 },
   navStreak: { marginLeft:'auto', fontSize:'0.7rem', color:'#ffb400', fontWeight:'800', display:'inline-flex', alignItems:'center', gap:'2px' },
