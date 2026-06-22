@@ -2,6 +2,7 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 import { registerPushSW } from './lib/pushNotifications'
+import { LanguageProvider } from './contexts/LanguageContext'
 
 const CACHE_VERSION = '3'
 if (sessionStorage.getItem('cache_version') !== CACHE_VERSION) {
@@ -20,4 +21,8 @@ if ('serviceWorker' in navigator) {
   })
 }
 
-createRoot(document.getElementById('root')).render(<App />)
+createRoot(document.getElementById('root')).render(
+  <LanguageProvider>
+    <App />
+  </LanguageProvider>
+)
